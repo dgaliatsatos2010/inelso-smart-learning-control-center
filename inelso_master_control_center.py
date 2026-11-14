@@ -704,7 +704,23 @@ elif section == "Service 26 — Ευφυής Προσαρμοστική Εξάσ
     c3.metric("Βεβαιότητα",f"{latest['βεβαιότητα']:.2f}")
     c4.metric("Πρόοδος",f"+{gain:.2f}")
     c5.metric("Δείκτης υγείας",f"{health26:.1f}/100")
+    st.subheader("SCORM / Moodle")
 
+    if st.button("Αποστολή τρέχοντος αποτελέσματος στο SCORM", key="s26_scorm_send"):
+        send_scorm_result(
+            score=latest["score"],
+            lesson_status="completed" if latest["score"] >= 70 else "incomplete",
+            confidence=latest["βεβαιότητα"],
+            mastery=latest["κατάκτηση"],
+            service="Service 26",
+            entity="Demo Student 0201",
+            auto_commit=False,
+        )
+
+        st.success(
+            "Το πραγματικό αποτέλεσμα στάλθηκε στον SCORM wrapper. "
+            "Η εγγραφή στο Moodle απαιτεί επιβεβαίωση."
+        )
     view = st.radio("Προβολή",["Μαθητής","Εκπαιδευτής"],horizontal=True)
     if view == "Μαθητής":
         tabs = st.tabs(["Προσαρμοστικό προφίλ","Κενά rubric","Πορεία προόδου","Μηχανισμός απόφασης"])
