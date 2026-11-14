@@ -22,7 +22,7 @@ from sklearn.metrics import (
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.cluster import KMeans
-
+from inelso_scorm_bridge import send_scorm_result
 st.set_page_config(
     page_title="INELSO Κεντρικό Σύστημα Έξυπνης Μάθησης — Τελική Έκδοση",
     page_icon="🧠",
