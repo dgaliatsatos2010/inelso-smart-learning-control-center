@@ -25,7 +25,7 @@ from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.cluster import KMeans
 st.set_page_config(
-    page_title="INELSO — Πλατφόρμα Έξυπνης Μάθησης",
+    page_title="INELSO Academia — Πλατφόρμα Έξυπνης Μάθησης",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -1331,7 +1331,7 @@ open31 = high31
 # ==========================================================
 # ΠΛΟΗΓΗΣΗ
 # ==========================================================
-st.sidebar.markdown("## 🎓 INELSO")
+st.sidebar.markdown("## 🎓 INELSO Academia")
 st.sidebar.caption("Πλατφόρμα Έξυπνης Μάθησης")
 st.sidebar.markdown("<div class='inelso-section-label'>Κύριες λειτουργίες</div>", unsafe_allow_html=True)
 
@@ -1416,7 +1416,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
 
     st.markdown("""
     <div class="inelso-home-hero">
-      <div class="inelso-home-eyebrow">INELSO · SMART LEARNING CONTROL CENTER</div>
+      <div class="inelso-home-eyebrow">INELSO Academia · SMART LEARNING CONTROL CENTER</div>
       <h1>Πλατφόρμα Έξυπνης Μάθησης</h1>
       <p>Από πραγματικά δεδομένα Moodle, SCORM ή αρχεία σε κατανοητές ενδείξεις, προτεραιότητες και ελεγχόμενες εκπαιδευτικές ενέργειες.</p>
     </div>
@@ -1988,7 +1988,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
             st.download_button(
                 "⬇️ Λήψη interactions CSV",
                 interactions_df.to_csv(index=False).encode("utf-8-sig"),
-                "INELSO_SCORM_interactions.csv",
+                "INELSO Academia_SCORM_interactions.csv",
                 "text/csv",
                 key="scorm_download_interactions"
             )
@@ -2029,7 +2029,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                     st.download_button(
                         "⬇️ SCORM Master Dataset",
                         unified_scorm.to_csv(index=False).encode("utf-8-sig"),
-                        "INELSO_SCORM_MASTER_DATASET.csv",
+                        "INELSO Academia_SCORM_MASTER_DATASET.csv",
                         "text/csv",
                         key="scorm_download_master",
                         use_container_width=True,
@@ -2039,7 +2039,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                         st.download_button(
                             "⬇️ Σύνοψη φοιτητών",
                             learner_scorm.to_csv(index=False).encode("utf-8-sig"),
-                            "INELSO_SCORM_LEARNER_SUMMARY.csv",
+                            "INELSO Academia_SCORM_LEARNER_SUMMARY.csv",
                             "text/csv",
                             key="scorm_download_learners",
                             use_container_width=True,
@@ -2048,7 +2048,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                     st.download_button(
                         "⬇️ Item Statistics",
                         psych_view.to_csv(index=False).encode("utf-8-sig"),
-                        "INELSO_SCORM_ITEM_STATISTICS.csv",
+                        "INELSO Academia_SCORM_ITEM_STATISTICS.csv",
                         "text/csv",
                         key="scorm_download_items",
                         use_container_width=True,
@@ -2433,7 +2433,7 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
         st.download_button(
             "Λήψη προσχεδίου σε CSV",
             edited_s25.to_csv(index=False).encode("utf-8-sig"),
-            "INELSO_Λειτουργία25_Authoring_Draft.csv",
+            "INELSO Academia_Λειτουργία25_Authoring_Draft.csv",
             "text/csv",
             key="s25_download"
         )
@@ -2612,7 +2612,7 @@ elif section == "Υποστήριξη Διδάσκοντα":
         st.download_button(
             "Λήψη faculty draft library CSV",
             lib_df.to_csv(index=False).encode("utf-8-sig"),
-            "INELSO_Λειτουργία28_Faculty_Drafts.csv",
+            "INELSO Academia_Λειτουργία28_Faculty_Drafts.csv",
             "text/csv",
             key="s28_download"
         )
@@ -2846,7 +2846,7 @@ elif section == "Κύκλος Ζωής Ενεργειών":
         st.download_button(
             "Λήψη μητρώου ενεργειών",
             export_lifecycle.to_csv(index=False).encode("utf-8-sig"),
-            "INELSO_Mitroo_Energeion.csv",
+            "INELSO Academia_Mitroo_Energeion.csv",
             "text/csv"
         )
 
@@ -3635,7 +3635,7 @@ elif section in {"Εισαγωγή CSV / Excel", "Κέντρο Εισαγωγή�
 
 
 # ==========================================================
-# INELSO ANALYTICS LAB
+# INELSO Academia ANALYTICS LAB
 # ==========================================================
 elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
     render_module_header("Εργαστήριο Ανάλυσης Δεδομένων", "Γενική ανάλυση εκπαιδευτικών δεδομένων: ποιότητα, πρόβλεψη, ομαδοποίηση, συσχετίσεις και ερμηνεία.", "analytics_lab")
@@ -4023,7 +4023,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                         st.download_button(
                             "Λήψη dataset με clusters",
                             clustered.to_csv(index=False).encode("utf-8-sig"),
-                            "INELSO_dataset_with_clusters.csv",
+                            "INELSO Academia_dataset_with_clusters.csv",
                             "text/csv"
                         )
 
@@ -4062,7 +4062,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
             numeric_cols = lab_df.select_dtypes(include=np.number).columns.tolist()
             categorical_cols = [c for c in lab_df.columns if c not in numeric_cols]
 
-            report_text = f"""INELSO ANALYTICS LAB — ΑΥΤΟΜΑΤΗ ΑΝΑΦΟΡΑ
+            report_text = f"""INELSO Academia ANALYTICS LAB — ΑΥΤΟΜΑΤΗ ΑΝΑΦΟΡΑ
 
 Dataset: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρχείο')}
 Γραμμές: {len(lab_df)}
@@ -4083,7 +4083,7 @@ Dataset: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρ
             st.download_button(
                 "Λήψη αυτόματης αναφοράς",
                 report_text.encode("utf-8"),
-                "INELSO_Analytics_Lab_Report.txt",
+                "INELSO Academia_Analytics_Lab_Report.txt",
                 "text/plain"
             )
 
@@ -4462,7 +4462,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
     pending_meta = st.session_state.get("pending_moodle_result_meta")
     if isinstance(pending_meta, dict):
         st.success(
-            f"Υπάρχει προετοιμασμένο αποτέλεσμα από {pending_meta.get('service','λειτουργία INELSO')}. "
+            f"Υπάρχει προετοιμασμένο αποτέλεσμα από {pending_meta.get('service','λειτουργία INELSO Academia')}. "
             "Έλεγξέ το παρακάτω πριν από οποιαδήποτε πραγματική εγγραφή."
         )
         meta_preview = pd.DataFrame([{
@@ -4600,14 +4600,14 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
 
         if pending_note:
             st.caption(
-                "Το κείμενο έχει προ-συμπληρωθεί από άλλο λειτουργία INELSO. "
+                "Το κείμενο έχει προ-συμπληρωθεί από άλλο λειτουργία INELSO Academia. "
                 "Ελέγξτε το πριν από οποιαδήποτε πραγματική εγγραφή."
             )
 
         formatted_note = (
-            f"[INELSO] {intervention_type}\n\n"
+            f"[INELSO Academia] {intervention_type}\n\n"
             f"{note_text.strip()}\n\n"
-            f"Καταγραφή μέσω INELSO Πλατφόρμα Έξυπνης Μάθησης."
+            f"Καταγραφή μέσω INELSO Academia Πλατφόρμα Έξυπνης Μάθησης."
             + (f"\nΠηγή ανάλυσης: {ACTIVE_NAME}." if ACTIVE_DF is not None else "")
         )
 
@@ -5074,7 +5074,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
         st.download_button(
             "Λήψη audit log CSV",
             audit.to_csv(index=False).encode("utf-8-sig"),
-            "INELSO_Moodle_Write_Audit.csv",
+            "INELSO Academia_Moodle_Write_Audit.csv",
             "text/csv"
         )
     else:
@@ -5398,7 +5398,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             st.download_button(
                 "Λήψη αποτελεσμάτων CSV",
                 out_df.to_csv(index=False).encode("utf-8-sig"),
-                "INELSO_Early_Warning.csv",
+                "INELSO Academia_Early_Warning.csv",
                 "text/csv",
                 use_container_width=True,
                 key="s16_download_results"
@@ -5571,7 +5571,7 @@ elif section == "Μητρώο Ενεργειών":
         st.download_button(
             "Λήψη μητρώου CSV",
             logdf.to_csv(index=False).encode("utf-8-sig"),
-            "INELSO_Action_Log.csv",
+            "INELSO Academia_Action_Log.csv",
             "text/csv"
         )
     else:
@@ -5625,7 +5625,7 @@ else:
     with st.expander("Αναλυτική κατάσταση λειτουργιών", expanded=False):
         st.dataframe(report,use_container_width=True,hide_index=True)
 
-    summary=f"""INELSO ΚΕΝΤΡΙΚΟ ΣΥΣΤΗΜΑ ΕΞΥΠΝΗΣ ΜΑΘΗΣΗΣ — ULTIMATE PRO WRITE
+    summary=f"""INELSO Academia ΚΕΝΤΡΙΚΟ ΣΥΣΤΗΜΑ ΕΞΥΠΝΗΣ ΜΑΘΗΣΗΣ — ULTIMATE PRO WRITE
 
 ενεργό σύνολο δεδομένων: {ACTIVE_NAME}
 Dataset type: {ACTIVE_KIND}
@@ -5652,6 +5652,6 @@ Moodle -> Ποιότητα Αξιολόγησης / 26 ενδείξεις -> Ε�
     st.download_button(
         "Λήψη κεντρικής σύνοψης",
         summary.encode("utf-8"),
-        "INELSO_Kentriki_Synopsi_ULTIMATE_PRO_WRITE.txt",
+        "INELSO Academia_Kentriki_Synopsi_ULTIMATE_PRO_WRITE.txt",
         "text/plain"
     )
