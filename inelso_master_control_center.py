@@ -1736,7 +1736,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
         ).rstrip("/")
     with col_b:
         scorm_course_id = st.number_input(
-            "Course ID",
+            "ID Μαθήματος",
             min_value=1,
             value=int(st.session_state.get("scorm_course_id", 6)),
             step=1,
@@ -2253,7 +2253,7 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
         status="completed" if s25_scorm_ready else "incomplete",
         entity=ACTIVE_NAME if ACTIVE_DF is not None else "Δημιουργία Μαθήματος & Αξιολόγησης authoring session",
         enabled=True,
-        intervention_type="Δημιουργία Μαθήματος & Αξιολόγησης — Faculty authoring review",
+        intervention_type="Δημιουργία Μαθήματος & Αξιολόγησης — Έλεγχος προσχεδίου",
         note="Καταγράφεται workflow completion/provenance χωρίς τεχνητό βαθμό.",
     )
 
@@ -2443,7 +2443,7 @@ elif section == "Υποστήριξη Διδάσκοντα":
         status="completed" if s28_scorm_ready else "incomplete",
         entity="Υποστήριξη Διδάσκοντα",
         enabled=True,
-        intervention_type="Υποστήριξη Διδάσκοντα — Faculty-approved feedback",
+        intervention_type="Υποστήριξη Διδάσκοντα — Εγκεκριμένο feedback",
         note="Καταγράφεται faculty workflow provenance χωρίς τεχνητό learner grade.",
     )
 
@@ -2568,7 +2568,7 @@ elif section == "Υποστήριξη Διδάσκοντα":
 
         if st.button("Προώθηση ως draft παρέμβασης για Moodle note", key="s28_stage"):
             st.session_state["pending_moodle_note_text"] = s28_edited
-            st.session_state["pending_moodle_intervention_type"] = "Υποστήριξη Διδάσκοντα — Faculty-approved feedback"
+            st.session_state["pending_moodle_intervention_type"] = "Υποστήριξη Διδάσκοντα — Εγκεκριμένο feedback"
             st.success(
                 "Το draft προωθήθηκε στην Ελεγχόμενη Εγγραφή Moodle. "
                 "Δεν έχει γίνει write — απαιτείται επιλογή learner/course και διπλή επιβεβαίωση."
@@ -2663,7 +2663,7 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
 # ΔΙΑΣΥΝΔΕΣΗ ΥΠΗΡΕΣΙΩΝ
 # ==========================================================
 elif section == "Ενιαία Ροή Ενεργειών":
-    render_module_header("Ενιαία Ροή Ενεργειών", "Μία ενιαία ουρά ενεργειών από Ποιότητα Αξιολόγησης, Προσαρμοστική Εξάσκηση και Ενοποιημένες Μαθησιακές Ενδείξεις.", "flow")
+    render_module_header("Ενιαία Ροή Ενεργειών", "", "flow")
     show_active_dataset_context("S31")
 
     actions=[]
@@ -2727,7 +2727,7 @@ elif section == "Ενιαία Ροή Ενεργειών":
 # ΚΥΚΛΟΣ ΖΩΗΣ ΕΝΕΡΓΕΙΩΝ
 # ==========================================================
 elif section == "Κύκλος Ζωής Ενεργειών":
-    render_module_header("Κύκλος Ζωής Ενεργειών", "Από την ανίχνευση μιας ένδειξης μέχρι την ανθρώπινη απόφαση, την παρέμβαση και το κλείσιμο της ενέργειας.", "lifecycle")
+    render_module_header("Κύκλος Ζωής Ενεργειών", "", "lifecycle")
     show_active_dataset_context("S31")
 
     actions=[]
@@ -3442,7 +3442,7 @@ Dataset: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρ
 # ΠΡΟΣΟΜΟΙΩΤΗΣ WHAT-IF
 # ==========================================================
 elif section == "Προσομοίωση Σεναρίων":
-    render_module_header("Προσομοίωση Σεναρίων", "Δοκιμή υποθετικών σεναρίων χωρίς αλλαγή πραγματικών δεδομένων ή επίσημων βαθμών.", "whatif")
+    render_module_header("Προσομοίωση Σεναρίων", "", "whatif")
     show_active_dataset_context("S26")
 
     st.subheader("Προσαρμοστική Εξάσκηση — δοκιμή κατωφλίων")
@@ -3846,21 +3846,16 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
         )
 
     action = st.radio(
-        "Τι θέλετε να καταγράψετε;",
-        [
-            "Εκπαιδευτική παρέμβαση / σημείωση",
-            "Προσωπικό μήνυμα",
-            "Ενημέρωση βαθμού — διαχειριστική λειτουργία"
-        ],
-        horizontal=True
+        "Ενέργεια",
+        ["Σημείωση", "Μήνυμα", "Βαθμός"],
+        horizontal=True,
+        label_visibility="collapsed"
     )
 
     # ------------------------------------------------------
     # EDUCATIONAL NOTE / INTERVENTION
     # ------------------------------------------------------
-    if action == "Εκπαιδευτική παρέμβαση / σημείωση":
-        st.subheader("Καταγραφή εκπαιδευτικής παρέμβασης / σημείωσης")
-        st.caption("Η σημείωση γράφεται στο Moodle ως course note και δεν εξαρτάται από τις προσωπικές ρυθμίσεις μηνυμάτων.")
+    if action == "Σημείωση":
 
         live_users = st.session_state.get("moodle_enrolled_users")
         live_courses = st.session_state.get("moodle_courses")
@@ -3875,8 +3870,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             selected_course_label = st.selectbox("Μάθημα", list(course_labels.keys()), key="note_course")
             note_course_id = course_labels[selected_course_label]
         else:
-            st.info("Δεν υπάρχουν διαθέσιμα μαθήματα στη συνεδρία. Μπορείς να βάλεις Course ID χειροκίνητα.")
-            note_course_id = st.number_input("Course ID", min_value=1, step=1, value=6, key="note_course_manual")
+            note_course_id = st.number_input("ID Μαθήματος", min_value=1, step=1, value=6, key="note_course_manual")
 
         if isinstance(live_users, pd.DataFrame) and len(live_users) > 0 and "id" in live_users.columns:
             user_labels = {}
@@ -3891,17 +3885,16 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             selected_user_label = st.selectbox("Φοιτητής / χρήστης", list(user_labels.keys()), key="note_user")
             note_user_id = user_labels[selected_user_label]
         else:
-            st.info("Δεν υπάρχουν διαθέσιμοι χρήστες στη συνεδρία. Μπορείς να βάλεις User ID χειροκίνητα.")
-            note_user_id = st.number_input("User ID", min_value=1, step=1, value=208, key="note_user_manual")
+            note_user_id = st.number_input("ID Χρήστη", min_value=1, step=1, value=208, key="note_user_manual")
 
         intervention_options = [
             "Μαθησιακή Ανάλυση — Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος",
             "Ποιότητα Αξιολόγησης — Έλεγχος ποιότητας ερώτησης",
-            "Δημιουργία Μαθήματος & Αξιολόγησης — Faculty authoring review",
+            "Δημιουργία Μαθήματος & Αξιολόγησης — Έλεγχος προσχεδίου",
             "Προσαρμοστική Εξάσκηση — Νέα προσπάθεια",
             "Προσαρμοστική Εξάσκηση — Εμπλουτισμός",
             "Προσαρμοστική Εξάσκηση — Ανθρώπινος έλεγχος",
-            "Υποστήριξη Διδάσκοντα — Faculty-approved feedback",
+            "Υποστήριξη Διδάσκοντα — Εγκεκριμένο feedback",
             "Ενοποιημένες Μαθησιακές Ενδείξεις — Μαθησιακή ένδειξη",
             "Άλλο"
         ]
@@ -3916,10 +3909,10 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
 
         pending_note = st.session_state.get("pending_moodle_note_text", "")
         note_text = st.text_area(
-            "Κείμενο εκπαιδευτικής παρέμβασης",
+            "Κείμενο σημείωσης",
             value=pending_note,
-            height=170,
-            placeholder="Καταγράψτε την παρέμβαση, το feedback ή την απόφαση που θα αποθηκευτεί στο Moodle."
+            height=120,
+            placeholder="Γράψτε τη σημείωση ή το feedback."
         )
 
         if pending_note:
@@ -3937,19 +3930,19 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
 
         note_preview = pd.DataFrame([{
             "Ενέργεια":"Καταγραφή Moodle note",
-            "Course ID":int(note_course_id),
-            "User ID":int(note_user_id),
+            "ID Μαθήματος":int(note_course_id),
+            "ID Χρήστη":int(note_user_id),
             "Τύπος παρέμβασης":intervention_type,
             "Κείμενο":formatted_note,
             "Λειτουργία Moodle":"core_notes_create_notes",
             "Πηγή ανάλυσης": ACTIVE_NAME if ACTIVE_DF is not None else "Μη διαθέσιμο"
         }])
 
-        st.subheader("Προεπισκόπηση")
-        st.dataframe(note_preview, use_container_width=True, hide_index=True)
+        with st.expander("Προεπισκόπηση", expanded=False):
+            st.dataframe(note_preview, use_container_width=True, hide_index=True)
 
         note_confirm1 = st.checkbox(
-            "Έλεγξα το μάθημα, τον learner και το κείμενο της παρέμβασης.",
+            "Έλεγξα το μάθημα, τον εκπαιδευόμενο και το κείμενο.",
             key="note_confirm1"
         )
         note_confirm2 = st.checkbox(
@@ -4031,11 +4024,8 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                         "ΑΠΟΤΥΧΙΑ"
                     )
 
-        st.markdown("---")
-        st.subheader("Ανάκτηση σημειώσεων μαθήματος")
-        st.caption("Έλεγχος ότι οι σημειώσεις Moodle έχουν αποθηκευτεί και μπορούν να ανακτηθούν.")
 
-        if st.button("ΑΝΑΚΤΗΣΗ MOODLE NOTES", key="load_notes"):
+        if st.button("Ανάκτηση σημειώσεων", key="load_notes"):
             if not moodle_url or not token:
                 st.error("Συμπλήρωσε Moodle URL και token.")
             else:
@@ -4070,8 +4060,8 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                 notes_df = pd.DataFrame(notes_list)
                 display_map = {
                     "id":"Note ID",
-                    "courseid":"Course ID",
-                    "userid":"User ID",
+                    "courseid":"ID Μαθήματος",
+                    "userid":"ID Χρήστη",
                     "content":"Περιεχόμενο",
                     "publishstate":"Κατάσταση",
                     "created":"Δημιουργήθηκε",
@@ -4094,8 +4084,8 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                 latest=notes_list[-1]
                 c1,c2,c3,c4=st.columns(4)
                 c1.metric("Note ID",str(latest.get("id","—")))
-                c2.metric("Course ID",str(latest.get("courseid","—")))
-                c3.metric("User ID",str(latest.get("userid","—")))
+                c2.metric("ID Μαθήματος",str(latest.get("courseid","—")))
+                c3.metric("ID Χρήστη",str(latest.get("userid","—")))
                 c4.metric("Verification","ΕΠΑΛΗΘΕΥΜΕΝΟ")
             else:
                 st.info("Δεν βρέθηκαν σημειώσεις για τον επιλεγμένο χρήστη/μάθημα.")
@@ -4103,7 +4093,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
     # ------------------------------------------------------
     # MESSAGE
     # ------------------------------------------------------
-    elif action == "Προσωπικό μήνυμα":
+    elif action == "Μήνυμα":
         st.subheader("Αποστολή προσωπικού μηνύματος")
 
         live_users = st.session_state.get("moodle_enrolled_users")
@@ -4133,18 +4123,14 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                 user_id = user_labels[selected_label]
             else:
                 user_id = st.number_input(
-                    "Moodle User ID παραλήπτη",
+                    "ID παραλήπτη",
                     min_value=1,
                     step=1,
                     value=1
                 )
         else:
-            st.info(
-                "Δεν υπάρχουν live εγγεγραμμένοι χρήστες στη συνεδρία. "
-                "Μπορείς να βάλεις User ID χειροκίνητα ή να πας πρώτα στο «Ζωντανή Σύνδεση Moodle»."
-            )
             user_id = st.number_input(
-                "Moodle User ID παραλήπτη",
+                "ID παραλήπτη",
                 min_value=1,
                 step=1,
                 value=1
@@ -4158,7 +4144,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
 
         preview = pd.DataFrame([{
             "Ενέργεια":"Αποστολή προσωπικού μηνύματος",
-            "Παραλήπτης User ID":int(user_id),
+            "ID παραλήπτη":int(user_id),
             "Κείμενο":message_text,
             "Λειτουργία Moodle":"core_message_send_instant_messages"
         }])
@@ -4270,7 +4256,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
     # ------------------------------------------------------
     # GRADE UPDATE
     # ------------------------------------------------------
-    elif action == "Ενημέρωση βαθμού — διαχειριστική λειτουργία":
+    elif action == "Βαθμός":
         st.subheader("Ενημέρωση βαθμού — διαχειριστική λειτουργία")
         st.error(
             "Η αλλαγή επίσημου βαθμού είναι υψηλής επίδρασης ενέργεια. "
@@ -4278,7 +4264,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             "τα IDs, το component και το grade item του συγκεκριμένου Moodle."
         )
 
-        course_id = st.number_input("Course ID",min_value=1,step=1,value=1)
+        course_id = st.number_input("ID Μαθήματος",min_value=1,step=1,value=1)
         component = st.text_input(
             "Component",
             value="mod_assign",
@@ -4298,11 +4284,11 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
         )
 
         grade_preview = pd.DataFrame([{
-            "Course ID":int(course_id),
+            "ID Μαθήματος":int(course_id),
             "Component":component,
             "Activity ID":int(activity_id),
             "Item number":int(item_number),
-            "Student ID":int(student_id),
+            "ID Εκπαιδευόμενου":int(student_id),
             "Νέος βαθμός":float(grade_value),
             "Feedback":feedback,
             "Λειτουργία API":"core_grade_update_grades"
@@ -4389,7 +4375,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
     # AUDIT LOG
     # ------------------------------------------------------
     st.markdown("---")
-    st.subheader("Ιστορικό ελεγχόμενων καταγραφών")
+    st.subheader("Ιστορικό")
     audit = st.session_state["moodle_write_audit"]
 
     if len(audit) > 0:
