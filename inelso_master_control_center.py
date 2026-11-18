@@ -481,17 +481,6 @@ MODULE_HELP = {
         ],
         "data": "Το μητρώο είναι αρχείο ιχνηλασιμότητας. Δεν αποτελεί από μόνο του εντολή προς Moodle και δεν αντικαθιστά την ελεγχόμενη εγγραφή."
     },
-    "presentation": {
-        "title": "Λειτουργία Παρουσίασης",
-        "purpose": "Παρουσιάζει την πλατφόρμα σε απλοποιημένη ροή για επίδειξη σε διοίκηση, διδάσκοντες ή άλλους μη τεχνικούς χρήστες.",
-        "steps": [
-            "Ακολουθήστε τα βήματα με τη σειρά ώστε να παρουσιαστεί η πλήρης ροή.",
-            "Ξεκινήστε από τα δεδομένα, συνεχίστε στις ενδείξεις και ολοκληρώστε με την ανθρώπινη έγκριση/επαλήθευση.",
-            "Για demo χρησιμοποιήστε μόνο σαφώς χαρακτηρισμένα δοκιμαστικά δεδομένα.",
-            "Για πραγματική χρήση επιστρέψτε στις πλήρεις ενότητες όπου υπάρχουν όλοι οι έλεγχοι."
-        ],
-        "data": "Η λειτουργία παρουσίασης αλλάζει τον τρόπο προβολής, όχι τους κανόνες ή τα δεδομένα της πλατφόρμας."
-    },
     "report": {
         "title": "Κεντρική Αναφορά",
         "purpose": "Συνοψίζει την κατάσταση των βασικών λειτουργιών, τις ανοικτές ενέργειες και την προέλευση των διαθέσιμων αποτελεσμάτων.",
@@ -1380,7 +1369,6 @@ if section == "__ADVANCED__":
             "Ζωντανή Σύνδεση Moodle",
             "Ελεγχόμενη Εγγραφή Moodle",
             "Μητρώο Ενεργειών",
-            "Λειτουργία Παρουσίασης",
             "Κεντρική Αναφορά",
         ],
         key="inelso_advanced_navigation",
@@ -1412,7 +1400,6 @@ SECTION_HELP = {
     "Ζωντανή Σύνδεση Moodle": "moodle_live",
     "Ελεγχόμενη Εγγραφή Moodle": "moodle_write",
     "Μητρώο Ενεργειών": "registry",
-    "Λειτουργία Παρουσίασης": "presentation",
     "Κεντρική Αναφορά": "report",
 }
 # Οι βοηθητικές ενότητες εμφανίζουν τις οδηγίες μέσα στην ίδια την οθόνη,
@@ -5334,172 +5321,6 @@ elif section == "Μητρώο Ενεργειών":
     st.warning(
         "Στο Streamlit Community Cloud η τοπική αποθήκευση δεν είναι εγγυημένα μόνιμη. "
         "Χρησιμοποίησε το CSV για ασφαλή μεταφορά/αρχειοθέτηση ή σύνδεσε μελλοντικά βάση δεδομένων/Moodle storage."
-    )
-
-# ==========================================================
-# ΠΑΡΟΥΣΙΑΣΗ
-# ==========================================================
-elif section == "Λειτουργία Παρουσίασης":
-    render_module_header("Παρουσίαση σε Διοίκηση & Διδάσκοντες", "Συνοπτική προβολή της αξίας, της ασφάλειας και της λειτουργικής ροής της πλατφόρμας.", "presentation")
-    show_active_dataset_context("PRESENTATION", compact=False)
-
-    st.markdown("""
-    <div style="padding:22px;border-radius:18px;background:#eef6ff;border:1px solid #cfe3ff;margin-bottom:18px;">
-      <div style="font-size:28px;font-weight:700;margin-bottom:8px;">INELSO Πλατφόρμα Έξυπνης Μάθησης</div>
-      <div style="font-size:16px;line-height:1.6;">
-        Ενιαίο περιβάλλον για early warning, ποιότητα αξιολόγησης, AI-assisted authoring,
-        προσαρμοστική εξάσκηση, faculty amplification, learning insights και ελεγχόμενη διασύνδεση Moodle.
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    p1,p2,p3,p4,p5,p6,p7 = st.columns(7)
-    p1.metric("S16","Έγκαιρη υποστήριξη")
-    p2.metric("S21","Assessment")
-    p3.metric("S25","Authoring")
-    p4.metric("S26","Adaptive")
-    p5.metric("S28","Faculty")
-    p6.metric("S31","Insights")
-    p7.metric("Moodle","Read/Write")
-
-    service_overview = pd.DataFrame([
-        {"Λειτουργία":"16","Ρόλος":"Μαθησιακή Ανάλυση & Έγκαιρη Υποστήριξη","Ανθρώπινη έγκριση":"ΝΑΙ"},
-        {"Λειτουργία":"21","Ρόλος":"Ποιότητα Αξιολόγησης","Ανθρώπινη έγκριση":"ΝΑΙ"},
-        {"Λειτουργία":"25","Ρόλος":"Δημιουργία Μαθήματος & Αξιολόγησης","Ανθρώπινη έγκριση":"ΝΑΙ"},
-        {"Λειτουργία":"26","Ρόλος":"Προσαρμοστική Εξάσκηση","Ανθρώπινη έγκριση":"ΝΑΙ"},
-        {"Λειτουργία":"28","Ρόλος":"Υποστήριξη Διδάσκοντα","Ανθρώπινη έγκριση":"ΝΑΙ"},
-        {"Λειτουργία":"31","Ρόλος":"Μαθησιακές Ενδείξεις","Ανθρώπινη έγκριση":"ΝΑΙ"},
-    ])
-    st.dataframe(service_overview, use_container_width=True, hide_index=True)
-
-    st.markdown("### Κύρια ροή")
-    if ACTIVE_DF is not None:
-        st.info("Δεδομένα → Έλεγχος ποιότητας → Ανάλυση → Υποστήριξη απόφασης → Ανθρώπινη έγκριση → Καταγραφή Moodle → Επαλήθευση")
-    else:
-        st.info("Ανάγνωση Moodle → Ανάλυση / Απόφαση → Ανθρώπινη έγκριση → Καταγραφή → Επαλήθευση")
-
-    st.markdown("### Τι αποδεικνύει το σύστημα")
-    st.success(
-        "Το INELSO δεν λειτουργεί μόνο ως dashboard. "
-        "Διαβάζει πραγματικά δεδομένα από το Moodle, υποστηρίζει λήψη απόφασης "
-        "και καταγράφει ελεγχόμενες εκπαιδευτικές παρεμβάσεις με επαλήθευση read-back."
-    )
-
-    step=st.radio(
-        "Βήμα παρουσίασης",
-        ["1 · Κεντρική εικόνα","2 · Μαθησιακή Ανάλυση","3 · Ποιότητα Αξιολόγησης","4 · Δημιουργία Μαθήματος & Αξιολόγησης","5 · Προσαρμοστική Εξάσκηση","6 · Υποστήριξη Διδάσκοντα","7 · Ενοποιημένες Μαθησιακές Ενδείξεις","8 · Ζωντανή Σύνδεση Moodle","9 · Ελεγχόμενη Καταγραφή","10 · Αξία για το Πανεπιστήμιο"],
-        horizontal=True
-    )
-
-    if step.startswith("1"):
-        st.markdown("## Ενιαία εικόνα λειτουργίας")
-        c1,c2,c3,c4=st.columns(4)
-        _presentation_healths = []
-        if "custom_s21" in st.session_state:
-            _presentation_healths.append(float(health21))
-        if "custom_s26" in st.session_state:
-            _presentation_healths.append(float(health26))
-        if ("custom_s21" in st.session_state) or ("custom_s26" in st.session_state):
-            _presentation_healths.append(float(health31))
-        _presentation_overall = (sum(_presentation_healths)/len(_presentation_healths)) if _presentation_healths else None
-        c1.metric("Συνολικός δείκτης", f"{_presentation_overall:.1f}/100" if _presentation_overall is not None else "—")
-        c2.metric("Ποιότητα Αξιολόγησης actions", open21 if ACTIVE_DF is not None and "custom_s21" in st.session_state else "—")
-        c3.metric("Προσαρμοστική Εξάσκηση actions", open26 if ACTIVE_DF is not None and "custom_s26" in st.session_state else "—")
-        c4.metric("Ενοποιημένες Μαθησιακές Ενδείξεις actions", open31 if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—")
-        if ACTIVE_DF is not None:
-            st.success(f"Όλη η παρουσίαση χρησιμοποιεί ως ενεργό σύνολο δεδομένων: {ACTIVE_NAME}")
-        st.write("Το Control Center ενοποιεί ποιότητα δεδομένων, μαθησιακή ανάλυση, αξιολόγηση, προσαρμοστική εξάσκηση, υποστήριξη διδάσκοντα και ελεγχόμενες ενέργειες Moodle.")
-
-    elif step.startswith("2"):
-        st.markdown("## Μαθησιακή Ανάλυση — Automated Analytics & Early-Warning")
-        st.write(f"Συμβατότητα δεδομένων: {service_dataset_compatibility('S16', ACTIVE_DF)}")
-        st.write("Risk scoring και explainability από διαθέσιμα learner-level ενδείξεις.")
-
-    elif step.startswith("3"):
-        st.markdown("## Ποιότητα Αξιολόγησης — Ευφυής Ποιότητα Αξιολόγησης")
-        st.metric("Ερωτήσεις ενεργού dataset", len(service21) if "custom_s21" in st.session_state else "—")
-        st.metric("Ανοικτές ενέργειες", open21 if "custom_s21" in st.session_state else "—")
-        st.write("Facility, discrimination και έλεγχο προτεραιότητας ανανεώνονται από συμβατό Moodle statistics CSV.")
-
-    elif step.startswith("4"):
-        st.markdown("## Δημιουργία Μαθήματος & Αξιολόγησης — AI-Assisted Authoring")
-        st.write("Το ενεργή πηγή μπορεί να χρησιμοποιηθεί ως πρόσθετο context για question bank / quiz / rubric drafts.")
-
-    elif step.startswith("5"):
-        st.markdown("## Προσαρμοστική Εξάσκηση — Adaptive Practice")
-        st.metric("Φοιτητές", len(cohort26) if "custom_s26" in st.session_state else "—")
-        st.metric("Ανοικτές ενέργειες", open26 if "custom_s26" in st.session_state else "—")
-        st.write(f"Συμβατότητα δεδομένων: {service_dataset_compatibility('S26', ACTIVE_DF)}")
-
-    elif step.startswith("6"):
-        st.markdown("## Υποστήριξη Διδάσκοντα — Faculty Teaching Amplification")
-        st.write("Το ενεργή πηγή μπορεί να χρησιμοποιηθεί ως τεκμηριωμένο context για Q&A, rubric clarification και feedback drafts.")
-
-    elif step.startswith("7"):
-        st.markdown("## Ενοποιημένες Μαθησιακές Ενδείξεις — Διασυνδεδεμένες Μαθησιακές Ενδείξεις")
-        st.metric("Signals", len(service31_integrated) if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—")
-        st.metric("Υψηλή προτεραιότητα", high31 if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—")
-        st.write("Συνθέτει τα ενεργά ενδείξεις από Ποιότητα Αξιολόγησης και Προσαρμοστική Εξάσκηση.")
-
-    elif step.startswith("8"):
-        st.markdown("## Ζωντανή Σύνδεση Moodle")
-        st.write("Το REST API παρέχει live courses/users/quizzes. Το CSV παραμένει παράλληλο analytical context.")
-
-    elif step.startswith("9"):
-        st.markdown("## Ελεγχόμενη Καταγραφή")
-        st.write("Ανθρώπινη έγκριση → καταγραφή στο Moodle → επαλήθευση αποτελέσματος.")
-        st.caption(f"Πηγή ανάλυσης: {ACTIVE_NAME if ACTIVE_DF is not None else 'καμία ενεργή πηγή'}")
-
-        note_result = st.session_state.get("moodle_notes_result")
-        verified_note = None
-        if isinstance(note_result, dict):
-            combined=[]
-            for key in ["coursenotes","notes","sitenotes","personalnotes"]:
-                value=note_result.get(key)
-                if isinstance(value,list):
-                    combined.extend(value)
-            if combined:
-                verified_note=combined[-1]
-
-        if verified_note:
-            st.success("Η καταγραφή στο Moodle επαληθεύτηκε")
-            v1,v2,v3,v4=st.columns(4)
-            v1.metric("Note ID",str(verified_note.get("id","—")))
-            v2.metric("Course ID",str(verified_note.get("courseid","—")))
-            v3.metric("User ID",str(verified_note.get("userid","—")))
-            v4.metric("Κατάσταση","ΕΠΑΛΗΘΕΥΜΕΝΟ")
-        else:
-            st.warning("Δεν υπάρχει ακόμη verified note στη συγκεκριμένη Streamlit συνεδρία.")
-
-    else:
-        st.markdown("## Αξία για το Πανεπιστήμιο")
-        st.write("• Ένα CSV γίνεται κοινή πηγή για όλο το Control Center")
-        st.write("• Κάθε λειτουργία χρησιμοποιεί μόνο τις μεταβλητές που επιστημονικά της αντιστοιχούν")
-        st.write("• Ποιότητα Αξιολόγησης/26/31 ανανεώνονται δυναμικά όταν το schema είναι συμβατό")
-        st.write("• Μαθησιακή Ανάλυση αναλύει learner-level risk ενδείξεις")
-        st.write("• Δημιουργία Μαθήματος & Αξιολόγησης/28 χρησιμοποιούν το CSV ως τεκμηριωμένο context")
-        st.write("• Ζωντανή Σύνδεση Moodle και Ελεγχόμενη Καταγραφή διατηρούν ξεχωριστή provenance αλυσίδα")
-
-    st.markdown("### Προτεινόμενη σειρά παρουσίασης")
-    demo_steps = pd.DataFrame([
-        {"Βήμα":1,"Ενότητα":"Κεντρική Εικόνα","Τι παρουσιάζεται":"Ενιαία εικόνα και δείκτες"},
-        {"Βήμα":2,"Ενότητα":"Ποιότητα Αξιολόγησης","Τι παρουσιάζεται":"Ποιότητα ερωτήσεων και έλεγχο προτεραιότητας"},
-        {"Βήμα":3,"Ενότητα":"Προσαρμοστική Εξάσκηση","Τι παρουσιάζεται":"επίδοση, βεβαιότητα και επόμενη προτεινόμενη ενέργεια"},
-        {"Βήμα":4,"Ενότητα":"Ενοποιημένες Μαθησιακές Ενδείξεις","Τι παρουσιάζεται":"Σύνθεση ενδείξεις και προτεραιότητες"},
-        {"Βήμα":5,"Ενότητα":"Ζωντανή Σύνδεση Moodle","Τι παρουσιάζεται":"μαθήματα, χρήστες, quiz και δομή"},
-        {"Βήμα":6,"Ενότητα":"Ελεγχόμενη Εγγραφή Moodle","Τι παρουσιάζεται":"Εγκεκριμένη καταγραφή και επαλήθευση"},
-    ])
-    st.dataframe(demo_steps,use_container_width=True,hide_index=True)
-
-    audit = st.session_state.get("moodle_write_audit")
-    if isinstance(audit,pd.DataFrame) and len(audit)>0:
-        st.markdown("### Τελευταίες ελεγχόμενες ενέργειες")
-        cols=[c for c in ["Ημερομηνία","Ενέργεια","Στόχος","Κατάσταση"] if c in audit.columns]
-        st.dataframe(audit[cols].tail(5),use_container_width=True,hide_index=True)
-
-    st.caption(
-        "Αρχή λειτουργίας: καμία κρίσιμη ενέργεια καταγραφής δεν εκτελείται αυτόματα. "
-        "Ο εκπαιδευτής βλέπει προεπισκόπηση, εγκρίνει ρητά και το αποτέλεσμα επαληθεύεται."
     )
 
 # ==========================================================
