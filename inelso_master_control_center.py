@@ -216,6 +216,51 @@ div[data-baseweb="popover"]{max-width:560px!important}
   color:#7b5b12;margin:.65rem 0
 }
 @media(max-width:900px){.inelso-process{grid-template-columns:1fr 1fr}}
+
+/* Premium dashboard / iframe presentation layer */
+.inelso-home-hero{
+  background:linear-gradient(135deg,#163b5c 0%,#245f86 58%,#2b7894 100%);
+  color:white;border-radius:22px;padding:1.55rem 1.7rem;margin:.2rem 0 1rem;
+  box-shadow:0 10px 28px rgba(16,42,67,.13);
+}
+.inelso-home-hero h1{color:#fff!important;margin:0!important;font-size:2rem!important;letter-spacing:-.02em}
+.inelso-home-hero p{margin:.55rem 0 0!important;color:rgba(255,255,255,.9)!important;font-size:1rem!important}
+.inelso-home-eyebrow{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.78;margin-bottom:.45rem}
+.inelso-dashboard-tabs [data-baseweb="tab-list"]{
+  gap:.35rem;background:#f5f8fb;padding:.35rem;border:1px solid #e1e9ef;border-radius:14px
+}
+.inelso-dashboard-tabs [data-baseweb="tab"]{
+  height:2.75rem;border-radius:10px;padding:0 1rem;font-weight:700;color:#475467
+}
+.inelso-dashboard-tabs [aria-selected="true"]{
+  background:#fff!important;color:#173b5e!important;box-shadow:0 3px 10px rgba(16,42,67,.07)
+}
+.inelso-feature-card{
+  background:#fff;border:1px solid #dfe8ef;border-radius:18px;padding:1.05rem 1.1rem;
+  box-shadow:0 5px 18px rgba(16,42,67,.045);min-height:160px;height:100%
+}
+.inelso-feature-card .kicker{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#2a8c99;margin-bottom:.35rem}
+.inelso-feature-card h3{margin:.05rem 0 .35rem!important;color:#173b5e!important;font-size:1.08rem!important}
+.inelso-feature-card p{margin:0!important;color:#667085!important;font-size:.9rem!important;line-height:1.45!important}
+.inelso-feature-value{font-size:1.7rem;font-weight:760;color:#102a43;line-height:1.15;margin:.35rem 0}
+.inelso-mini-note{font-size:.78rem;color:#667085;margin-top:.3rem}
+.inelso-action-banner{
+  background:linear-gradient(180deg,#f8fbff 0%,#f2f7fb 100%);
+  border:1px solid #d9e6f0;border-radius:16px;padding:1rem 1.1rem;margin:.65rem 0
+}
+.inelso-action-banner strong{color:#173b5e}
+.inelso-data-strip{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7rem;margin:.65rem 0 1rem
+}
+.inelso-data-chip{
+  border:1px solid #e0e8ef;background:#fff;border-radius:14px;padding:.8rem .9rem
+}
+.inelso-data-chip .label{font-size:.76rem;color:#667085;font-weight:650}
+.inelso-data-chip .value{font-size:1.35rem;color:#173b5e;font-weight:760;margin-top:.15rem}
+@media(max-width:900px){
+  .inelso-data-strip{grid-template-columns:1fr 1fr}
+  .inelso-home-hero{padding:1.2rem}
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1377,53 +1422,46 @@ SECTION_HELP = {
 # ΚΕΝΤΡΙΚΟΣ ΠΙΝΑΚΑΣ
 # ==========================================================
 if section == "Κεντρική Εικόνα Ελέγχου":
+
+    def _home_nav(target_label):
+        # Button callback: ενημερώνει το βασικό radio στην επόμενη εκτέλεση.
+        st.session_state["inelso_main_navigation"] = target_label
+
     st.markdown("""
-    <div class="hero">
-      <h1>INELSO Πλατφόρμα Έξυπνης Μάθησης</h1>
-      <p>Μία ασφαλής εικόνα για μάθηση, αξιολόγηση και έγκαιρη υποστήριξη — από πραγματικά δεδομένα Moodle, SCORM ή αρχεία.</p>
+    <div class="inelso-home-hero">
+      <div class="inelso-home-eyebrow">INELSO · SMART LEARNING CONTROL CENTER</div>
+      <h1>Πλατφόρμα Έξυπνης Μάθησης</h1>
+      <p>Από πραγματικά δεδομένα Moodle, SCORM ή αρχεία σε κατανοητές ενδείξεις, προτεραιότητες και ελεγχόμενες εκπαιδευτικές ενέργειες.</p>
     </div>
     """, unsafe_allow_html=True)
+
     show_active_dataset_context("DASHBOARD", compact=False)
-    render_info_button("dashboard")
-    st.markdown("#### Γρήγορη εκκίνηση")
-    q1,q2,q3,q4 = st.columns(4)
-    with q1:
-        st.markdown("<div class='inelso-card'><span class='inelso-step'>1</span><b>Φορτώστε δεδομένα</b><p>CSV, Excel ή export από Moodle.</p></div>", unsafe_allow_html=True)
-    with q2:
-        st.markdown("<div class='inelso-card'><span class='inelso-step'>2</span><b>Επιλέξτε λειτουργία</b><p>Η πλατφόρμα δείχνει ποιες αναλύσεις υποστηρίζονται.</p></div>", unsafe_allow_html=True)
-    with q3:
-        st.markdown("<div class='inelso-card'><span class='inelso-step'>3</span><b>Διαβάστε την ένδειξη</b><p>Κάθε αποτέλεσμα συνοδεύεται από απλή επεξήγηση.</p></div>", unsafe_allow_html=True)
-    with q4:
-        st.markdown("<div class='inelso-card'><span class='inelso-step'>4</span><b>Εγκρίνετε την ενέργεια</b><p>Καμία κρίσιμη ενέργεια δεν εκτελείται αυτόματα.</p></div>", unsafe_allow_html=True)
+
     if ACTIVE_DF is None:
         render_empty_state(
-            "Ξεκινήστε από μία πραγματική πηγή δεδομένων",
-            "Η πλατφόρμα δεν εμφανίζει τεχνητούς δείκτες όταν δεν υπάρχουν δεδομένα. "
-            "Μπορείτε να συνδεθείτε σε SCORM του Moodle ή να εισαγάγετε CSV/Excel.",
-            "Επιλέξτε «Ανάλυση SCORM» ή «Εισαγωγή Δεδομένων» από το αριστερό μενού."
+            "Ξεκινήστε με πραγματικά δεδομένα",
+            "Δεν εμφανίζονται τεχνητοί δείκτες. Συνδέστε SCORM του Moodle ή εισαγάγετε CSV/Excel και η Αρχική θα ενημερωθεί αυτόματα.",
+            "Επιλέξτε μία από τις δύο πηγές παρακάτω."
         )
-        s1, s2 = st.columns(2)
-        with s1:
+        a,b = st.columns(2)
+        with a:
             st.markdown(
-                "<div class='inelso-source-card'><b>① Moodle / SCORM</b>"
-                "<p>Αυτόματη ανάκτηση πραγματικών προσπαθειών, βαθμών και απαντήσεων ανά ερώτηση.</p></div>",
-                unsafe_allow_html=True,
+                "<div class='inelso-feature-card'><div class='kicker'>Ζωντανή πηγή</div>"
+                "<h3>Moodle / SCORM</h3><p>Ανάκτηση πραγματικών προσπαθειών, βαθμών, χρόνων και απαντήσεων ανά ερώτηση.</p></div>",
+                unsafe_allow_html=True
             )
-        with s2:
+            st.button("Άνοιγμα Ανάλυσης SCORM", use_container_width=True, on_click=_home_nav, args=("Ανάλυση SCORM",), key="home_open_scorm_empty")
+        with b:
             st.markdown(
-                "<div class='inelso-source-card'><b>② CSV / Excel</b>"
-                "<p>Εισαγωγή εξωτερικών ή συμπληρωματικών δεδομένων με έλεγχο ποιότητας και συμβατότητας.</p></div>",
-                unsafe_allow_html=True,
+                "<div class='inelso-feature-card'><div class='kicker'>Αρχείο</div>"
+                "<h3>CSV / Excel</h3><p>Εισαγωγή εξωτερικών ή συμπληρωματικών δεδομένων με αυτόματο έλεγχο ποιότητας και συμβατότητας.</p></div>",
+                unsafe_allow_html=True
             )
-        st.caption("Οι δείκτες και οι συγκρίσεις εμφανίζονται μόνο όταν υπάρχει ενεργή πραγματική πηγή.")
+            st.button("Εισαγωγή δεδομένων", use_container_width=True, on_click=_home_nav, args=("Εισαγωγή Δεδομένων",), key="home_open_data_empty")
+        render_info_button("dashboard")
 
     else:
-        st.success(
-            f"Ενεργή πηγή: {ACTIVE_NAME}. Κάθε λειτουργία χρησιμοποιεί μόνο τα πεδία που υποστηρίζει πραγματικά."
-        )
-        render_source_quality_strip(ACTIVE_DF, "DASHBOARD")
-        st.markdown("#### Επιχειρησιακή εικόνα")
-        c1, c2, c3, c4, c5 = st.columns(5)
+        q = dataset_quality_metrics(ACTIVE_DF)
         valid_healths = []
         if "custom_s21" in st.session_state:
             valid_healths.append(float(health21))
@@ -1439,64 +1477,174 @@ if section == "Κεντρική Εικόνα Ελέγχου":
             + (open31 if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else 0)
         )
 
-        c1.metric("Συνολικός δείκτης υγείας", f"{dashboard_overall:.1f}/100" if dashboard_overall is not None else "—")
-        c2.metric("Ποιότητα Αξιολόγησης", f"{health21:.1f}" if "custom_s21" in st.session_state else "—")
-        c3.metric("Προσαρμοστική Εξάσκηση", f"{health26:.1f}" if "custom_s26" in st.session_state else "—")
-        c4.metric("Ενοποιημένες Μαθησιακές Ενδείξεις", f"{health31:.1f}" if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—")
-        c5.metric("Ανοικτές ενέργειες", dashboard_open if valid_healths else "—")
+        render_source_quality_strip(ACTIVE_DF, "DASHBOARD")
 
+        # Compact, buyer-friendly data summary.
         st.markdown(
-            '<div class="flow">Ενεργό CSV → εξειδικευμένη ανάλυση → ενοποιημένες ενδείξεις → '
-            'διαφανείς κανόνες → ανθρώπινος έλεγχος → παρέμβαση / retry / revision → αναφορά</div>',
+            "<div class='inelso-data-strip'>"
+            f"<div class='inelso-data-chip'><div class='label'>Εγγραφές</div><div class='value'>{len(ACTIVE_DF)}</div></div>"
+            f"<div class='inelso-data-chip'><div class='label'>Πεδία</div><div class='value'>{len(ACTIVE_DF.columns)}</div></div>"
+            f"<div class='inelso-data-chip'><div class='label'>Κενές τιμές</div><div class='value'>{q['missing'] if q else '—'}</div></div>"
+            f"<div class='inelso-data-chip'><div class='label'>Διπλότυπα</div><div class='value'>{q['duplicates'] if q else '—'}</div></div>"
+            "</div>",
             unsafe_allow_html=True
         )
 
-        st.subheader("Κατάσταση λειτουργιών για το ενεργό σύνολο δεδομένων")
-        comparison = pd.DataFrame([
-            {
-                "Ενότητα":"Μαθησιακή Ανάλυση",
-                "Ρόλος":"Μαθησιακή Ανάλυση & Έγκαιρη Υποστήριξη",
-                "Συμβατότητα":service_dataset_compatibility("S16", ACTIVE_DF),
-                "Δείκτης / αποτέλεσμα":"Έτοιμο για παραμετρική ανάλυση" if ACTIVE_DF is not None else "—",
-                "Πηγή":ACTIVE_NAME,
-            },
-            {
-                "Ενότητα":"Ποιότητα Αξιολόγησης",
-                "Ρόλος":"Ποιότητα αξιολόγησης",
-                "Συμβατότητα":service_dataset_compatibility("S21", ACTIVE_DF),
-                "Δείκτης / αποτέλεσμα":f"Δείκτης {health21:.1f}/100" if "custom_s21" in st.session_state else "Χρειάζονται συμβατά στατιστικά ανά ερώτηση",
-                "Πηγή":ACTIVE_NAME,
-            },
-            {
-                "Ενότητα":"Δημιουργία Μαθήματος & Αξιολόγησης",
-                "Ρόλος":"Υποβοηθούμενη δημιουργία περιεχομένου",
-                "Συμβατότητα":service_dataset_compatibility("S25", ACTIVE_DF),
-                "Δείκτης / αποτέλεσμα":"Διαθέσιμο ως τεκμηριωμένο εκπαιδευτικό πλαίσιο",
-                "Πηγή":ACTIVE_NAME,
-            },
-            {
-                "Ενότητα":"Προσαρμοστική Εξάσκηση",
-                "Ρόλος":"Προσαρμοστική εξάσκηση",
-                "Συμβατότητα":service_dataset_compatibility("S26", ACTIVE_DF),
-                "Δείκτης / αποτέλεσμα":f"Δείκτης {health26:.1f}/100" if "custom_s26" in st.session_state else "Χρειάζεται αντιστοίχιση πεδίων ανά φοιτητή",
-                "Πηγή":ACTIVE_NAME,
-            },
-            {
-                "Ενότητα":"Υποστήριξη Διδάσκοντα",
-                "Ρόλος":"Υποστήριξη διδάσκοντα",
-                "Συμβατότητα":service_dataset_compatibility("S28", ACTIVE_DF),
-                "Δείκτης / αποτέλεσμα":"Διαθέσιμο ως τεκμηριωμένο εκπαιδευτικό πλαίσιο",
-                "Πηγή":ACTIVE_NAME,
-            },
-            {
-                "Ενότητα":"Ενοποιημένες Μαθησιακές Ενδείξεις",
-                "Ρόλος":"Σύνθεση μαθησιακών ενδείξεων",
-                "Συμβατότητα":service_dataset_compatibility("S31", ACTIVE_DF),
-                "Δείκτης / αποτέλεσμα":f"{len(service31_integrated)} πραγματικά ενδείξεις · δείκτης {health31:.1f}/100" if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "Αναμονή πραγματικών αντιστοιχισμένων ενδείξεων",
-                "Πηγή":ACTIVE_NAME,
-            },
-        ])
-        st.dataframe(comparison, use_container_width=True, hide_index=True)
+        st.markdown("<div class='inelso-dashboard-tabs'>", unsafe_allow_html=True)
+        home_tabs = st.tabs(["Επισκόπηση", "Αναλύσεις", "Ενέργειες", "Δεδομένα"])
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        with home_tabs[0]:
+            st.markdown("### Επιχειρησιακή εικόνα")
+            c1,c2,c3,c4,c5 = st.columns(5)
+            c1.metric("Συνολικός δείκτης", f"{dashboard_overall:.1f}/100" if dashboard_overall is not None else "—")
+            c2.metric("Ποιότητα Quiz", f"{health21:.1f}/100" if "custom_s21" in st.session_state else "—")
+            c3.metric("Προσαρμοστική Εξάσκηση", f"{health26:.1f}/100" if "custom_s26" in st.session_state else "—")
+            c4.metric("Μαθησιακές Ενδείξεις", f"{health31:.1f}/100" if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—")
+            c5.metric("Ανοικτές ενέργειες", dashboard_open if valid_healths else "—")
+
+            st.markdown(
+                "<div class='inelso-action-banner'><strong>Η ροή του συστήματος</strong><br>"
+                "Πραγματική πηγή → έλεγχος ποιότητας → εξειδικευμένη ανάλυση → μαθησιακές ενδείξεις → "
+                "ανθρώπινη έγκριση → ελεγχόμενη ενέργεια → επαλήθευση.</div>",
+                unsafe_allow_html=True
+            )
+
+            if dashboard_open:
+                st.warning(f"Υπάρχουν {dashboard_open} σημεία που χρειάζονται προσοχή. Δείτε το tab «Ενέργειες».")
+            else:
+                st.success("Δεν υπάρχουν αυτή τη στιγμή καταγεγραμμένες ενέργειες υψηλής προτεραιότητας.")
+
+            st.markdown("#### Γρήγορη διαδρομή demo")
+            d1,d2,d3,d4 = st.columns(4)
+            with d1:
+                st.markdown("<div class='inelso-feature-card'><div class='kicker'>01 · DATA</div><h3>Πηγή</h3><p>Επιβεβαιώστε ότι τα δεδομένα είναι πραγματικά και ποιοτικά.</p></div>", unsafe_allow_html=True)
+            with d2:
+                st.markdown("<div class='inelso-feature-card'><div class='kicker'>02 · ANALYSE</div><h3>Ανάλυση</h3><p>Ανοίξτε την κατάλληλη λειτουργία για το διαθέσιμο schema.</p></div>", unsafe_allow_html=True)
+            with d3:
+                st.markdown("<div class='inelso-feature-card'><div class='kicker'>03 · DECIDE</div><h3>Ένδειξη</h3><p>Δείτε τι χρειάζεται προσοχή και γιατί.</p></div>", unsafe_allow_html=True)
+            with d4:
+                st.markdown("<div class='inelso-feature-card'><div class='kicker'>04 · APPROVE</div><h3>Ενέργεια</h3><p>Καμία κρίσιμη ενέργεια δεν εκτελείται χωρίς ανθρώπινη έγκριση.</p></div>", unsafe_allow_html=True)
+
+        with home_tabs[1]:
+            st.markdown("### Κύριες αναλύσεις")
+            st.caption("Οι κάρτες δείχνουν μόνο αποτελέσματα που υποστηρίζονται από την ενεργή πηγή.")
+
+            a1,a2,a3 = st.columns(3)
+            with a1:
+                s21_value = f"{health21:.1f}/100" if "custom_s21" in st.session_state else "—"
+                s21_note = f"{open21} ανοικτές ενέργειες" if "custom_s21" in st.session_state else "Χρειάζονται item-level δεδομένα"
+                st.markdown(
+                    f"<div class='inelso-feature-card'><div class='kicker'>QUIZ QUALITY</div><h3>Ποιότητα Quiz</h3>"
+                    f"<div class='inelso-feature-value'>{s21_value}</div><p>{s21_note}</p></div>",
+                    unsafe_allow_html=True
+                )
+                st.button("Άνοιγμα Ποιότητας Quiz", use_container_width=True, on_click=_home_nav, args=("Ποιότητα Quiz",), key="home_open_s21")
+            with a2:
+                s26_value = f"{health26:.1f}/100" if "custom_s26" in st.session_state else "—"
+                s26_note = f"{open26} περιπτώσεις για ενέργεια" if "custom_s26" in st.session_state else "Χρειάζονται learner-level δεδομένα"
+                st.markdown(
+                    f"<div class='inelso-feature-card'><div class='kicker'>ADAPTIVE PRACTICE</div><h3>Προσαρμοστική Εξάσκηση</h3>"
+                    f"<div class='inelso-feature-value'>{s26_value}</div><p>{s26_note}</p></div>",
+                    unsafe_allow_html=True
+                )
+                st.button("Άνοιγμα Προσαρμοστικής Εξάσκησης", use_container_width=True, on_click=_home_nav, args=("Προσαρμοστική Εξάσκηση",), key="home_open_s26")
+            with a3:
+                s31_value = f"{health31:.1f}/100" if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—"
+                s31_note = f"{len(service31_integrated)} πραγματικές ενδείξεις" if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "Αναμονή πραγματικών ενδείξεων"
+                st.markdown(
+                    f"<div class='inelso-feature-card'><div class='kicker'>LEARNING INSIGHTS</div><h3>Μαθησιακές Ενδείξεις</h3>"
+                    f"<div class='inelso-feature-value'>{s31_value}</div><p>{s31_note}</p></div>",
+                    unsafe_allow_html=True
+                )
+                st.button("Άνοιγμα Μαθησιακών Ενδείξεων", use_container_width=True, on_click=_home_nav, args=("Μαθησιακές Ενδείξεις",), key="home_open_s31")
+
+            b1,b2,b3 = st.columns(3)
+            with b1:
+                st.markdown(
+                    "<div class='inelso-feature-card'><div class='kicker'>EARLY SUPPORT</div><h3>Έγκαιρη Υποστήριξη</h3>"
+                    f"<div class='inelso-feature-value'>{service_dataset_compatibility('S16', ACTIVE_DF)}</div>"
+                    "<p>Learner-level risk και προτεραιοποίηση υποστήριξης.</p></div>",
+                    unsafe_allow_html=True
+                )
+                st.button("Άνοιγμα Έγκαιρης Υποστήριξης", use_container_width=True, on_click=_home_nav, args=("Έγκαιρη Υποστήριξη",), key="home_open_s16")
+            with b2:
+                st.markdown(
+                    "<div class='inelso-feature-card'><div class='kicker'>SCORM</div><h3>Ανάλυση SCORM</h3>"
+                    "<div class='inelso-feature-value'>LIVE</div><p>Προσπάθειες, score, χρόνος και πραγματικές interactions ανά ερώτηση.</p></div>",
+                    unsafe_allow_html=True
+                )
+                st.button("Άνοιγμα Ανάλυσης SCORM", use_container_width=True, on_click=_home_nav, args=("Ανάλυση SCORM",), key="home_open_scorm")
+            with b3:
+                st.markdown(
+                    "<div class='inelso-feature-card'><div class='kicker'>AUTHORING</div><h3>Δημιουργία Αξιολόγησης</h3>"
+                    "<div class='inelso-feature-value'>DRAFT</div><p>Question bank, quiz, rubric και ασκήσεις με έλεγχο διδάσκοντα.</p></div>",
+                    unsafe_allow_html=True
+                )
+                st.button("Άνοιγμα Δημιουργίας Αξιολόγησης", use_container_width=True, on_click=_home_nav, args=("Δημιουργία Αξιολόγησης",), key="home_open_s25")
+
+            with st.expander("Τεχνική κατάσταση όλων των λειτουργιών", expanded=False):
+                comparison = pd.DataFrame([
+                    {"Ενότητα":"Έγκαιρη Υποστήριξη","Συμβατότητα":service_dataset_compatibility("S16", ACTIVE_DF),"Αποτέλεσμα":"Έτοιμο για ανάλυση","Πηγή":ACTIVE_NAME},
+                    {"Ενότητα":"Ποιότητα Quiz","Συμβατότητα":service_dataset_compatibility("S21", ACTIVE_DF),"Αποτέλεσμα":f"{health21:.1f}/100" if "custom_s21" in st.session_state else "Αναμονή item-level δεδομένων","Πηγή":ACTIVE_NAME},
+                    {"Ενότητα":"Δημιουργία Αξιολόγησης","Συμβατότητα":service_dataset_compatibility("S25", ACTIVE_DF),"Αποτέλεσμα":"Διαθέσιμο ως context","Πηγή":ACTIVE_NAME},
+                    {"Ενότητα":"Προσαρμοστική Εξάσκηση","Συμβατότητα":service_dataset_compatibility("S26", ACTIVE_DF),"Αποτέλεσμα":f"{health26:.1f}/100" if "custom_s26" in st.session_state else "Αναμονή learner-level mapping","Πηγή":ACTIVE_NAME},
+                    {"Ενότητα":"Υποστήριξη Διδάσκοντα","Συμβατότητα":service_dataset_compatibility("S28", ACTIVE_DF),"Αποτέλεσμα":"Διαθέσιμο ως context","Πηγή":ACTIVE_NAME},
+                    {"Ενότητα":"Μαθησιακές Ενδείξεις","Συμβατότητα":service_dataset_compatibility("S31", ACTIVE_DF),"Αποτέλεσμα":f"{len(service31_integrated)} ενδείξεις" if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "Αναμονή πραγματικών ενδείξεων","Πηγή":ACTIVE_NAME},
+                ])
+                st.dataframe(comparison, use_container_width=True, hide_index=True)
+
+        with home_tabs[2]:
+            st.markdown("### Τι χρειάζεται προσοχή")
+            e1,e2,e3 = st.columns(3)
+            with e1:
+                st.metric("Quiz review", open21 if "custom_s21" in st.session_state else "—")
+                st.caption("Ερωτήσεις που χρειάζονται έλεγχο ή αναθεώρηση.")
+            with e2:
+                st.metric("Adaptive actions", open26 if "custom_s26" in st.session_state else "—")
+                st.caption("Learners/attempts που χρειάζονται retry ή ανθρώπινο έλεγχο.")
+            with e3:
+                st.metric("High-priority signals", open31 if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—")
+                st.caption("Ενοποιημένες ενδείξεις υψηλής προτεραιότητας.")
+
+            if dashboard_open:
+                st.markdown(
+                    f"<div class='inelso-danger-lite'><b>{dashboard_open} ανοικτές ενέργειες συνολικά.</b> "
+                    "Η προτεραιότητα είναι υποστήριξη απόφασης· δεν εκτελείται αυτόματα καμία κρίσιμη αλλαγή.</div>",
+                    unsafe_allow_html=True
+                )
+            else:
+                st.success("Δεν υπάρχουν ανοικτές ενέργειες από τις ενεργές αναλύσεις.")
+
+            c1,c2 = st.columns(2)
+            with c1:
+                st.button("Άνοιγμα Ποιότητας Quiz", use_container_width=True, on_click=_home_nav, args=("Ποιότητα Quiz",), key="home_actions_s21")
+            with c2:
+                st.button("Άνοιγμα Προσαρμοστικής Εξάσκησης", use_container_width=True, on_click=_home_nav, args=("Προσαρμοστική Εξάσκηση",), key="home_actions_s26")
+
+        with home_tabs[3]:
+            st.markdown("### Ενεργή πηγή δεδομένων")
+            st.markdown(
+                f"<div class='inelso-feature-card'><div class='kicker'>ACTIVE SOURCE</div><h3>{ACTIVE_NAME}</h3>"
+                f"<p>{len(ACTIVE_DF)} εγγραφές · {len(ACTIVE_DF.columns)} πεδία · "
+                f"πληρότητα {q['completeness']:.1f}% · ποιότητα {q['quality']:.1f}/100.</p></div>",
+                unsafe_allow_html=True
+            )
+            x1,x2 = st.columns(2)
+            with x1:
+                st.button("Ανάλυση SCORM", use_container_width=True, on_click=_home_nav, args=("Ανάλυση SCORM",), key="home_data_scorm")
+            with x2:
+                st.button("Εισαγωγή νέου αρχείου", use_container_width=True, on_click=_home_nav, args=("Εισαγωγή Δεδομένων",), key="home_data_import")
+
+            with st.expander("Περισσότερες πληροφορίες για την πηγή", expanded=False):
+                st.write(f"**Όνομα πηγής:** {ACTIVE_NAME}")
+                st.write(f"**Τύπος:** {ACTIVE_KIND}")
+                st.write(f"**Εγγραφές:** {len(ACTIVE_DF)}")
+                st.write(f"**Πεδία:** {len(ACTIVE_DF.columns)}")
+                st.write(f"**Κενές τιμές:** {q['missing'] if q else '—'}")
+                st.write(f"**Διπλότυπα:** {q['duplicates'] if q else '—'}")
+
+            render_info_button("dashboard")
 
 # ==========================================================
 # SERVICE 21
