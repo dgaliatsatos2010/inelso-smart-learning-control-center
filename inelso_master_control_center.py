@@ -404,17 +404,6 @@ MODULE_HELP = {
         ],
         "data": "Η προέλευση συνδέει το αποτέλεσμα με το ενεργό αρχείο, τις σχετικές στήλες και τη λειτουργία που το παρήγαγε."
     },
-    "readiness": {
-        "title": "Έλεγχος Ετοιμότητας",
-        "purpose": "Ελέγχει αν υπάρχουν οι βασικές προϋποθέσεις για ασφαλή και κατανοητή χρήση της πλατφόρμας πριν από πραγματική εφαρμογή.",
-        "steps": [
-            "Ελέγξτε ότι έχει φορτωθεί το σωστό αρχείο και ότι οι βασικές στήλες αναγνωρίζονται.",
-            "Επιβεβαιώστε ότι οι κανόνες αξιολόγησης/rubric έχουν συμφωνηθεί από τον διδάσκοντα.",
-            "Ελέγξτε τη σύνδεση Moodle πριν επιχειρήσετε εγγραφή.",
-            "Χρησιμοποιήστε τα ευρήματα ως checklist πριν από πιλοτική ή παραγωγική χρήση."
-        ],
-        "data": "Ο έλεγχος δεν πιστοποιεί επιστημονική εγκυρότητα· δείχνει αν οι τεχνικές και λειτουργικές προϋποθέσεις είναι διαθέσιμες."
-    },
     "data_center": {
         "title": "Κέντρο Εισαγωγής & Επεξεργασίας Δεδομένων",
         "purpose": "Είναι το σημείο από όπου φορτώνεται το αρχείο που χρησιμοποιεί ολόκληρη η πλατφόρμα ως ενεργό σύνολο δεδομένων.",
@@ -1363,7 +1352,6 @@ if section == "__ADVANCED__":
             "Ενιαία Ροή Ενεργειών",
             "Κύκλος Ζωής Ενεργειών",
             "Μεθοδολογία & Προέλευση",
-            "Έλεγχος Ετοιμότητας",
             "Εργαστήριο Ανάλυσης Δεδομένων",
             "Προσομοίωση Σεναρίων",
             "Ζωντανή Σύνδεση Moodle",
@@ -1393,7 +1381,6 @@ SECTION_HELP = {
     "Ενιαία Ροή Ενεργειών": "flow",
     "Κύκλος Ζωής Ενεργειών": "lifecycle",
     "Μεθοδολογία & Προέλευση": "methodology",
-    "Έλεγχος Ετοιμότητας": "readiness",
     "Εισαγωγή CSV / Excel": "csv_import",
     "Εργαστήριο Ανάλυσης Δεδομένων": "analytics_lab",
     "Προσομοίωση Σεναρίων": "whatif",
@@ -1640,7 +1627,6 @@ elif section == "Ποιότητα Αξιολόγησης":
     if ACTIVE_DF is None:
         render_module_header("Ποιότητα Αξιολόγησης", "Έλεγχος της ποιότητας των ερωτήσεων quiz με κατανοητούς δείκτες και προτεινόμενες ενέργειες.", "s21")
         show_active_dataset_context("S21")
-        st.info("Δεν υπάρχει ακόμη ενεργή πηγή δεδομένων. Φόρτωσε CSV ή χρησιμοποίησε την «Ανάλυση SCORM Αξιολόγησης» για ζωντανή ανάκτηση πραγματικών προσπαθειών.")
         c1,c2,c3,c4,c5 = st.columns(5)
         c1.metric("Ερωτήσεις","—")
         c2.metric("Μέσος δείκτης ευκολίας","—")
@@ -1748,11 +1734,6 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
         "Ζωντανή ανάκτηση πραγματικών SCORM προσπαθειών και μετατροπή τους σε δείκτες ποιότητας ερωτήσεων.",
         "scorm_analysis"
     )
-    st.info(
-        "Η λειτουργία είναι μόνο ανάγνωσης. Δεν αλλάζει προσπάθειες, βαθμούς ή completion στο Moodle. "
-        "Για την Ποιότητα Αξιολόγησης χρησιμοποιείται η τελευταία προσπάθεια κάθε εκπαιδευόμενου."
-    )
-
     # Reuse remembered Moodle URL where available.
     default_scorm_url = st.session_state.get("moodle_base_url", "https://contentsolutions.eu") or "https://contentsolutions.eu"
     col_a, col_b = st.columns([2,1])
@@ -2859,7 +2840,6 @@ elif section == "Μεθοδολογία & Προέλευση":
         "Διαφάνεια για το τι υπολογίζεται, από πού προέρχεται και τι επιτρέπεται να συμπεράνουμε.",
         "methodology"
     )
-    show_active_dataset_context("REPORT")
 
     provenance = pd.DataFrame([
         {
@@ -2905,8 +2885,6 @@ elif section == "Μεθοδολογία & Προέλευση":
             st.markdown("<div class='inelso-feature-card'><div class='kicker'>3 · Ανάλυση</div><h3>Διαφανείς κανόνες</h3><p>Οι δείκτες και τα thresholds είναι ορατά και ελέγξιμα.</p></div>", unsafe_allow_html=True)
         with c4:
             st.markdown("<div class='inelso-feature-card'><div class='kicker'>4 · Απόφαση</div><h3>Human-in-the-loop</h3><p>Η πλατφόρμα υποστηρίζει· δεν αντικαθιστά την εκπαιδευτική κρίση.</p></div>", unsafe_allow_html=True)
-
-        st.info("Η ενεργή πηγή δεν μετατρέπεται αυτόματα σε αποτέλεσμα για κάθε λειτουργία. Αν λείπουν τα απαιτούμενα πεδία, η αντίστοιχη λειτουργία παραμένει κενή ή δηλώνεται ως μη συμβατή.")
 
         with st.expander("🔍 Τι σημαίνει «προέλευση» και γιατί είναι σημαντική;"):
             st.write(
@@ -3022,620 +3000,6 @@ elif section == "Μεθοδολογία & Προέλευση":
 
 # ==========================================================
 # ΕΛΕΓΧΟΣ ΕΤΟΙΜΟΤΗΤΑΣ
-# ==========================================================
-elif section == "Έλεγχος Ετοιμότητας":
-    render_module_header("Έλεγχος Ετοιμότητας", "Τεχνικός και λειτουργικός έλεγχος πριν από παρουσίαση ή πιλοτική χρήση.", "readiness")
-    show_active_dataset_context("REPORT")
-
-    dataset_loaded = ACTIVE_DF is not None
-    s21_compat = service_dataset_compatibility("S21", ACTIVE_DF)
-    s26_compat = service_dataset_compatibility("S26", ACTIVE_DF)
-    s16_compat = service_dataset_compatibility("S16", ACTIVE_DF)
-
-    readiness = pd.DataFrame([
-        {"Κατηγορία":"Αναλύσεις","Έλεγχος":"Ποιότητα Αξιολόγησης λειτουργεί","Κατάσταση":"ΕΤΟΙΜΟ" if "custom_s21" in st.session_state else "ΑΝΑΜΟΝΗ","Σχόλιο":"Ψυχομετρικές ενδείξεις διαθέσιμες μόνο με συμβατό item-level schema"},
-        {"Κατηγορία":"Αναλύσεις","Έλεγχος":"Προσαρμοστική Εξάσκηση λειτουργεί","Κατάσταση":"ΕΤΟΙΜΟ" if "custom_s26" in st.session_state else "ΑΝΑΜΟΝΗ","Σχόλιο":"Απαιτούνται πραγματικά learner-level δεδομένα με score/confidence/rubric"},
-        {"Κατηγορία":"Αναλύσεις","Έλεγχος":"Ενοποιημένες Μαθησιακές Ενδείξεις συνδέεται με 21/26","Κατάσταση":"ΕΤΟΙΜΟ" if ("custom_s21" in st.session_state or "custom_s26" in st.session_state) else "ΑΝΑΜΟΝΗ","Σχόλιο":"Ενεργοποιείται μόνο όταν υπάρχουν πραγματικές ενδείξεις από τις σχετικές λειτουργίες"},
-        {"Κατηγορία":"Moodle & SCORM","Έλεγχος":"Moodle iframe","Κατάσταση":"ΕΤΟΙΜΟ","Σχόλιο":"Ίδιο Streamlit URL με ?embed=true"},
-        {"Κατηγορία":"Ασφάλεια","Έλεγχος":"Επίσημοι βαθμοί","Κατάσταση":"ΑΣΦΑΛΕΣ","Σχόλιο":"Καμία αυτόματη εγγραφή βαθμών"},
-        {"Κατηγορία":"Ασφάλεια","Έλεγχος":"Human-in-the-loop","Κατάσταση":"ΕΤΟΙΜΟ","Σχόλιο":"Υψηλή αβεβαιότητα/προτεραιότητα οδηγεί σε ανθρώπινο έλεγχο"},
-        {"Κατηγορία":"Ασφάλεια","Έλεγχος":"Audit/provenance","Κατάσταση":"ΕΤΟΙΜΟ","Σχόλιο":"Κάθε ένδειξη διατηρεί πηγή και τύπο"},
-        {"Κατηγορία":"Δεδομένα","Έλεγχος":"Ενεργό dataset","Κατάσταση":"ΕΤΟΙΜΟ" if dataset_loaded else "ΑΠΑΙΤΕΙΤΑΙ","Σχόλιο":ACTIVE_NAME if dataset_loaded else "Φόρτωσε αρχείο από το Κέντρο Δεδομένων"},
-        {"Κατηγορία":"Συμβατότητα","Έλεγχος":"Ποιότητα Αξιολόγησης ↔ CSV","Κατάσταση":"ΕΤΟΙΜΟ" if s21_compat=="ΠΛΗΡΗΣ" else "ΥΠΟ ΠΡΟΫΠΟΘΕΣΗ","Σχόλιο":f"Συμβατότητα: {s21_compat}"},
-        {"Κατηγορία":"Συμβατότητα","Έλεγχος":"Προσαρμοστική Εξάσκηση ↔ CSV","Κατάσταση":"ΕΤΟΙΜΟ" if s26_compat=="ΠΛΗΡΗΣ" else "ΥΠΟ ΠΡΟΫΠΟΘΕΣΗ","Σχόλιο":f"Συμβατότητα: {s26_compat}"},
-        {"Κατηγορία":"Συμβατότητα","Έλεγχος":"Μαθησιακή Ανάλυση ↔ CSV","Κατάσταση":"ΕΤΟΙΜΟ" if s16_compat=="ΠΛΗΡΗΣ" else "ΥΠΟ ΠΡΟΫΠΟΘΕΣΗ","Σχόλιο":f"Συμβατότητα: {s16_compat}"},
-        {"Κατηγορία":"Δεδομένα","Έλεγχος":"Εισαγωγή εξωτερικών δεδομένων","Κατάσταση":"ΕΤΟΙΜΟ","Σχόλιο":"CSV, Excel, JSON, XML και Moodle exports"},
-        {"Κατηγορία":"Εργαλεία","Έλεγχος":"Analytics Lab","Κατάσταση":"ΕΤΟΙΜΟ","Σχόλιο":"Classification, regression, clustering, correlations και group comparison"},
-        {"Κατηγορία":"Εργαλεία","Έλεγχος":"What-if simulator","Κατάσταση":"ΕΤΟΙΜΟ","Σχόλιο":"Sandbox προσομοίωση adaptive thresholds"},
-        {"Κατηγορία":"Moodle & SCORM","Έλεγχος":"Ζωντανή Σύνδεση Moodle connector","Κατάσταση":"ΕΤΟΙΜΟ ΥΠΟ ΠΡΟΫΠΟΘΕΣΗ","Σχόλιο":"Απαιτεί ενεργό διασύνδεση Moodle και token"},
-        {"Κατηγορία":"Moodle & SCORM","Έλεγχος":"Ελεγχόμενη εγγραφή Moodle","Κατάσταση":"ΕΤΟΙΜΟ ΥΠΟ ΠΡΟΫΠΟΘΕΣΗ","Σχόλιο":"SCORM launch + REST write + preview + διπλή επιβεβαίωση + audit/read-back verification"},
-        {"Κατηγορία":"Αναλύσεις","Έλεγχος":"Έγκαιρη υποστήριξη","Κατάσταση":"ΕΤΟΙΜΟ" if dataset_loaded and s16_compat=="ΠΛΗΡΗΣ" else "ΑΝΑΜΟΝΗ","Σχόλιο":"Υπολογίζεται μόνο από ενεργά πραγματικά δεδομένα"},
-        {"Κατηγορία":"Εργαλεία","Έλεγχος":"Μητρώο ενεργειών","Κατάσταση":"ΕΤΟΙΜΟ","Σχόλιο":"Session + import/export CSV για μεταφερσιμότητα"},
-        {"Κατηγορία":"Υποδομή","Έλεγχος":"Persistent action storage","Κατάσταση":"ΜΕΛΛΟΝΤΙΚΟ","Σχόλιο":"Η κατάσταση ενεργειών αποθηκεύεται μόνο στη συνεδρία"},
-    ])
-
-    ready_count = int((readiness["Κατάσταση"].isin(["ΕΤΟΙΜΟ","ΑΣΦΑΛΕΣ"])).sum())
-    total = len(readiness)
-
-    c1,c2,c3 = st.columns(3)
-    c1.metric("Έλεγχοι", total)
-    c2.metric("Έτοιμοι / ασφαλείς", ready_count)
-
-    if not dataset_loaded:
-        c3.metric("Ετοιμότητα πραγματικής χρήσης", "—")
-    else:
-        score = round(100*ready_count/total,1)
-        c3.metric("Ετοιμότητα πραγματικής χρήσης", f"{score:.1f}%")
-
-    tab_summary, tab_analysis, tab_data, tab_moodle, tab_security, tab_all = st.tabs([
-        "📌 Σύνοψη",
-        "🧠 Αναλύσεις",
-        "🗂️ Δεδομένα & Συμβατότητα",
-        "🔌 Moodle & SCORM",
-        "🛡️ Ασφάλεια",
-        "📋 Όλοι οι έλεγχοι",
-    ])
-
-    with tab_summary:
-        st.markdown("### Κατάσταση εγκατάστασης")
-        if not dataset_loaded:
-            st.info(
-                "Ο τεχνικός πυρήνας είναι διαθέσιμος, αλλά η συνολική ετοιμότητα πραγματικής χρήσης "
-                "δεν αξιολογείται χωρίς ενεργή πηγή δεδομένων."
-            )
-        else:
-            score = round(100*ready_count/total,1)
-            if score >= 85:
-                st.success("Η τρέχουσα εγκατάσταση είναι έτοιμη για ελεγχόμενη πιλοτική χρήση με την ενεργή πηγή.")
-            else:
-                st.warning("Υπάρχουν σημεία που χρειάζονται ολοκλήρωση πριν από παραγωγική χρήση.")
-
-        s1,s2,s3,s4 = st.columns(4)
-        s1.metric("Dataset", "Ενεργό" if dataset_loaded else "Απαιτείται")
-        s2.metric("Ποιότητα Αξιολόγησης", s21_compat if dataset_loaded else "—")
-        s3.metric("Προσαρμοστική Εξάσκηση", s26_compat if dataset_loaded else "—")
-        s4.metric("Έγκαιρη Υποστήριξη", s16_compat if dataset_loaded else "—")
-
-        with st.expander("🎯 Τι πρέπει να είναι έτοιμο για live demo;", expanded=True):
-            st.markdown("""
-- Ενεργό dataset ή επιβεβαιωμένη SCORM/Moodle πηγή
-- Ορατή συμβατότητα ανά λειτουργία
-- Human-in-the-loop για κρίσιμες αποφάσεις
-- Καμία αυτόματη αλλαγή επίσημου βαθμού
-- Moodle write μόνο με preview, ρητή έγκριση και verification
-""")
-
-    with tab_analysis:
-        df_tab = readiness[readiness["Κατηγορία"]=="Αναλύσεις"][["Έλεγχος","Κατάσταση","Σχόλιο"]]
-        st.dataframe(df_tab, use_container_width=True, hide_index=True)
-
-        a1,a2,a3 = st.columns(3)
-        a1.metric("Ποιότητα Αξιολόγησης", "Έτοιμο" if "custom_s21" in st.session_state else "Αναμονή")
-        a2.metric("Προσαρμοστική Εξάσκηση", "Έτοιμο" if "custom_s26" in st.session_state else "Αναμονή")
-        a3.metric("Μαθησιακές Ενδείξεις", "Έτοιμο" if ("custom_s21" in st.session_state or "custom_s26" in st.session_state) else "Αναμονή")
-
-        with st.expander("🔎 Γιατί κάποιες λειτουργίες μένουν σε αναμονή;"):
-            st.write(
-                "Η εφαρμογή δεν δημιουργεί τεχνητά αποτελέσματα. "
-                "Κάθε λειτουργία ενεργοποιείται μόνο όταν η ενεργή πηγή περιέχει τα απαιτούμενα πεδία."
-            )
-
-    with tab_data:
-        df_tab = readiness[readiness["Κατηγορία"].isin(["Δεδομένα","Συμβατότητα"])][["Έλεγχος","Κατάσταση","Σχόλιο"]]
-        st.dataframe(df_tab, use_container_width=True, hide_index=True)
-
-        d1,d2,d3 = st.columns(3)
-        d1.metric("Ποιότητα Αξιολόγησης", s21_compat if dataset_loaded else "—")
-        d2.metric("Προσαρμοστική Εξάσκηση", s26_compat if dataset_loaded else "—")
-        d3.metric("Έγκαιρη Υποστήριξη", s16_compat if dataset_loaded else "—")
-
-        with st.expander("🧩 Τι σημαίνει πλήρης / μερική / χωρίς συμβατότητα;"):
-            st.markdown("""
-- **ΠΛΗΡΗΣ:** υπάρχουν τα απαιτούμενα πεδία για την αντίστοιχη ανάλυση.
-- **ΜΕΡΙΚΗ / ΥΠΟ ΠΡΟΫΠΟΘΕΣΗ:** υπάρχουν κάποια σχετικά πεδία αλλά χρειάζεται mapping ή πρόσθετη πληροφορία.
-- **ΧΩΡΙΣ DATASET:** δεν εκτελείται πραγματική ανάλυση.
-""")
-
-    with tab_moodle:
-        df_tab = readiness[readiness["Κατηγορία"]=="Moodle & SCORM"][["Έλεγχος","Κατάσταση","Σχόλιο"]]
-        st.dataframe(df_tab, use_container_width=True, hide_index=True)
-
-        m1,m2,m3 = st.columns(3)
-        m1.metric("Iframe", "Έτοιμο")
-        m2.metric("REST Read", "Υπό προϋπόθεση")
-        m3.metric("Controlled Write", "Υπό προϋπόθεση")
-
-        with st.expander("🔐 Ροή ελεγχόμενης Moodle εγγραφής", expanded=True):
-            st.markdown("""
-**Read → Decision → Human Approval → Write → Verification**
-
-Η επιτυχία δεν βασίζεται μόνο σε HTTP 200. Το αποτέλεσμα πρέπει να ανακτηθεί ξανά από το Moodle ώστε να θεωρηθεί επαληθευμένο.
-""")
-
-    with tab_security:
-        df_tab = readiness[readiness["Κατηγορία"]=="Ασφάλεια"][["Έλεγχος","Κατάσταση","Σχόλιο"]]
-        st.dataframe(df_tab, use_container_width=True, hide_index=True)
-
-        q1,q2,q3 = st.columns(3)
-        q1.metric("Επίσημοι βαθμοί", "Ασφαλές")
-        q2.metric("Human-in-the-loop", "Ενεργό")
-        q3.metric("Audit / provenance", "Ενεργό")
-
-        with st.expander("🛡️ Βασικές αρχές ασφαλείας", expanded=True):
-            st.markdown("""
-- Καμία αυτόματη αλλαγή επίσημων βαθμών
-- Καμία κρίσιμη write ενέργεια χωρίς ανθρώπινη έγκριση
-- Διατήρηση προέλευσης κάθε ένδειξης
-- Read-back verification μετά από write
-- Καμία παραγωγή τεχνητών αποτελεσμάτων όταν λείπουν πραγματικά δεδομένα
-""")
-
-    with tab_all:
-        st.dataframe(readiness[["Κατηγορία","Έλεγχος","Κατάσταση","Σχόλιο"]], use_container_width=True, hide_index=True)
-        with st.expander("🧰 Εργαλεία & υποδομή"):
-            st.dataframe(
-                readiness[readiness["Κατηγορία"].isin(["Εργαλεία","Υποδομή"])][["Έλεγχος","Κατάσταση","Σχόλιο"]],
-                use_container_width=True,
-                hide_index=True
-            )
-
-# ==========================================================
-# ΚΕΝΤΡΟ ΕΙΣΑΓΩΓΗΣ & ΕΠΕΞΕΡΓΑΣΙΑΣ ΔΕΔΟΜΕΝΩΝ
-# ==========================================================
-elif section in {"Εισαγωγή CSV / Excel", "Κέντρο Εισαγωγής & Επεξεργασίας Δεδομένων"}:
-    render_module_header("Εισαγωγή CSV / Excel", "Φόρτωση, έλεγχος και προετοιμασία εξωτερικού αρχείου που μπορεί να γίνει το ενεργό σύνολο δεδομένων όλης της πλατφόρμας.", "csv_import")
-    show_active_dataset_context("DATA")
-
-    st.info(
-        "Υποστηρίζονται αρχεία CSV, XLSX/XLS, JSON και XML. "
-        "Για Moodle προτείνεται export σε CSV/Excel/JSON όπου είναι διαθέσιμο. "
-        "Η εφαρμογή δεν γράφει πίσω στο Moodle."
-    )
-
-    uploaded = st.file_uploader(
-        "Επιλέξτε αρχείο δεδομένων",
-        type=["csv","xlsx","xls","json","xml"],
-        accept_multiple_files=False
-    )
-
-    if uploaded is None:
-        st.markdown("""
-### Τι μπορεί να γίνει μετά τη μεταφόρτωση
-
-- Αυτόματη προεπισκόπηση δεδομένων
-- Αναγνώριση τύπων στηλών
-- Έλεγχος κενών τιμών
-- Έλεγχος διπλοεγγραφών
-- Βασικός καθαρισμός
-- Περιγραφικά στατιστικά
-- Συσχετίσεις αριθμητικών μεταβλητών
-- Επιλογή φίλτρων και στηλών
-- Εξαγωγή καθαρισμένου CSV
-- Αυτόματη αναγνώριση πιθανής μορφής Ποιότητα Αξιολόγησης
-- Αυτόματη αναγνώριση πιθανής μορφής Προσαρμοστική Εξάσκηση
-- Προετοιμασία ενδείξεις για Ενοποιημένες Μαθησιακές Ενδείξεις
-""")
-    else:
-        filename = uploaded.name
-        ext = filename.lower().split(".")[-1]
-
-        def load_uploaded_file(file_obj, ext):
-            if ext == "csv":
-                raw = file_obj.getvalue()
-                # Try UTF-8 first, then common Greek/Windows fallback
-                for enc in ["utf-8-sig","utf-8","cp1253","latin1"]:
-                    try:
-                        return pd.read_csv(io.BytesIO(raw), encoding=enc)
-                    except Exception:
-                        pass
-                raise ValueError("Δεν ήταν δυνατή η ανάγνωση του CSV με τις υποστηριζόμενες κωδικοποιήσεις.")
-            elif ext in ["xlsx","xls"]:
-                return pd.read_excel(file_obj)
-            elif ext == "json":
-                raw = file_obj.getvalue().decode("utf-8-sig")
-                obj = json.loads(raw)
-                if isinstance(obj, list):
-                    return pd.DataFrame(obj)
-                if isinstance(obj, dict):
-                    # Prefer record-like top-level arrays
-                    for k,v in obj.items():
-                        if isinstance(v, list) and v and isinstance(v[0], dict):
-                            return pd.DataFrame(v)
-                    return pd.json_normalize(obj)
-                raise ValueError("Το JSON δεν έχει αναγνωρίσιμη δομή πίνακα.")
-            elif ext == "xml":
-                root = ET.fromstring(file_obj.getvalue())
-                rows = []
-                for child in list(root):
-                    row = {}
-                    for sub in list(child):
-                        row[sub.tag] = sub.text
-                    if row:
-                        rows.append(row)
-                if not rows:
-                    # fallback: flatten direct children
-                    rows = [{c.tag:c.text for c in list(root)}]
-                return pd.DataFrame(rows)
-            else:
-                raise ValueError("Μη υποστηριζόμενος τύπος αρχείου.")
-
-        _activate_new_upload = False
-        try:
-            df = load_uploaded_file(uploaded, ext)
-            st.success(f"Το αρχείο «{filename}» φορτώθηκε επιτυχώς.")
-
-            upload_signature = hashlib.sha256(uploaded.getvalue()).hexdigest()
-            is_new_upload = st.session_state.get("inelso_active_upload_signature") != upload_signature
-
-            # Το upload γίνεται global ενεργό σύνολο δεδομένων για όλο το Control Center.
-            st.session_state["inelso_uploaded_original"] = df.copy()
-            st.session_state["inelso_uploaded_name"] = filename
-            # Ο χρήστης επέλεξε ρητά εξωτερικό αρχείο: αυτό γίνεται η ενεργή πηγή αντί του SCORM Master Dataset.
-            st.session_state.pop("inelso_scorm_active_df", None)
-            st.session_state.pop("inelso_scorm_active_name", None)
-
-            if is_new_upload:
-                # Νέο αρχείο = νέα καθαρή active κατάσταση. Δεν κρατάμε mapping από προηγούμενο CSV.
-                st.session_state["inelso_uploaded_clean"] = df.copy()
-                for _k in ["custom_s21","custom_s21_source","custom_s26","custom_s26_source"]:
-                    st.session_state.pop(_k, None)
-
-                # --------------------------------------------------
-                # Αυτόματη σύνδεση Moodle Πλήρη στατιστικά -> Ποιότητα Αξιολόγησης
-                # --------------------------------------------------
-                auto_s21 = extract_service21_from_moodle_complete_stats(df)
-                if auto_s21 is not None:
-                    auto_s21["κατάσταση"] = auto_s21["διάκριση"].apply(κατηγορία_διάκρισης)
-                    auto_s21["ενέργεια"] = auto_s21.apply(ενέργεια_ερώτησης, axis=1)
-                    st.session_state["custom_s21"] = auto_s21
-                    st.session_state["custom_s21_source"] = "Moodle Πλήρη στατιστικά"
-
-                # --------------------------------------------------
-                # Αυτόματη σύνδεση learner-level CSV -> Προσαρμοστική Εξάσκηση
-                # Αναγνωρίζει learner, attempt, score, confidence, RC-01...RC-05.
-                # --------------------------------------------------
-                learner_col = detect_column(df, ["learner","student","student id","userid","user id","μαθητής"])
-                attempt_col = detect_column(df, ["attempt","προσπάθεια"])
-                score_col = detect_column(df, ["score","grade","final score","βαθμός"])
-                conf_col = detect_column(df, ["confidence","βεβαιότητα"])
-                rc_cols = {
-                    code: detect_column(df, [code.lower(), code.replace("-","").lower()])
-                    for code in ["RC-01","RC-02","RC-03","RC-04","RC-05"]
-                }
-
-                if score_col is not None and attempt_col is not None and conf_col is not None and rc_cols["RC-01"] is not None:
-                    mapped26 = pd.DataFrame({
-                        "προσπάθεια": pd.to_numeric(df[attempt_col], errors="coerce"),
-                        "score": pd.to_numeric(df[score_col], errors="coerce"),
-                        "βεβαιότητα": pd.to_numeric(df[conf_col], errors="coerce"),
-                    })
-                    mapped26["μαθητής"] = (
-                        df[learner_col].astype(str)
-                        if learner_col is not None
-                        else [f"CSV learner {i+1}" for i in range(len(df))]
-                    )
-                    for code, source_col in rc_cols.items():
-                        mapped26[code] = (
-                            pd.to_numeric(df[source_col], errors="coerce")
-                            if source_col is not None else np.nan
-                        )
-
-                    mapped26 = mapped26.dropna(subset=["score","προσπάθεια"]).copy()
-                    mapped26["κατάσταση"] = mapped26.apply(
-                        lambda r: κατάσταση_26(
-                            float(r["score"]) if pd.notna(r["score"]) else 0,
-                            float(r["βεβαιότητα"]) if pd.notna(r["βεβαιότητα"]) else 0,
-                            float(r["RC-01"]) if pd.notna(r["RC-01"]) else 0,
-                        ), axis=1
-                    )
-                    mapped26["κατάκτηση"] = np.select(
-                        [mapped26["score"] >= 90, mapped26["score"] >= 70],
-                        ["Κατάκτηση", "Επαρκής"],
-                        default="Αναπτυσσόμενο"
-                    )
-                    mapped26 = mapped26.sort_values(["μαθητής","προσπάθεια"]).reset_index(drop=True)
-                    st.session_state["custom_s26"] = mapped26
-                    st.session_state["custom_s26_source"] = filename
-
-                st.session_state["inelso_active_upload_signature"] = upload_signature
-                _activate_new_upload = True
-        except Exception as e:
-            st.error(f"Σφάλμα ανάγνωσης αρχείου: {e}")
-            df = None
-
-        if _activate_new_upload:
-            # Νέο run ώστε το ACTIVE_DF/ACTIVE_NAME να ενημερωθεί παντού άμεσα.
-            st.rerun()
-
-        if df is not None:
-            # Normalize column names lightly but preserve originals
-            original_columns = list(df.columns)
-
-            c1,c2,c3,c4 = st.columns(4)
-            c1.metric("Γραμμές", len(df))
-            c2.metric("Στήλες", len(df.columns))
-            c3.metric("Κενά κελιά", int(df.isna().sum().sum()))
-            c4.metric("Διπλότυπες γραμμές", int(df.duplicated().sum()))
-
-            tabs = st.tabs([
-                "Προεπισκόπηση",
-                "Ποιότητα δεδομένων",
-                "Καθαρισμός",
-                "Περιγραφική ανάλυση",
-                "Αυτόματη αναγνώριση",
-                "Εξαγωγές"
-            ])
-
-            with tabs[0]:
-                st.subheader("Προεπισκόπηση")
-                n = st.slider("Αριθμός γραμμών προεπισκόπησης", 5, min(100, max(5,len(df))), min(20, max(5,len(df))))
-                st.dataframe(df.head(n), use_container_width=True, hide_index=True)
-
-                st.subheader("Τύποι στηλών")
-                dtype_table = pd.DataFrame({
-                    "Στήλη": df.columns.astype(str),
-                    "Τύπος": [str(df[c].dtype) for c in df.columns],
-                    "Μοναδικές τιμές": [df[c].nunique(dropna=True) for c in df.columns],
-                })
-                st.dataframe(dtype_table, use_container_width=True, hide_index=True)
-
-            with tabs[1]:
-                st.subheader("Έλεγχος ποιότητας")
-                quality = pd.DataFrame({
-                    "Στήλη": df.columns.astype(str),
-                    "Κενά": [int(df[c].isna().sum()) for c in df.columns],
-                    "Κενά (%)": [round(float(df[c].isna().mean()*100),2) for c in df.columns],
-                    "Μοναδικές τιμές": [int(df[c].nunique(dropna=True)) for c in df.columns],
-                    "Τύπος": [str(df[c].dtype) for c in df.columns]
-                })
-                st.dataframe(quality, use_container_width=True, hide_index=True)
-
-                duplicate_count = int(df.duplicated().sum())
-                if duplicate_count > 0:
-                    st.warning(f"Εντοπίστηκαν {duplicate_count} διπλότυπες γραμμές.")
-                else:
-                    st.success("Δεν εντοπίστηκαν πλήρως διπλότυπες γραμμές.")
-
-                high_missing = quality[quality["Κενά (%)"] >= 30]
-                if len(high_missing) > 0:
-                    st.warning("Υπάρχουν στήλες με ≥30% κενές τιμές.")
-                    st.dataframe(high_missing, use_container_width=True, hide_index=True)
-
-            with tabs[2]:
-                st.subheader("Καθαρισμός δεδομένων")
-                work = df.copy()
-
-                remove_duplicates = st.checkbox("Αφαίρεση πλήρως διπλότυπων γραμμών")
-                strip_text = st.checkbox("Αφαίρεση περιττών κενών από κειμενικές στήλες")
-                drop_empty_cols = st.checkbox("Αφαίρεση εντελώς κενών στηλών")
-
-                if remove_duplicates:
-                    work = work.drop_duplicates()
-                if strip_text:
-                    for c in work.select_dtypes(include="object").columns:
-                        work[c] = work[c].apply(lambda x: x.strip() if isinstance(x,str) else x)
-                if drop_empty_cols:
-                    work = work.dropna(axis=1, how="all")
-
-                st.session_state["inelso_uploaded_clean"] = work
-
-                c1,c2,c3 = st.columns(3)
-                c1.metric("Γραμμές μετά τον καθαρισμό", len(work))
-                c2.metric("Στήλες μετά τον καθαρισμό", len(work.columns))
-                c3.metric("Υπόλοιπα κενά", int(work.isna().sum().sum()))
-
-                st.dataframe(work.head(25), use_container_width=True, hide_index=True)
-
-            with tabs[3]:
-                st.subheader("Περιγραφική ανάλυση")
-                numeric = df.select_dtypes(include=np.number)
-
-                if numeric.shape[1] > 0:
-                    desc = numeric.describe().T.reset_index().rename(columns={"index":"Μεταβλητή"})
-                    st.dataframe(desc, use_container_width=True, hide_index=True)
-
-                    if numeric.shape[1] >= 2:
-                        st.subheader("Πίνακας συσχετίσεων")
-                        corr = numeric.corr(numeric_only=True)
-                        st.dataframe(corr, use_container_width=True)
-                else:
-                    st.info("Δεν εντοπίστηκαν αριθμητικές στήλες για περιγραφικά στατιστικά.")
-
-                categorical = df.select_dtypes(exclude=np.number)
-                if categorical.shape[1] > 0:
-                    st.subheader("Κατηγορικές μεταβλητές")
-                    selected_cat = st.selectbox("Επιλέξτε κατηγορική στήλη", categorical.columns.tolist())
-                    freq = df[selected_cat].fillna("(Κενό)").value_counts(dropna=False).reset_index()
-                    freq.columns = [selected_cat, "Πλήθος"]
-                    st.dataframe(freq, use_container_width=True, hide_index=True)
-
-            with tabs[4]:
-                st.subheader("Αυτόματη αναγνώριση δομής")
-
-                lower_cols = {str(c).lower(): c for c in df.columns}
-                lower_names = set(lower_cols.keys())
-
-                # Heuristics for S21
-                s21_terms = [
-                    "facility", "discrimination", "discriminative efficiency",
-                    "facility index", "discrimination index",
-                    "question", "question name", "slot"
-                ]
-                s21_matches = [t for t in s21_terms if any(t in c for c in lower_names)]
-
-                # Heuristics for S26
-                s26_terms = [
-                    "score","mastery","confidence","attempt",
-                    "rc-01","rc01","rc-02","rc02","rc-03","rc03","rc-04","rc04","rc-05","rc05"
-                ]
-                s26_matches = [t for t in s26_terms if any(t in c for c in lower_names)]
-
-                # General Moodle indicators
-                moodle_terms = [
-                    "userid","user id","quiz","attempt","grade","timecreated",
-                    "timemodified","question","course","activity","module","state"
-                ]
-                moodle_matches = [t for t in moodle_terms if any(t in c for c in lower_names)]
-
-                score21 = min(100, int(100*len(set(s21_matches))/max(1,len(s21_terms))))
-                score26 = min(100, int(100*len(set(s26_matches))/max(1,len(s26_terms))))
-                moodle_score = min(100, int(100*len(set(moodle_matches))/max(1,len(moodle_terms))))
-
-                a,b,c = st.columns(3)
-                a.metric("Συμβατότητα με Ποιότητα Αξιολόγησης", f"{score21}%")
-                b.metric("Συμβατότητα με Προσαρμοστική Εξάσκηση", f"{score26}%")
-                c.metric("Ενδείξεις Moodle export", f"{moodle_score}%")
-
-                if "custom_s21" in st.session_state and st.session_state.get("custom_s21_source") == "Moodle Πλήρη στατιστικά":
-                    st.success(
-                        f"Αναγνωρίστηκε αυτόματα Moodle Πλήρη στατιστικά export. "
-                        f"Η ενότητα Ποιότητας Αξιολόγησης έχει ενημερωθεί με {len(st.session_state['custom_s21'])} ερωτήσεις."
-                    )
-                elif score21 >= 30:
-                    st.success("Το αρχείο περιέχει αρκετές ενδείξεις για ανάλυση για Ποιότητα Αξιολόγησης.")
-                if "custom_s26" in st.session_state:
-                    st.success(
-                        f"Αναγνωρίστηκε αυτόματα σύνολο δεδομένων ανά φοιτητή για Προσαρμοστική Εξάσκηση. "
-                        f"Δημιουργήθηκαν {len(st.session_state['custom_s26'])} mapped rows."
-                    )
-                elif score26 >= 30:
-                    st.success("Το αρχείο περιέχει αρκετές ενδείξεις για ανάλυση για Προσαρμοστική Εξάσκηση.")
-                if moodle_score >= 20:
-                    st.info("Το αρχείο φαίνεται να περιέχει πεδία που συναντώνται συχνά σε Moodle exports.")
-
-                st.subheader("Αντιστοίχιση στηλών")
-                st.caption("Μπορείς να ορίσεις χειροκίνητα ποιες στήλες αντιστοιχούν στις βασικές μεταβλητές.")
-
-                cols = ["— καμία —"] + list(df.columns.astype(str))
-
-                map_service = st.radio(
-                    "Τύπος ανάλυσης",
-                    ["Γενική ανάλυση","Ποιότητα Αξιολόγησης","Προσαρμοστική Εξάσκηση"],
-                    horizontal=True
-                )
-
-                if map_service == "Ποιότητα Αξιολόγησης":
-                    qcol = st.selectbox("Στήλη ερώτησης", cols)
-                    fcol = st.selectbox("Στήλη δείκτη ευκολίας", cols)
-                    dcol = st.selectbox("Στήλη δείκτη διάκρισης", cols)
-                    ecol = st.selectbox("Στήλη αποτελεσματικότητας διάκρισης", cols)
-
-                    if st.button("Δημιουργία πίνακα Ποιότητα Αξιολόγησης από το αρχείο"):
-                        required = [qcol,fcol,dcol]
-                        if "— καμία —" in required:
-                            st.error("Επίλεξε τουλάχιστον ερώτηση, δείκτη ευκολίας και δείκτη διάκρισης.")
-                        else:
-                            mapped = pd.DataFrame({
-                                "ερώτηση": df[qcol],
-                                "facility": df[fcol].map(pct_number),
-                                "διάκριση": df[dcol].map(pct_number),
-                            })
-                            if ecol != "— καμία —":
-                                mapped["αποτελεσματικότητα"] = df[ecol].map(pct_number)
-                            else:
-                                mapped["αποτελεσματικότητα"] = np.nan
-
-                            mapped["κατάσταση"] = mapped["διάκριση"].apply(κατηγορία_διάκρισης)
-                            mapped["ενέργεια"] = mapped.apply(ενέργεια_ερώτησης, axis=1)
-
-                            st.session_state["custom_s21"] = mapped
-                            st.success("Δημιουργήθηκε προσωρινός πίνακας Ποιότητα Αξιολόγησης από το αρχείο.")
-                            st.dataframe(mapped, use_container_width=True, hide_index=True)
-
-                elif map_service == "Προσαρμοστική Εξάσκηση":
-                    learner26_col = st.selectbox("Στήλη learner / αναγνωριστικού", cols)
-                    score_col = st.selectbox("Στήλη score", cols)
-                    conf_col = st.selectbox("Στήλη βεβαιότητας", cols)
-                    attempt_col = st.selectbox("Στήλη προσπάθειας", cols)
-                    rc01_col = st.selectbox("Στήλη RC-01", cols)
-                    rc02_col = st.selectbox("Στήλη RC-02", cols)
-                    rc03_col = st.selectbox("Στήλη RC-03", cols)
-                    rc04_col = st.selectbox("Στήλη RC-04", cols)
-                    rc05_col = st.selectbox("Στήλη RC-05", cols)
-
-                    if st.button("Δημιουργία πίνακα Προσαρμοστική Εξάσκηση από το αρχείο"):
-                        required = [score_col,conf_col,attempt_col,rc01_col]
-                        if "— καμία —" in required:
-                            st.error("Επίλεξε score, βεβαιότητα, προσπάθεια και RC-01.")
-                        else:
-                            mapped26 = pd.DataFrame({
-                                "προσπάθεια": df[attempt_col],
-                                "score": pd.to_numeric(df[score_col], errors="coerce"),
-                                "βεβαιότητα": pd.to_numeric(df[conf_col], errors="coerce"),
-                                "RC-01": pd.to_numeric(df[rc01_col], errors="coerce"),
-                                "RC-02": pd.to_numeric(df[rc02_col], errors="coerce") if rc02_col != "— καμία —" else np.nan,
-                                "RC-03": pd.to_numeric(df[rc03_col], errors="coerce") if rc03_col != "— καμία —" else np.nan,
-                                "RC-04": pd.to_numeric(df[rc04_col], errors="coerce") if rc04_col != "— καμία —" else np.nan,
-                                "RC-05": pd.to_numeric(df[rc05_col], errors="coerce") if rc05_col != "— καμία —" else np.nan,
-                            })
-                            if learner26_col != "— καμία —":
-                                mapped26["μαθητής"] = df[learner26_col].astype(str)
-                            else:
-                                mapped26["μαθητής"] = [
-                                    f"CSV learner {i+1}" for i in range(len(mapped26))
-                                ]
-                            mapped26["κατάσταση"] = mapped26.apply(
-                                lambda r: κατάσταση_26(
-                                    r["score"] if pd.notna(r["score"]) else 0,
-                                    r["βεβαιότητα"] if pd.notna(r["βεβαιότητα"]) else 0,
-                                    r["RC-01"] if pd.notna(r["RC-01"]) else 0
-                                ),
-                                axis=1
-                            )
-                            mapped26["κατάκτηση"] = np.where(
-                                mapped26["score"] >= 70, "Επαρκής", "Αναπτυσσόμενο"
-                            )
-                            st.session_state["custom_s26"] = mapped26
-                            st.session_state["custom_s26_source"] = active_dataset_name()
-                            st.success("Η ενότητα Προσαρμοστικής Εξάσκησης συνδέθηκε με το ενεργή πηγή.")
-                            st.dataframe(mapped26, use_container_width=True, hide_index=True)
-
-            with tabs[5]:
-                st.subheader("Εξαγωγές")
-
-                clean_df = st.session_state.get("inelso_uploaded_clean", df)
-
-                st.download_button(
-                    "Λήψη καθαρισμένου CSV",
-                    clean_df.to_csv(index=False).encode("utf-8-sig"),
-                    f"{Path(filename).stem}_clean.csv",
-                    "text/csv"
-                )
-
-                quality_export = pd.DataFrame({
-                    "Στήλη": df.columns.astype(str),
-                    "Κενά": [int(df[c].isna().sum()) for c in df.columns],
-                    "Κενά (%)": [round(float(df[c].isna().mean()*100),2) for c in df.columns],
-                    "Μοναδικές τιμές": [int(df[c].nunique(dropna=True)) for c in df.columns],
-                    "Τύπος": [str(df[c].dtype) for c in df.columns]
-                })
-
-                st.download_button(
-                    "Λήψη αναφοράς ποιότητας CSV",
-                    quality_export.to_csv(index=False).encode("utf-8-sig"),
-                    f"{Path(filename).stem}_quality_report.csv",
-                    "text/csv"
-                )
-
-                if "custom_s21" in st.session_state:
-                    st.download_button(
-                        "Λήψη παραγόμενου Ποιότητα Αξιολόγησης CSV",
-                        st.session_state["custom_s21"].to_csv(index=False).encode("utf-8-sig"),
-                        f"{Path(filename).stem}_service21.csv",
-                        "text/csv"
-                    )
-
-                if "custom_s26" in st.session_state:
-                    st.download_button(
-                        "Λήψη παραγόμενου Προσαρμοστική Εξάσκηση CSV",
-                        st.session_state["custom_s26"].to_csv(index=False).encode("utf-8-sig"),
-                        f"{Path(filename).stem}_service26.csv",
-                        "text/csv"
-                    )
-
-
-# ==========================================================
-# INELSO Academia ANALYTICS LAB
 # ==========================================================
 elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
     render_module_header("Εργαστήριο Ανάλυσης Δεδομένων", "Γενική ανάλυση εκπαιδευτικών δεδομένων: ποιότητα, πρόβλεψη, ομαδοποίηση, συσχετίσεις και ερμηνεία.", "analytics_lab")
@@ -4178,11 +3542,6 @@ elif section == "Ζωντανή Σύνδεση Moodle":
     )
     show_active_dataset_context("REPORT")
 
-    st.info(
-        "Τα στοιχεία σύνδεσης δίνονται μία φορά ανά συνεδρία και χρησιμοποιούνται και από την Ανάλυση SCORM "
-        "και από την Ελεγχόμενη Εγγραφή Moodle."
-    )
-
     def moodle_rest_call(base_url, ws_token, function_name, params=None, timeout=20):
         if params is None:
             params = {}
@@ -4446,25 +3805,8 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
         "Ασφαλής εκτέλεση εγκεκριμένων ενεργειών στο Moodle, με προεπισκόπηση και επαλήθευση.",
         "moodle_write"
     )
-    show_active_dataset_context("REPORT")
-    st.markdown(
-        """
-        <div class="inelso-process">
-          <div class="step active"><strong>1. Έλεγχος</strong><span>Επιβεβαιώνετε μάθημα, χρήστη και περιεχόμενο.</span></div>
-          <div class="step"><strong>2. Έγκριση</strong><span>Δίνετε ρητή ανθρώπινη επιβεβαίωση.</span></div>
-          <div class="step"><strong>3. Καταγραφή</strong><span>Η εγκεκριμένη ενέργεια αποστέλλεται στο Moodle.</span></div>
-          <div class="step safe"><strong>4. Επαλήθευση</strong><span>Το αποτέλεσμα ανακτάται ξανά για επιβεβαίωση.</span></div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
     pending_meta = st.session_state.get("pending_moodle_result_meta")
     if isinstance(pending_meta, dict):
-        st.success(
-            f"Υπάρχει προετοιμασμένο αποτέλεσμα από {pending_meta.get('service','λειτουργία INELSO Academia')}. "
-            "Έλεγξέ το παρακάτω πριν από οποιαδήποτε πραγματική εγγραφή."
-        )
         meta_preview = pd.DataFrame([{
             "Λειτουργία": pending_meta.get("service"),
             "Οντότητα": pending_meta.get("entity"),
@@ -4477,11 +3819,6 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
 
     moodle_url = st.session_state.get("moodle_base_url", "")
     token = st.session_state.get("moodle_shared_token", "")
-
-    if moodle_url and token:
-        st.success("🔐 Η σύνδεση Moodle είναι ενεργή για αυτή τη συνεδρία. Δεν χρειάζεται νέα εισαγωγή στοιχείων.")
-    else:
-        st.info("Για να ενεργοποιηθεί η καταγραφή, δώστε τα στοιχεία σύνδεσης μία φορά στην «Ανάλυση SCORM» ή στη «Ζωντανή Σύνδεση Moodle».")
 
     if "moodle_write_audit" not in st.session_state:
         st.session_state["moodle_write_audit"] = pd.DataFrame(columns=[
@@ -5117,13 +4454,6 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
     show_active_dataset_context("S16")
 
     if ACTIVE_DF is None:
-        st.markdown(
-            "<div class='inelso-action-banner'><strong>Η λειτουργία είναι έτοιμη — χρειάζεται πραγματική πηγή δεδομένων.</strong><br>"
-            "Δεν δημιουργούνται demo κίνδυνοι ή τεχνητές περιπτώσεις. Μόλις φορτωθεί συμβατό learner-level dataset, "
-            "η σελίδα μετατρέπεται αυτόματα σε ενεργό workspace ανάλυσης.</div>",
-            unsafe_allow_html=True
-        )
-
         no_data_tabs = st.tabs(["Τι κάνει", "Τι χρειάζεται", "Ασφάλεια"])
         with no_data_tabs[0]:
             a,b,c1,c2 = st.columns(4)
@@ -5587,13 +4917,6 @@ else:
         "report"
     )
     show_active_dataset_context("REPORT", compact=False)
-
-    if ACTIVE_DF is None:
-        render_empty_state(
-            "Δεν υπάρχει ακόμη αναφορά πραγματικών αποτελεσμάτων",
-            "Η Κεντρική Αναφορά δεν δημιουργεί τεχνητούς δείκτες. Ενεργοποιήστε SCORM ή εισαγάγετε δεδομένα για να εμφανιστεί διοικητική σύνοψη.",
-            "Χρησιμοποιήστε «Ανάλυση SCORM» ή «Εισαγωγή Δεδομένων»."
-        )
 
     c1,c2,c3,c4=st.columns(4)
     c1.metric("Συνολικός δείκτης υγείας", f"{overall:.1f}" if ACTIVE_DF is not None else "—")
