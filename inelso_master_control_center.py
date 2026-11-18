@@ -2852,58 +2852,170 @@ elif section == "Κύκλος Ζωής Ενεργειών":
 # ΜΕΘΟΔΟΛΟΓΙΑ & ΠΡΟΕΛΕΥΣΗ
 # ==========================================================
 elif section == "Μεθοδολογία & Προέλευση":
-    render_module_header("Μεθοδολογία & Προέλευση", "Διαφάνεια για το τι υπολογίζεται, από πού προέρχεται και τι επιτρέπεται να συμπεράνουμε.", "methodology")
+    render_module_header(
+        "Μεθοδολογία & Προέλευση",
+        "Διαφάνεια για το τι υπολογίζεται, από πού προέρχεται και τι επιτρέπεται να συμπεράνουμε.",
+        "methodology"
+    )
     show_active_dataset_context("REPORT")
 
-    st.subheader("Προέλευση δεδομένων")
     provenance = pd.DataFrame([
         {
             "Ενότητα":"Ποιότητα Αξιολόγησης",
-             "Πηγή": (f"ενεργή πηγή: {ACTIVE_NAME}" if "custom_s21" in st.session_state else (f"ενεργή πηγή: {ACTIVE_NAME} — μη συμβατό με S21" if ACTIVE_DF is not None else "Μη διαθέσιμο")),
+            "Πηγή": (f"ενεργή πηγή: {ACTIVE_NAME}" if "custom_s21" in st.session_state else (f"ενεργή πηγή: {ACTIVE_NAME} — μη συμβατό με S21" if ACTIVE_DF is not None else "Μη διαθέσιμο")),
             "Τύπος":"Item-level psychometric ενδείξεις",
             "Χρήση":"Ποιότητα ερωτήσεων και ουρά ελέγχου",
             "Περιορισμός":"Δεν επιτρέπεται αυτόματη διαγραφή/αλλαγή item"
         },
         {
             "Ενότητα":"Προσαρμοστική Εξάσκηση",
-             "Πηγή": (f"ενεργή πηγή: {ACTIVE_NAME}" if "custom_s26" in st.session_state else (f"ενεργή πηγή: {ACTIVE_NAME} — μη mapped για S26" if ACTIVE_DF is not None else "Μη διαθέσιμο")),
+            "Πηγή": (f"ενεργή πηγή: {ACTIVE_NAME}" if "custom_s26" in st.session_state else (f"ενεργή πηγή: {ACTIVE_NAME} — μη mapped για S26" if ACTIVE_DF is not None else "Μη διαθέσιμο")),
             "Τύπος":"Rubric levels, score, mastery, confidence",
             "Χρήση":"Retry / enrichment / ανθρώπινος έλεγχος",
             "Περιορισμός":"Δεν αλλάζει επίσημο βαθμό Moodle"
         },
         {
             "Ενότητα":"Ενοποιημένες Μαθησιακές Ενδείξεις",
-             "Πηγή": f"Παράγωγο ενδείξεις — ενεργό σύνολο δεδομένων: {ACTIVE_NAME}" if ACTIVE_DF is not None else "Παράγωγο ενδείξεις από Ποιότητα Αξιολόγησης + 26",
+            "Πηγή": f"Παράγωγες ενδείξεις — ενεργό σύνολο δεδομένων: {ACTIVE_NAME}" if ACTIVE_DF is not None else "Παράγωγες ενδείξεις από Ποιότητα Αξιολόγησης + Προσαρμοστική Εξάσκηση",
             "Τύπος":"Integrated learning ενδείξεις",
             "Χρήση":"Σύνθεση και προτεραιοποίηση",
             "Περιορισμός":"Δεν επινοούνται θεματικές αντιστοιχίσεις χωρίς τεκμηρίωση"
         },
     ])
-    st.dataframe(provenance,use_container_width=True,hide_index=True)
 
-    st.subheader("Κανόνες Ποιότητας Αξιολόγησης")
-    st.markdown("""
+    tab_overview, tab_source, tab_s21, tab_s26, tab_s31, tab_safety = st.tabs([
+        "🧭 Επισκόπηση",
+        "🗂️ Προέλευση δεδομένων",
+        "🧪 Ποιότητα Αξιολόγησης",
+        "🎯 Προσαρμοστική Εξάσκηση",
+        "🔗 Μαθησιακές Ενδείξεις",
+        "🛡️ Όρια & ασφάλεια",
+    ])
+
+    with tab_overview:
+        st.markdown("### Πώς λειτουργεί η μεθοδολογία")
+        c1,c2,c3,c4 = st.columns(4)
+        with c1:
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>1 · Πηγή</div><h3>Πραγματικά δεδομένα</h3><p>CSV/Excel, SCORM ή επιτρεπόμενη Moodle REST ανάγνωση.</p></div>", unsafe_allow_html=True)
+        with c2:
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>2 · Έλεγχος</div><h3>Συμβατότητα</h3><p>Κάθε λειτουργία χρησιμοποιεί μόνο τα πεδία που πραγματικά υποστηρίζει.</p></div>", unsafe_allow_html=True)
+        with c3:
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>3 · Ανάλυση</div><h3>Διαφανείς κανόνες</h3><p>Οι δείκτες και τα thresholds είναι ορατά και ελέγξιμα.</p></div>", unsafe_allow_html=True)
+        with c4:
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>4 · Απόφαση</div><h3>Human-in-the-loop</h3><p>Η πλατφόρμα υποστηρίζει· δεν αντικαθιστά την εκπαιδευτική κρίση.</p></div>", unsafe_allow_html=True)
+
+        st.info("Η ενεργή πηγή δεν μετατρέπεται αυτόματα σε αποτέλεσμα για κάθε service. Αν λείπουν τα απαιτούμενα πεδία, η αντίστοιχη λειτουργία παραμένει κενή ή δηλώνεται ως μη συμβατή.")
+
+        with st.expander("🔍 Τι σημαίνει «προέλευση» και γιατί είναι σημαντική;"):
+            st.write(
+                "Κάθε αποτέλεσμα πρέπει να μπορεί να συνδεθεί με την αρχική πηγή δεδομένων, "
+                "τον τύπο της ανάλυσης και τον κανόνα που χρησιμοποιήθηκε. "
+                "Έτσι αποφεύγονται μη τεκμηριωμένες ερμηνείες και διατηρείται πλήρης ιχνηλασιμότητα."
+            )
+
+    with tab_source:
+        st.markdown("### Προέλευση δεδομένων ανά λειτουργία")
+        st.dataframe(provenance, use_container_width=True, hide_index=True)
+
+        c1,c2,c3 = st.columns(3)
+        c1.metric("Ενεργή πηγή", ACTIVE_NAME if ACTIVE_DF is not None else "—")
+        c2.metric("Ποιότητα Αξιολόγησης", service_dataset_compatibility("S21", ACTIVE_DF) if ACTIVE_DF is not None else "—")
+        c3.metric("Προσαρμοστική Εξάσκηση", service_dataset_compatibility("S26", ACTIVE_DF) if ACTIVE_DF is not None else "—")
+
+        with st.expander("📌 Πώς διαβάζω τον πίνακα προέλευσης;"):
+            st.markdown(
+                "- **Πηγή:** από πού προέρχονται τα δεδομένα.\n"
+                "- **Τύπος:** ποια δομή δεδομένων χρησιμοποιείται.\n"
+                "- **Χρήση:** ποια ανάλυση επιτρέπεται να γίνει.\n"
+                "- **Περιορισμός:** τι δεν επιτρέπεται να συμπεράνουμε ή να αλλάξουμε αυτόματα."
+            )
+
+    with tab_s21:
+        st.markdown("### Κανόνες Ποιότητας Αξιολόγησης")
+        r1,r2,r3,r4 = st.columns(4)
+        r1.metric("Ισχυρή διάκριση", "≥ 40%")
+        r2.metric("Ικανοποιητική", "20–39.99%")
+        r3.metric("Έλεγχος", "0–19.99%")
+        r4.metric("Κρίσιμη", "< 0%")
+
+        with st.expander("📊 Αναλυτικοί κανόνες διάκρισης", expanded=True):
+            st.markdown("""
 - Διάκριση ≥ 40% → **ΙΣΧΥΡΗ**
 - 20%–39,99% → **ΙΚΑΝΟΠΟΙΗΤΙΚΗ**
 - 0%–19,99% → **ΕΛΕΓΧΟΣ**
 - Αρνητική διάκριση → **ΚΡΙΣΙΜΗ**
 - Μη εκτιμήσιμη διάκριση → απαιτεί ανθρώπινο έλεγχο scoring / response pattern
 """)
+        with st.expander("🧠 Πώς ερμηνεύεται για demo;"):
+            st.write(
+                "Η διάκριση δείχνει κατά πόσο ένα item διαφοροποιεί αποτελεσματικά τους learners. "
+                "Χαμηλή ή αρνητική τιμή δεν οδηγεί σε αυτόματη διαγραφή· δημιουργεί ένδειξη για ανθρώπινο review."
+            )
 
-    st.subheader("Κανόνες Προσαρμοστικής Εξάσκησης")
-    st.markdown("""
+    with tab_s26:
+        st.markdown("### Κανόνες Προσαρμοστικής Εξάσκησης")
+        a1,a2,a3,a4 = st.columns(4)
+        a1.metric("Confidence review", "< 0.70")
+        a2.metric("RC-01 review", "0–1")
+        a3.metric("Retry", "Score < 70")
+        a4.metric("Ready", "Score ≥ 70")
+
+        with st.expander("🎯 Αναλυτικοί κανόνες adaptive decision", expanded=True):
+            st.markdown("""
 - Βεβαιότητα < 0,70 → **ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ**
 - RC-01 επίπεδο 0–1 → **ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ**
 - Επίδοση < 70 με επαρκή βεβαιότητα → **ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ**
 - Επίδοση ≥ 70 με επαρκή βεβαιότητα → **ΕΤΟΙΜΟ**
+- Μέγιστος αριθμός προσπαθειών → **3**
 """)
+        with st.expander("🧩 Τι σημαίνει ο περιορισμός RC-01;"):
+            st.write(
+                "Το RC-01 αφορά εννοιολογική ακρίβεια. Πολύ χαμηλή επίδοση στο RC-01 "
+                "δεν επιτρέπεται να θεωρηθεί υψηλή κατάκτηση ακόμη και αν ο συνολικός score είναι καλύτερος."
+            )
+        with st.expander("👤 Πότε απαιτείται ανθρώπινος έλεγχος;"):
+            st.write(
+                "Όταν η βεβαιότητα είναι χαμηλή ή όταν το κρίσιμο κριτήριο RC-01 βρίσκεται σε επίπεδο 0–1. "
+                "Το σύστημα δεν παίρνει αυτόματα παιδαγωγική απόφαση."
+            )
 
-    st.subheader("Κανόνες Ενοποιημένων Μαθησιακών Ενδείξεων")
-    st.markdown("""
-- Συνθέτει ενδείξεις που ήδη υπάρχουν στα Ποιότητα Αξιολόγησης και Προσαρμοστική Εξάσκηση.
-- Διατηρεί την αρχική προέλευση κάθε ένδειξη.
+    with tab_s31:
+        st.markdown("### Κανόνες Ενοποιημένων Μαθησιακών Ενδείξεων")
+        i1,i2,i3 = st.columns(3)
+        i1.metric("Πηγή", "S21 / S26")
+        i2.metric("Αυτόματη απόφαση", "ΟΧΙ")
+        i3.metric("Υψηλή προτεραιότητα", "Human review")
+
+        with st.expander("🔗 Πώς συντίθενται οι ενδείξεις;", expanded=True):
+            st.markdown("""
+- Συνθέτει ενδείξεις που ήδη υπάρχουν στην Ποιότητα Αξιολόγησης και στην Προσαρμοστική Εξάσκηση.
+- Διατηρεί την αρχική προέλευση κάθε ένδειξης.
 - Η προτεραιότητα δεν ισοδυναμεί με αυτόματη εκπαιδευτική απόφαση.
 - Κάθε υψηλής προτεραιότητας ένδειξη οδηγεί πρώτα σε ανθρώπινο έλεγχο.
+""")
+        with st.expander("🧾 Τι ΔΕΝ κάνει η σύνθεση;"):
+            st.write(
+                "Δεν δημιουργεί τεχνητές θεματικές συσχετίσεις, δεν επινοεί learner states "
+                "και δεν μετατρέπει την προτεραιότητα σε αυτόματη ενέργεια."
+            )
+
+    with tab_safety:
+        st.markdown("### Όρια, ασφάλεια και επιτρεπόμενα συμπεράσματα")
+        s1,s2,s3 = st.columns(3)
+        with s1:
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>Βαθμοί</div><h3>Δεν αλλάζουν αυτόματα</h3><p>Καμία επίσημη βαθμολογία Moodle δεν τροποποιείται από analytics.</p></div>", unsafe_allow_html=True)
+        with s2:
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>Παρεμβάσεις</div><h3>Ρητή έγκριση</h3><p>Κρίσιμες ενέργειες απαιτούν ανθρώπινη επιβεβαίωση πριν από write.</p></div>", unsafe_allow_html=True)
+        with s3:
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>Audit</div><h3>Read-back verification</h3><p>Η επιτυχία θεωρείται επιβεβαιωμένη μόνο όταν η πληροφορία ανακτηθεί ξανά.</p></div>", unsafe_allow_html=True)
+
+        with st.expander("🛡️ Βασικές αρχές ασφαλούς λειτουργίας", expanded=True):
+            st.markdown("""
+- Δεν εμφανίζονται τεχνητά αποτελέσματα όταν δεν υπάρχει συμβατό ενεργό dataset.
+- Δεν αλλάζουν αυτόματα επίσημοι βαθμοί.
+- Δεν εκτελείται κρίσιμη Moodle write ενέργεια χωρίς ρητή ανθρώπινη έγκριση.
+- Η επιτυχής HTTP απόκριση από μόνη της δεν θεωρείται τελική επιβεβαίωση.
+- Η τελική επιτυχία βασίζεται σε read-back verification και audit trail.
 """)
 
 # ==========================================================
