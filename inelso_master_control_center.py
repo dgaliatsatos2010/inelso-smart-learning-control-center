@@ -1590,7 +1590,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
         with home_tabs[3]:
             st.markdown("### Ενεργή πηγή δεδομένων")
             st.markdown(
-                f"<div class='inelso-feature-card'><div class='kicker'>ACTIVE SOURCE</div><h3>{ACTIVE_NAME}</h3>"
+                f"<div class='inelso-feature-card'><div class='kicker'>ΕΝΕΡΓΗ ΠΗΓΗ</div><h3>{ACTIVE_NAME}</h3>"
                 f"<p>{len(ACTIVE_DF)} εγγραφές · {len(ACTIVE_DF.columns)} πεδία · "
                 f"πληρότητα {q['completeness']:.1f}% · ποιότητα {q['quality']:.1f}/100.</p></div>",
                 unsafe_allow_html=True
@@ -2070,7 +2070,6 @@ elif section == "Προσαρμοστική Εξάσκηση":
     if ACTIVE_DF is None:
         render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
         show_active_dataset_context("S26")
-        st.info("Δεν έχει φορτωθεί ενεργή πηγή. Η ενότητα Προσαρμοστικής Εξάσκησης παραμένει κενό μέχρι να φορτωθεί πραγματικό σύνολο δεδομένων ανά φοιτητή.")
         c1,c2,c3,c4,c5 = st.columns(5)
         c1.metric("Τρέχουσα επίδοση","—")
         c2.metric("Κατάκτηση","—")
@@ -2226,7 +2225,6 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
     if ACTIVE_DF is None:
         render_module_header("Δημιουργία Μαθήματος & Αξιολόγησης", "Δημιουργία ελεγχόμενων προσχεδίων για quiz, τράπεζες ερωτήσεων, rubric και ασκήσεις.", "s25")
         show_active_dataset_context("S25")
-        st.info("Δεν έχει φορτωθεί ενεργή πηγή. Η ενότητα Δημιουργίας Μαθήματος & Αξιολόγησης παραμένει κενό μέχρι να φορτωθεί πραγματικό σύνολο δεδομένων ή εκπαιδευτικό πλαίσιο.")
         st.metric("Κατάσταση","—")
         st.stop()
 
@@ -2418,7 +2416,6 @@ elif section == "Υποστήριξη Διδάσκοντα":
     if ACTIVE_DF is None:
         render_module_header("Υποστήριξη Διδάσκοντα", "Προσχέδια απαντήσεων και feedback που ελέγχονται πάντα από τον διδάσκοντα.", "s28")
         show_active_dataset_context("S28")
-        st.info("Δεν έχει φορτωθεί ενεργή πηγή. Η ενότητα Υποστήριξης Διδάσκοντα παραμένει κενό μέχρι να φορτωθεί πραγματικό σύνολο δεδομένων ή εκπαιδευτικό πλαίσιο.")
         st.metric("Κατάσταση","—")
         st.stop()
 
@@ -2594,7 +2591,6 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
     if ACTIVE_DF is None:
         render_module_header("Ενοποιημένες Μαθησιακές Ενδείξεις", "Συγκέντρωση και ιεράρχηση πραγματικών ενδείξεων από τις επιμέρους αναλύσεις.", "s31")
         show_active_dataset_context("S31")
-        st.info("Δεν έχει φορτωθεί ενεργή πηγή. Η ενότητα Ενοποιημένων Μαθησιακών Ενδείξεων παραμένει κενό.")
         c1,c2,c3,c4 = st.columns(4)
         c1.metric("Συνολικά ενδείξεις","—")
         c2.metric("Υψηλή προτεραιότητα","—")
@@ -2828,7 +2824,7 @@ elif section == "Κύκλος Ζωής Ενεργειών":
 elif section == "Μεθοδολογία & Προέλευση":
     render_module_header(
         "Μεθοδολογία & Προέλευση",
-        "Διαφάνεια για το τι υπολογίζεται, από πού προέρχεται και τι επιτρέπεται να συμπεράνουμε.",
+        "",
         "methodology"
     )
 
@@ -2836,21 +2832,21 @@ elif section == "Μεθοδολογία & Προέλευση":
         {
             "Ενότητα":"Ποιότητα Αξιολόγησης",
             "Πηγή": (f"ενεργή πηγή: {ACTIVE_NAME}" if "custom_s21" in st.session_state else (f"ενεργή πηγή: {ACTIVE_NAME} — μη συμβατή με την Ποιότητα Αξιολόγησης" if ACTIVE_DF is not None else "Μη διαθέσιμο")),
-            "Τύπος":"Item-level psychometric ενδείξεις",
+            "Τύπος":"Ψυχομετρικές ενδείξεις ανά ερώτηση",
             "Χρήση":"Ποιότητα ερωτήσεων και ουρά ελέγχου",
             "Περιορισμός":"Δεν επιτρέπεται αυτόματη διαγραφή/αλλαγή item"
         },
         {
             "Ενότητα":"Προσαρμοστική Εξάσκηση",
             "Πηγή": (f"ενεργή πηγή: {ACTIVE_NAME}" if "custom_s26" in st.session_state else (f"ενεργή πηγή: {ACTIVE_NAME} — δεν έχει αντιστοιχιστεί για την Προσαρμοστική Εξάσκηση" if ACTIVE_DF is not None else "Μη διαθέσιμο")),
-            "Τύπος":"Rubric levels, score, mastery, confidence",
-            "Χρήση":"Retry / enrichment / ανθρώπινος έλεγχος",
+            "Τύπος":"Επίπεδα κριτηρίων, επίδοση, κατάκτηση, βεβαιότητα",
+            "Χρήση":"Νέα προσπάθεια / εμπλουτισμός / ανθρώπινος έλεγχος",
             "Περιορισμός":"Δεν αλλάζει επίσημο βαθμό Moodle"
         },
         {
             "Ενότητα":"Ενοποιημένες Μαθησιακές Ενδείξεις",
             "Πηγή": f"Παράγωγες ενδείξεις — ενεργό σύνολο δεδομένων: {ACTIVE_NAME}" if ACTIVE_DF is not None else "Παράγωγες ενδείξεις από Ποιότητα Αξιολόγησης + Προσαρμοστική Εξάσκηση",
-            "Τύπος":"Integrated learning ενδείξεις",
+            "Τύπος":"Ενοποιημένες μαθησιακές ενδείξεις",
             "Χρήση":"Σύνθεση και προτεραιοποίηση",
             "Περιορισμός":"Δεν επινοούνται θεματικές αντιστοιχίσεις χωρίς τεκμηρίωση"
         },
@@ -2869,13 +2865,13 @@ elif section == "Μεθοδολογία & Προέλευση":
         st.markdown("### Πώς λειτουργεί η μεθοδολογία")
         c1,c2,c3,c4 = st.columns(4)
         with c1:
-            st.markdown("<div class='inelso-feature-card'><div class='kicker'>1 · Πηγή</div><h3>Πραγματικά δεδομένα</h3><p>CSV/Excel, SCORM ή επιτρεπόμενη Moodle REST ανάγνωση.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>1 · Πηγή</div><h3>Πραγματικά δεδομένα</h3><p>Αρχεία CSV/Excel, SCORM ή επιτρεπόμενη ανάγνωση από το Moodle.</p></div>", unsafe_allow_html=True)
         with c2:
             st.markdown("<div class='inelso-feature-card'><div class='kicker'>2 · Έλεγχος</div><h3>Συμβατότητα</h3><p>Κάθε λειτουργία χρησιμοποιεί μόνο τα πεδία που πραγματικά υποστηρίζει.</p></div>", unsafe_allow_html=True)
         with c3:
-            st.markdown("<div class='inelso-feature-card'><div class='kicker'>3 · Ανάλυση</div><h3>Διαφανείς κανόνες</h3><p>Οι δείκτες και τα thresholds είναι ορατά και ελέγξιμα.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>3 · Ανάλυση</div><h3>Διαφανείς κανόνες</h3><p>Οι δείκτες και τα όρια είναι ορατά και ελέγξιμα.</p></div>", unsafe_allow_html=True)
         with c4:
-            st.markdown("<div class='inelso-feature-card'><div class='kicker'>4 · Απόφαση</div><h3>Human-in-the-loop</h3><p>Η πλατφόρμα υποστηρίζει· δεν αντικαθιστά την εκπαιδευτική κρίση.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>4 · Απόφαση</div><h3>Ανθρώπινος έλεγχος</h3><p>Η πλατφόρμα υποστηρίζει· δεν αντικαθιστά την εκπαιδευτική κρίση.</p></div>", unsafe_allow_html=True)
 
         with st.expander("🔍 Τι σημαίνει «προέλευση» και γιατί είναι σημαντική;"):
             st.write(
@@ -2993,7 +2989,7 @@ elif section == "Μεθοδολογία & Προέλευση":
 # ΕΛΕΓΧΟΣ ΕΤΟΙΜΟΤΗΤΑΣ
 # ==========================================================
 elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
-    render_module_header("Εργαστήριο Ανάλυσης Δεδομένων", "Γενική ανάλυση εκπαιδευτικών δεδομένων: ποιότητα, πρόβλεψη, ομαδοποίηση, συσχετίσεις και ερμηνεία.", "analytics_lab")
+    render_module_header("Εργαστήριο Ανάλυσης Δεδομένων", "", "analytics_lab")
     show_active_dataset_context("ANALYTICS")
 
     source_options = ["Χρήση τελευταίου αρχείου από το Κέντρο Δεδομένων"]
@@ -3528,7 +3524,7 @@ elif section == "Προσομοίωση Σεναρίων":
 elif section == "Ζωντανή Σύνδεση Moodle":
     render_module_header(
         "Ζωντανή Σύνδεση Moodle",
-        "Απευθείας ανάγνωση επιτρεπόμενων δεδομένων από το Moodle μέσω REST, χωρίς export αρχείου.",
+        "",
         "moodle_live"
     )
     show_active_dataset_context("REPORT")
@@ -3793,7 +3789,7 @@ elif section == "Ζωντανή Σύνδεση Moodle":
 elif section == "Ελεγχόμενη Εγγραφή Moodle":
     render_module_header(
         "Ελεγχόμενη Εγγραφή Moodle",
-        "Ασφαλής εκτέλεση εγκεκριμένων ενεργειών στο Moodle, με προεπισκόπηση και επαλήθευση.",
+        "",
         "moodle_write"
     )
     pending_meta = st.session_state.get("pending_moodle_result_meta")
@@ -4394,7 +4390,6 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
     # ------------------------------------------------------
     st.markdown("---")
     st.subheader("Ιστορικό ελεγχόμενων καταγραφών")
-    st.caption("ΕΠΙΤΥΧΙΑ σημαίνει επιβεβαιωμένη παράδοση/εγγραφή από το Moodle· η τεχνική απόκριση από μόνη της δεν θεωρείται επιτυχία χωρίς επαλήθευση.")
     audit = st.session_state["moodle_write_audit"]
 
     if len(audit) > 0:
@@ -4421,13 +4416,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                 "Το τοπικό session audit log δεν περιέχει νέα ενέργεια καταγραφής στην παρούσα συνεδρία."
             )
         else:
-            st.info("Δεν έχει εκτελεστεί ακόμη καμία ενέργεια καταγραφής σε αυτή τη συνεδρία.")
-
-    st.info(
-        "Προτεινόμενη πολιτική παραγωγής: βασικό write workflow μέσω σημειώσεων Moodle, "
-        "ειδικό service account, ελάχιστες capabilities, ξεχωριστό read token και write token, "
-        "και ενεργοποίηση μόνο των απολύτως απαραίτητων functions."
-    )
+            pass
 
 # ==========================================================
 # EARLY WARNING ENGINE
@@ -4777,7 +4766,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
 # ΜΗΤΡΩΟ ΕΝΕΡΓΕΙΩΝ
 # ==========================================================
 elif section == "Μητρώο Ενεργειών":
-    render_module_header("Μητρώο Ενεργειών", "Καταγραφή αποφάσεων, ενεργειών, υπευθύνων και καταστάσεων για πλήρη ιχνηλασιμότητα.", "registry")
+    render_module_header("Μητρώο Ενεργειών", "", "registry")
     show_active_dataset_context("REPORT")
 
     base_columns = [
@@ -4886,7 +4875,7 @@ elif section == "Μητρώο Ενεργειών":
             "text/csv"
         )
     else:
-        st.info("Δεν υπάρχουν ακόμη καταχωρίσεις.")
+        pass
 
 # ==========================================================
 # ΚΕΝΤΡΙΚΗ ΑΝΑΦΟΡΑ
@@ -4894,7 +4883,7 @@ elif section == "Μητρώο Ενεργειών":
 else:
     render_module_header(
         "Κεντρική Αναφορά",
-        "Διοικητική σύνοψη της ενεργής πηγής, των διαθέσιμων αναλύσεων και των ενεργειών που χρειάζονται προσοχή.",
+        "",
         "report"
     )
     show_active_dataset_context("REPORT", compact=False)
