@@ -2624,11 +2624,11 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
         "Ενοποιημένες Μαθησιακές Ενδείξεις",
         summary=f"Ενοποιημένες ενδείξεις {len(service31_integrated)} · υψηλής προτεραιότητας {high31}",
         score=None,
-        status="Integrated learning insight",
-        entity="Integrated learning ενδείξεις",
+        status="Ενοποιημένη μαθησιακή ένδειξη",
+        entity="Ενοποιημένες μαθησιακές ενδείξεις",
         enabled=True,
         intervention_type="Ενοποιημένες Μαθησιακές Ενδείξεις — Μαθησιακή ένδειξη",
-        note="Καταγράφεται synthesis/provenance των ενδείξεις, όχι learner grade.",
+        note="Καταγράφεται η σύνθεση και η προέλευση των ενδείξεων, όχι επίσημος βαθμός εκπαιδευόμενου.",
     )
 
 
@@ -3505,17 +3505,17 @@ elif section == "Προσομοίωση Σεναρίων":
     )
 
     changed = int((sim["κατάσταση"] != sim["Νέα κατάσταση"]).sum())
-    st.info(f"Με τα επιλεγμένα thresholds αλλάζουν κατηγορία {changed} από {len(sim)} learners.")
+    st.info(f"Με τα επιλεγμένα όρια αλλάζουν κατηγορία {changed} από {len(sim)} learners.")
 
     st.subheader("Σενάρια")
     scenarios = pd.DataFrame([
-        {"Σενάριο":"Βασικό","Confidence threshold":0.70,"Όριο βαθμολογίας":70},
-        {"Σενάριο":"Πιο αυστηρό","Confidence threshold":0.80,"Όριο βαθμολογίας":80},
-        {"Σενάριο":"Πιο ελαστικό","Confidence threshold":0.60,"Όριο βαθμολογίας":60},
+        {"Σενάριο":"Βασικό","Όριο βεβαιότητας":0.70,"Όριο βαθμολογίας":70},
+        {"Σενάριο":"Πιο αυστηρό","Όριο βεβαιότητας":0.80,"Όριο βαθμολογίας":80},
+        {"Σενάριο":"Πιο ελαστικό","Όριο βεβαιότητας":0.60,"Όριο βαθμολογίας":60},
     ])
     st.dataframe(scenarios,use_container_width=True,hide_index=True)
 
-    st.warning("Η προσομοίωση είναι sandbox. Δεν επηρεάζει το Moodle ούτε τις επίσημες αποφάσεις.")
+    st.warning("Η προσομοίωση γίνεται σε ασφαλές δοκιμαστικό περιβάλλον. Δεν επηρεάζει το Moodle ούτε τις επίσημες αποφάσεις.")
 
 
 # ==========================================================
@@ -4713,9 +4713,9 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             )
         else:
             ranked = st.session_state["early_warning_results"].sort_values("Δείκτης κινδύνου",ascending=False)
-            st.markdown("### Human-in-the-loop παρέμβαση")
+            st.markdown("### Παρέμβαση με ανθρώπινο έλεγχο")
             selected_risk_learner = st.selectbox(
-                "Learner",
+                "Εκπαιδευόμενος",
                 ranked["Μαθητής"].astype(str).tolist(),
                 key="s16_intervention_learner"
             )
