@@ -1783,11 +1783,13 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
             pass
     scorm_token = st.text_input(
         "Κλειδί πρόσβασης Moodle",
-        value=secret_token,
+        value=st.session_state.get("moodle_shared_token", secret_token),
         type="password",
         key="scorm_rest_token",
-        help="Χρησιμοποιείται για ανάγνωση SCORM reports μέσω REST."
+        help="Δίνεται μία φορά ανά συνεδρία και χρησιμοποιείται στις συνδεδεμένες λειτουργίες Moodle."
     )
+    if scorm_token:
+        st.session_state["moodle_shared_token"] = scorm_token
 
     if st.button("🔎 Εντοπισμός SCORM και χρηστών", type="primary", key="scorm_discover"):
         if not scorm_moodle_url or not scorm_token:
@@ -4096,10 +4098,9 @@ elif section == "Προσομοίωση Σεναρίων":
 
     if "custom_s26" not in st.session_state:
         render_empty_state(
-            "Δεν υπάρχει πραγματικό learner-level dataset για προσομοίωση",
-            "Ο προσομοιωτής δεν χρησιμοποιεί demo φοιτητές στην εμπορική έκδοση. "
-            "Χρειάζονται πραγματικές εγγραφές με score, confidence και, όπου εφαρμόζεται, rubric.",
-            "Εισαγάγετε συμβατό CSV/Excel ή ενεργοποιήστε πηγή που παρέχει τα απαιτούμενα πεδία."
+            "Η προσομοίωση είναι διαθέσιμη μόλις ενεργοποιηθεί κατάλληλη πηγή δεδομένων",
+            "Φορτώστε ή συνδέστε δεδομένα και επιστρέψτε εδώ για δοκιμή διαφορετικών κατωφλίων και σεναρίων.",
+            "Μετά την ενεργοποίηση της πηγής, οι επιλογές προσομοίωσης εμφανίζονται αυτόματα."
         )
         st.stop()
 
@@ -4170,33 +4171,17 @@ elif section == "Προσομοίωση Σεναρίων":
 # LIVE MOODLE
 # ==========================================================
 elif section == "Ζωντανή Σύνδεση Moodle":
-    render_module_header("Ζωντανή Σύνδεση Moodle", "Απευθείας ανάγνωση επιτρεπόμενων δεδομένων από το Moodle μέσω REST, χωρίς export αρχείου.", "moodle_live")
+    render_module_header(
+        "Ζωντανή Σύνδεση Moodle",
+        "Απευθείας ανάγνωση επιτρεπόμενων δεδομένων από το Moodle μέσω REST, χωρίς export αρχείου.",
+        "moodle_live"
+    )
     show_active_dataset_context("REPORT")
-    if ACTIVE_DF is not None:
-        st.info(
-            "Το ενεργή πηγή παραμένει συνδεδεμένο ως analytical/provenance context. "
-            "Τα live Moodle δεδομένα προέρχονται ανεξάρτητα από το REST API και δεν αντικαθίστανται από το CSV."
-        )
 
-    st.warning(
-        "Απαιτείται ενεργοποιημένο διασύνδεση Moodle και token με τα κατάλληλα δικαιώματα. "
-        "Η εφαρμογή εκτελεί μόνο αναγνώσεις. Δεν γράφει βαθμούς ή submissions."
+    st.info(
+        "Τα στοιχεία σύνδεσης δίνονται μία φορά ανά συνεδρία και χρησιμοποιούνται και από την Ανάλυση SCORM "
+        "και από την Ελεγχόμενη Εγγραφή Moodle."
     )
-
-    default_url = st.session_state.get("moodle_base_url", "")
-    moodle_url = st.text_input(
-        "Βασικό URL Moodle",
-        value=default_url,
-        placeholder="https://example.edu"
-    ).rstrip("/")
-
-    token = st.text_input(
-        "Κλειδί πρόσβασης Moodle",
-        type="password",
-        help="Το token χρησιμοποιείται μόνο για το τρέχον αίτημα μέσα στη συνεδρία."
-    )
-
-    st.session_state["moodle_base_url"] = moodle_url
 
     def moodle_rest_call(base_url, ws_token, function_name, params=None, timeout=20):
         if params is None:
@@ -4215,34 +4200,78 @@ elif section == "Ζωντανή Σύνδεση Moodle":
             raise RuntimeError(data.get("message", data))
         return data
 
-    col1,col2 = st.columns(2)
+    default_live_url = st.session_state.get("moodle_base_url", "https://contentsolutions.eu") or "https://contentsolutions.eu"
+    default_live_token = st.session_state.get("moodle_shared_token", "")
 
-    with col1:
-        st.subheader("1. Έλεγχος σύνδεσης")
-        if st.button("Έλεγχος σύνδεσης Moodle"):
-            if not moodle_url or not token:
-                st.error("Συμπλήρωσε URL και token.")
+    tab_conn, tab_courses, tab_course_data, tab_advanced = st.tabs([
+        "🔐 Σύνδεση",
+        "📚 Μαθήματα",
+        "👥 Δεδομένα μαθήματος",
+        "🛠️ Προχωρημένα"
+    ])
+
+    with tab_conn:
+        st.markdown("### Σύνδεση Moodle")
+        st.caption("Συμπληρώστε τα στοιχεία μία φορά. Παραμένουν διαθέσιμα όσο διαρκεί η τρέχουσα συνεδρία.")
+
+        moodle_url = st.text_input(
+            "Βασικό URL Moodle",
+            value=default_live_url,
+            key="live_shared_moodle_url"
+        ).rstrip("/")
+
+        token = st.text_input(
+            "Κλειδί πρόσβασης Moodle",
+            value=default_live_token,
+            type="password",
+            key="live_shared_moodle_token",
+            help="Χρησιμοποιείται μόνο μέσα στην τρέχουσα συνεδρία."
+        )
+
+        if moodle_url:
+            st.session_state["moodle_base_url"] = moodle_url
+        if token:
+            st.session_state["moodle_shared_token"] = token
+
+        c1, c2 = st.columns([1, 2])
+        with c1:
+            if st.button("🔌 Έλεγχος σύνδεσης", type="primary", key="live_check_connection"):
+                if not moodle_url or not token:
+                    st.error("Συμπληρώστε URL και κλειδί πρόσβασης.")
+                else:
+                    try:
+                        info = moodle_rest_call(
+                            moodle_url, token, "core_webservice_get_site_info"
+                        )
+                        st.session_state["moodle_site_info"] = info
+                        st.session_state["moodle_connection_verified"] = True
+                        st.success("Η σύνδεση με το Moodle λειτουργεί.")
+                    except Exception as e:
+                        st.session_state["moodle_connection_verified"] = False
+                        st.error(f"Αποτυχία σύνδεσης: {e}")
+
+        with c2:
+            if st.session_state.get("moodle_connection_verified"):
+                info = st.session_state.get("moodle_site_info", {})
+                st.markdown(
+                    f"**Συνδεδεμένο:** {info.get('sitename','Moodle')}  \\n"
+                    f"**Λογαριασμός:** {info.get('fullname','—')}  \\n"
+                    f"**Έκδοση:** {info.get('release','—')}"
+                )
             else:
-                try:
-                    info = moodle_rest_call(
-                        moodle_url, token, "core_webservice_get_site_info"
-                    )
-                    st.session_state["moodle_site_info"] = info
-                    st.success("Η σύνδεση με το Moodle λειτουργεί.")
-                    show = {
-                        "Όνομα ιστοτόπου": info.get("sitename"),
-                        "Χρήστης Web Service": info.get("fullname"),
-                        "Moodle release": info.get("release"),
-                    }
-                    st.json(show)
-                except Exception as e:
-                    st.error(f"Αποτυχία σύνδεσης: {e}")
+                st.caption("Μετά τον επιτυχή έλεγχο, δεν χρειάζεται να ξαναδώσετε τα στοιχεία στις άλλες καρτέλες.")
 
-    with col2:
-        st.subheader("2. Μαθήματα")
-        if st.button("Ανάκτηση μαθημάτων"):
+    # Shared values are refreshed after the connection tab widgets run.
+    moodle_url = st.session_state.get("moodle_base_url", default_live_url)
+    token = st.session_state.get("moodle_shared_token", default_live_token)
+
+    with tab_courses:
+        st.markdown("### Μαθήματα")
+        st.caption("Ανακτήστε μία φορά τη λίστα και επιλέξτε το μάθημα που θα χρησιμοποιηθεί στις επόμενες καρτέλες.")
+
+        if st.button("📥 Ανάκτηση μαθημάτων", type="primary", key="live_load_courses"):
             if not moodle_url or not token:
-                st.error("Συμπλήρωσε URL και token.")
+                st.error("Πηγαίνετε πρώτα στην καρτέλα «Σύνδεση».")
             else:
                 try:
                     courses = moodle_rest_call(
@@ -4254,131 +4283,158 @@ elif section == "Ζωντανή Σύνδεση Moodle":
                 except Exception as e:
                     st.error(f"Αποτυχία ανάκτησης μαθημάτων: {e}")
 
-    if "moodle_courses" in st.session_state:
-        courses_df = st.session_state["moodle_courses"]
-        display_cols = [c for c in ["id","shortname","fullname","visible"] if c in courses_df.columns]
-        st.dataframe(courses_df[display_cols] if display_cols else courses_df,
-                     use_container_width=True, hide_index=True)
-
-        if "id" in courses_df.columns:
-            course_options = {
-                f"{r.get('shortname','')} — {r.get('fullname','')} (ID {r['id']})": int(r["id"])
-                for _,r in courses_df.iterrows()
-            }
-            selected_course_label = st.selectbox(
-                "Επιλέξτε μάθημα",
-                list(course_options.keys())
+        if "moodle_courses" in st.session_state:
+            courses_df = st.session_state["moodle_courses"]
+            display_cols = [x for x in ["id","shortname","fullname","visible"] if x in courses_df.columns]
+            st.dataframe(
+                courses_df[display_cols] if display_cols else courses_df,
+                use_container_width=True,
+                hide_index=True
             )
-            selected_course_id = course_options[selected_course_label]
+            if "id" in courses_df.columns and len(courses_df):
+                course_options = {
+                    f"{r.get('shortname','')} — {r.get('fullname','')} (ID {r['id']})": int(r["id"])
+                    for _, r in courses_df.iterrows()
+                }
+                labels = list(course_options.keys())
+                previous_id = st.session_state.get("moodle_selected_course_id")
+                default_idx = 0
+                if previous_id is not None:
+                    for idx, lab in enumerate(labels):
+                        if course_options[lab] == previous_id:
+                            default_idx = idx
+                            break
+                selected_course_label = st.selectbox(
+                    "Επιλέξτε μάθημα",
+                    labels,
+                    index=default_idx,
+                    key="live_course_selector"
+                )
+                st.session_state["moodle_selected_course_id"] = course_options[selected_course_label]
+                st.success(f"Ενεργό μάθημα: {selected_course_label}")
 
-            st.subheader("3. Live δεδομένα μαθήματος")
-            c1,c2,c3 = st.columns(3)
+    with tab_course_data:
+        st.markdown("### Δεδομένα μαθήματος")
+        selected_course_id = st.session_state.get("moodle_selected_course_id")
+        if not selected_course_id:
+            st.info("Επιλέξτε πρώτα μάθημα από την καρτέλα «Μαθήματα».")
+        else:
+            st.caption(f"Ενεργό Course ID: {selected_course_id}")
+            c1, c2, c3 = st.columns(3)
 
             with c1:
-                if st.button("Εγγεγραμμένοι χρήστες"):
+                if st.button("👥 Εγγεγραμμένοι χρήστες", key="live_users_btn"):
                     try:
                         users = moodle_rest_call(
                             moodle_url, token,
                             "core_enrol_get_enrolled_users",
-                            {"courseid": selected_course_id}
+                            {"courseid": int(selected_course_id)}
                         )
-                        udf = pd.DataFrame(users)
-                        st.session_state["moodle_enrolled_users"] = udf
-                        st.success(f"Ανακτήθηκαν {len(udf)} χρήστες.")
+                        st.session_state["moodle_enrolled_users"] = pd.DataFrame(users)
                     except Exception as e:
                         st.error(f"Αποτυχία: {e}")
 
             with c2:
-                if st.button("Quiz του μαθήματος"):
+                if st.button("📝 Quiz", key="live_quizzes_btn"):
                     try:
                         quizzes = moodle_rest_call(
                             moodle_url, token,
                             "mod_quiz_get_quizzes_by_courses",
-                            {"courseids[0]": selected_course_id}
+                            {"courseids[0]": int(selected_course_id)}
                         )
                         qlist = quizzes.get("quizzes", quizzes) if isinstance(quizzes, dict) else quizzes
-                        qdf = pd.DataFrame(qlist)
-                        st.session_state["moodle_quizzes"] = qdf
-                        st.success(f"Ανακτήθηκαν {len(qdf)} quiz.")
+                        st.session_state["moodle_quizzes"] = pd.DataFrame(qlist)
                     except Exception as e:
                         st.error(f"Αποτυχία: {e}")
 
             with c3:
-                if st.button("Περιεχόμενο μαθήματος"):
+                if st.button("🗂️ Δομή μαθήματος", key="live_contents_btn"):
                     try:
                         contents = moodle_rest_call(
                             moodle_url, token,
                             "core_course_get_contents",
-                            {"courseid": selected_course_id}
+                            {"courseid": int(selected_course_id)}
                         )
                         st.session_state["moodle_course_contents"] = contents
-                        st.success("Ανακτήθηκε η δομή του μαθήματος.")
                     except Exception as e:
                         st.error(f"Αποτυχία: {e}")
 
-    if "moodle_enrolled_users" in st.session_state:
-        st.subheader("Εγγεγραμμένοι χρήστες")
-        users = st.session_state["moodle_enrolled_users"]
-        safe_cols = [c for c in ["id","fullname","email","lastaccess"] if c in users.columns]
-        st.dataframe(users[safe_cols] if safe_cols else users,
-                     use_container_width=True, hide_index=True)
+            data_tab1, data_tab2, data_tab3 = st.tabs(["Χρήστες", "Quiz", "Δομή"])
 
-        st.download_button(
-            "Λήψη live Moodle users CSV",
-            users.to_csv(index=False).encode("utf-8-sig"),
-            "moodle_live_users.csv",
-            "text/csv"
+            with data_tab1:
+                if "moodle_enrolled_users" in st.session_state:
+                    users = st.session_state["moodle_enrolled_users"]
+                    safe_cols = [x for x in ["id","fullname","email","lastaccess"] if x in users.columns]
+                    st.dataframe(users[safe_cols] if safe_cols else users, use_container_width=True, hide_index=True)
+                    st.download_button(
+                        "⬇️ Λήψη χρηστών CSV",
+                        users.to_csv(index=False).encode("utf-8-sig"),
+                        "moodle_live_users.csv",
+                        "text/csv"
+                    )
+                else:
+                    st.caption("Δεν έχουν ανακτηθεί ακόμη χρήστες.")
+
+            with data_tab2:
+                if "moodle_quizzes" in st.session_state:
+                    qdf = st.session_state["moodle_quizzes"]
+                    show_cols = [x for x in ["id","name","course","grade","sumgrades","timeopen","timeclose"] if x in qdf.columns]
+                    st.dataframe(qdf[show_cols] if show_cols else qdf, use_container_width=True, hide_index=True)
+                else:
+                    st.caption("Δεν έχουν ανακτηθεί ακόμη quiz.")
+
+            with data_tab3:
+                if "moodle_course_contents" in st.session_state:
+                    sections = st.session_state["moodle_course_contents"]
+                    flat = []
+                    for sec in sections if isinstance(sections, list) else []:
+                        sec_name = sec.get("name","")
+                        for mod in sec.get("modules",[]):
+                            flat.append({
+                                "Ενότητα": sec_name,
+                                "Όνομα": mod.get("name"),
+                                "Τύπος": mod.get("modname"),
+                                "ID": mod.get("id"),
+                                "URL": mod.get("url")
+                            })
+                    if flat:
+                        st.dataframe(pd.DataFrame(flat), use_container_width=True, hide_index=True)
+                    else:
+                        st.caption("Δεν βρέθηκε διαθέσιμη δομή.")
+                else:
+                    st.caption("Δεν έχει ανακτηθεί ακόμη η δομή του μαθήματος.")
+
+    with tab_advanced:
+        st.markdown("### Προχωρημένο αίτημα")
+        st.caption("Για ειδικές λειτουργίες Moodle που δεν έχουν έτοιμο κουμπί στις προηγούμενες καρτέλες.")
+        custom_function = st.text_input(
+            "Λειτουργία διασύνδεσης Moodle",
+            placeholder="π.χ. gradereport_user_get_grade_items",
+            key="live_custom_function"
         )
-
-    if "moodle_quizzes" in st.session_state:
-        st.subheader("Quiz / Σύντομο τεστ")
-        qdf = st.session_state["moodle_quizzes"]
-        show_cols = [c for c in ["id","name","course","grade","sumgrades","timeopen","timeclose"] if c in qdf.columns]
-        st.dataframe(qdf[show_cols] if show_cols else qdf,
-                     use_container_width=True, hide_index=True)
-
-    if "moodle_course_contents" in st.session_state:
-        st.subheader("Δομή μαθήματος")
-        sections = st.session_state["moodle_course_contents"]
-        flat = []
-        for sec in sections if isinstance(sections,list) else []:
-            sec_name = sec.get("name","")
-            for mod in sec.get("modules",[]):
-                flat.append({
-                    "Ενότητα":sec_name,
-                    "Όνομα":mod.get("name"),
-                    "Τύπος":mod.get("modname"),
-                    "ID":mod.get("id"),
-                    "URL":mod.get("url")
-                })
-        if flat:
-            st.dataframe(pd.DataFrame(flat),use_container_width=True,hide_index=True)
-
-    st.subheader("Προχωρημένο REST αίτημα")
-    st.caption("Για Λειτουργία Moodles που δεν έχουν έτοιμο κουμπί παραπάνω.")
-    custom_function = st.text_input(
-        "Λειτουργία διασύνδεσης Moodle",
-        placeholder="π.χ. gradereport_user_get_grade_items"
-    )
-    custom_params_text = st.text_area(
-        "Παράμετροι ως JSON",
-        value="{}",
-        height=100
-    )
-    if st.button("Εκτέλεση προχωρημένου αιτήματος"):
-        try:
-            params = json.loads(custom_params_text or "{}")
-            result = moodle_rest_call(moodle_url, token, custom_function, params)
-            st.session_state["moodle_custom_result"] = result
-            st.success("Το αίτημα ολοκληρώθηκε.")
-            if isinstance(result, list):
-                st.dataframe(pd.DataFrame(result),use_container_width=True,hide_index=True)
-            elif isinstance(result, dict):
-                st.json(result)
+        custom_params_text = st.text_area(
+            "Παράμετροι ως JSON",
+            value="{}",
+            height=100,
+            key="live_custom_params"
+        )
+        if st.button("▶️ Εκτέλεση αιτήματος", key="live_custom_execute"):
+            if not moodle_url or not token:
+                st.error("Πηγαίνετε πρώτα στην καρτέλα «Σύνδεση».")
             else:
-                st.write(result)
-        except Exception as e:
-            st.error(f"Αποτυχία αιτήματος: {e}")
+                try:
+                    params = json.loads(custom_params_text or "{}")
+                    result = moodle_rest_call(moodle_url, token, custom_function, params)
+                    st.session_state["moodle_custom_result"] = result
+                    st.success("Το αίτημα ολοκληρώθηκε.")
+                    if isinstance(result, list):
+                        st.dataframe(pd.DataFrame(result), use_container_width=True, hide_index=True)
+                    elif isinstance(result, dict):
+                        st.json(result)
+                    else:
+                        st.write(result)
+                except Exception as e:
+                    st.error(f"Αποτυχία αιτήματος: {e}")
 
 
 # ==========================================================
@@ -4425,18 +4481,31 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
         unsafe_allow_html=True,
     )
 
-    with st.expander("⚙️ Σύνδεση Moodle", expanded=False):
-        st.caption("Οι ρυθμίσεις σύνδεσης είναι διαχειριστικές και δεν χρειάζεται να εμφανίζονται σε κάθε καθημερινή χρήση.")
+    moodle_url = st.session_state.get("moodle_base_url", "")
+    token = st.session_state.get("moodle_shared_token", "")
+
+    if moodle_url and token:
+        st.success("🔐 Χρησιμοποιούνται τα στοιχεία σύνδεσης που έχουν ήδη δοθεί στη συνεδρία.")
+    else:
+        st.info("Δώστε πρώτα τα στοιχεία στην «Ανάλυση SCORM» ή στη «Ζωντανή Σύνδεση Moodle».")
+
+    with st.expander("⚙️ Αλλαγή στοιχείων σύνδεσης", expanded=False):
+        st.caption("Χρησιμοποιήστε το μόνο αν θέλετε να αλλάξετε τα ήδη αποθηκευμένα στοιχεία της συνεδρίας.")
         moodle_url = st.text_input(
             "Διεύθυνση Moodle",
-            value=st.session_state.get("moodle_base_url",""),
+            value=moodle_url,
             key="write_moodle_url"
         ).rstrip("/")
         token = st.text_input(
             "Κλειδί ασφαλούς πρόσβασης",
+            value=token,
             type="password",
             key="write_moodle_token"
         )
+        if moodle_url:
+            st.session_state["moodle_base_url"] = moodle_url
+        if token:
+            st.session_state["moodle_shared_token"] = token
 
     if "moodle_write_audit" not in st.session_state:
         st.session_state["moodle_write_audit"] = pd.DataFrame(columns=[
