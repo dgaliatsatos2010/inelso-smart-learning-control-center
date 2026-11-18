@@ -498,9 +498,6 @@ def render_info_button(key):
             with st.expander("Περισσότερες οδηγίες"):
                 for i, step in enumerate(info['steps'][3:], start=4):
                     st.markdown(f"**{i}.** {step}")
-        if info.get("data"):
-            st.markdown("**Τι δεδομένα χρειάζονται**")
-            st.info(info['data'])
 
 def render_module_header(title, subtitle, help_key=None, badge=None):
     st.markdown("<div id='inelso-page-top'></div>", unsafe_allow_html=True)
