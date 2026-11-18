@@ -4859,79 +4859,184 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
 # EARLY WARNING ENGINE
 # ==========================================================
 elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστήριξη":
-    if ACTIVE_DF is None:
-        render_module_header("Μαθησιακή Ανάλυση & Έγκαιρη Υποστήριξη", "Έγκαιρος εντοπισμός περιπτώσεων που μπορεί να χρειάζονται εκπαιδευτική υποστήριξη.", "s16")
-        show_active_dataset_context("S16")
-        st.info("Δεν έχει φορτωθεί ενεργή πηγή. Η ενότητα Μαθησιακής Ανάλυσης παραμένει κενό μέχρι να φορτωθεί πραγματικό dataset.")
-        c1,c2,c3 = st.columns(3)
-        c1.metric("Φοιτητές","—")
-        c2.metric("Ενδείξεις προτεραιότητας","—")
-        c3.metric("Κατάσταση","—")
-        st.stop()
 
-    render_module_header("Μαθησιακή Ανάλυση & Έγκαιρη Υποστήριξη", "Έγκαιρος εντοπισμός περιπτώσεων που μπορεί να χρειάζονται εκπαιδευτική υποστήριξη.", "s16")
+    def _s16_go(target_label):
+        st.session_state["inelso_main_navigation"] = target_label
+
+    render_module_header(
+        "Μαθησιακή Ανάλυση & Έγκαιρη Υποστήριξη",
+        "Έγκαιρος εντοπισμός περιπτώσεων που μπορεί να χρειάζονται εκπαιδευτική υποστήριξη.",
+        "s16"
+    )
     show_active_dataset_context("S16")
-    st.caption(
-        "Παρακολούθηση συμμετοχής, ολοκλήρωσης και έγκαιρος εντοπισμός φοιτητών που μπορεί να χρειάζονται ανθρώπινη υποστήριξη."
-    )
-    st.info(
-        "Ο δείκτης είναι διαφανής και παραμετρικός. Δεν παρουσιάζεται ως επικυρωμένο μοντέλο πρόβλεψης "
-        "χωρίς ανεξάρτητη αξιολόγηση."
-    )
 
-
-    s16_scorm_ready = ACTIVE_DF is not None
-    render_moodle_rest_service_panel(
-        "Μαθησιακή Ανάλυση",
-        summary=(
-            f"Early-warning analysis · compatibility {service_dataset_compatibility('S16', ACTIVE_DF)}"
-            if s16_scorm_ready else
-            "Dataset required"
-        ),
-        score=None,
-        status="Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος" if s16_scorm_ready else "incomplete",
-        entity=ACTIVE_NAME if s16_scorm_ready else "Μαθησιακή Ανάλυση",
-        enabled=True,
-        intervention_type="Μαθησιακή Ανάλυση — Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος",
-        note="Ο operational risk index δεν γράφεται ως επίσημος βαθμός.",
-    )
-
-
-    if "inelso_uploaded_original" not in st.session_state:
-        st.warning("Φορτώστε πρώτα δεδομένα από το «Κέντρο Εισαγωγής & Επεξεργασίας Δεδομένων».")
-    else:
-        ew_df = st.session_state.get(
-            "inelso_uploaded_clean",
-            st.session_state["inelso_uploaded_original"]
-        ).copy()
-
-        st.info(
-            "Ο δείκτης προτεραιότητας είναι διαφανής λειτουργικός δείκτης και όχι επικυρωμένο μοντέλο πρόβλεψης. "
-            "Ο χρήστης επιλέγει ποιες στήλες αντιστοιχούν στις απαιτούμενες ενδείξεις."
+    if ACTIVE_DF is None:
+        st.markdown(
+            "<div class='inelso-action-banner'><strong>Το service είναι έτοιμο — χρειάζεται πραγματική πηγή δεδομένων.</strong><br>"
+            "Δεν δημιουργούνται demo κίνδυνοι ή τεχνητές περιπτώσεις. Μόλις φορτωθεί συμβατό learner-level dataset, "
+            "η σελίδα μετατρέπεται αυτόματα σε ενεργό workspace ανάλυσης.</div>",
+            unsafe_allow_html=True
         )
 
+        no_data_tabs = st.tabs(["Τι κάνει", "Τι χρειάζεται", "Ασφάλεια"])
+        with no_data_tabs[0]:
+            a,b,c1,c2 = st.columns(4)
+            with a:
+                st.markdown(
+                    "<div class='inelso-feature-card'><div class='kicker'>MONITOR</div><h3>Παρακολουθεί</h3>"
+                    "<p>Επίδοση, αδράνεια, προσπάθειες και engagement, μόνο όταν υπάρχουν πραγματικά πεδία.</p></div>",
+                    unsafe_allow_html=True
+                )
+            with b:
+                st.markdown(
+                    "<div class='inelso-feature-card'><div class='kicker'>SCORE</div><h3>Ιεραρχεί</h3>"
+                    "<p>Συνδυάζει διαθέσιμες ενδείξεις σε διαφανή λειτουργικό δείκτη προτεραιότητας.</p></div>",
+                    unsafe_allow_html=True
+                )
+            with c1:
+                st.markdown(
+                    "<div class='inelso-feature-card'><div class='kicker'>EXPLAIN</div><h3>Εξηγεί</h3>"
+                    "<p>Δείχνει ποιες μεταβλητές και ποια βάρη συνέβαλαν στην τελική ένδειξη.</p></div>",
+                    unsafe_allow_html=True
+                )
+            with c2:
+                st.markdown(
+                    "<div class='inelso-feature-card'><div class='kicker'>SUPPORT</div><h3>Προτείνει</h3>"
+                    "<p>Παράγει επόμενο βήμα για ανθρώπινο έλεγχο, επικοινωνία ή απλή παρακολούθηση.</p></div>",
+                    unsafe_allow_html=True
+                )
+
+            st.markdown("#### Τι θα εμφανιστεί όταν υπάρχουν δεδομένα")
+            k1,k2,k3,k4 = st.columns(4)
+            k1.metric("Φοιτητές", "—")
+            k2.metric("Υψηλή προτεραιότητα", "—")
+            k3.metric("Μεσαία προτεραιότητα", "—")
+            k4.metric("Κατάσταση", "Αναμονή δεδομένων")
+
+        with no_data_tabs[1]:
+            st.markdown("### Ελάχιστα χρήσιμα πεδία")
+            st.markdown(
+                "<div class='inelso-process'>"
+                "<div class='step active'><strong>1 · Learner ID</strong><span>Ανώνυμο ή εσωτερικό αναγνωριστικό μαθητή.</span></div>"
+                "<div class='step'><strong>2 · Επίδοση</strong><span>Score ή grade, εφόσον είναι διαθέσιμο.</span></div>"
+                "<div class='step'><strong>3 · Συμμετοχή</strong><span>Αδράνεια, submissions ή activity/engagement.</span></div>"
+                "<div class='step safe'><strong>4 · Ανθρώπινος έλεγχος</strong><span>Η ένδειξη δεν εκτελεί καμία αυτόματη παρέμβαση.</span></div>"
+                "</div>",
+                unsafe_allow_html=True
+            )
+            x1,x2 = st.columns(2)
+            with x1:
+                st.button(
+                    "Εισαγωγή CSV / Excel",
+                    use_container_width=True,
+                    on_click=_s16_go,
+                    args=("Εισαγωγή Δεδομένων",),
+                    key="s16_empty_import"
+                )
+            with x2:
+                st.button(
+                    "Ανάλυση SCORM",
+                    use_container_width=True,
+                    on_click=_s16_go,
+                    args=("Ανάλυση SCORM",),
+                    key="s16_empty_scorm"
+                )
+
+        with no_data_tabs[2]:
+            st.markdown(
+                "<div class='inelso-feature-card'><div class='kicker'>HUMAN IN THE LOOP</div>"
+                "<h3>Δεν είναι αυτόματη απόφαση για φοιτητή</h3>"
+                "<p>Ο δείκτης είναι λειτουργικό εργαλείο προτεραιοποίησης. Δεν είναι επικυρωμένο προγνωστικό μοντέλο, "
+                "δεν αλλάζει βαθμούς και δεν στέλνει παρεμβάσεις χωρίς ανθρώπινη έγκριση.</p></div>",
+                unsafe_allow_html=True
+            )
+            st.info("Καμία επίσημη βαθμολογία ή κρίσιμη ενέργεια δεν μεταβάλλεται αυτόματα.")
+
+        st.stop()
+
+    # ------------------------------------------------------
+    # ACTIVE DATASET MODE
+    # ------------------------------------------------------
+    ew_df = st.session_state.get(
+        "inelso_uploaded_clean",
+        st.session_state.get("inelso_uploaded_original", ACTIVE_DF)
+    ).copy()
+
+    render_source_quality_strip(ACTIVE_DF, "S16")
+
+    st.markdown(
+        "<div class='inelso-action-banner'><strong>Διαφανής early-support δείκτης.</strong><br>"
+        "Ο χρήστης επιλέγει ποιες πραγματικές στήλες συμμετέχουν, ρυθμίζει βάρη/κατώφλια και βλέπει ακριβώς "
+        "πώς δημιουργήθηκε κάθε προτεραιότητα.</div>",
+        unsafe_allow_html=True
+    )
+
+    s16_tabs = st.tabs(["Επισκόπηση", "Ρύθμιση δείκτη", "Αποτελέσματα", "Παρέμβαση & Moodle"])
+
+    with s16_tabs[0]:
+        compat = service_dataset_compatibility("S16", ACTIVE_DF)
+        p = dataset_profile(ACTIVE_DF)
+        r1,r2,r3,r4 = st.columns(4)
+        r1.metric("Εγγραφές", p["rows"])
+        r2.metric("Πεδία", p["cols"])
+        r3.metric("Συμβατότητα", compat)
+        if "early_warning_results" in st.session_state:
+            _ew_current = st.session_state["early_warning_results"]
+            _high_n = int((_ew_current["Κατηγορία κινδύνου"]=="ΥΨΗΛΟΣ").sum()) if "Κατηγορία κινδύνου" in _ew_current.columns else 0
+            r4.metric("Υψηλή προτεραιότητα", _high_n)
+        else:
+            r4.metric("Υψηλή προτεραιότητα", "—")
+
+        st.markdown("#### Τι χρησιμοποιεί το service")
+        u1,u2,u3,u4 = st.columns(4)
+        with u1:
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>PERFORMANCE</div><h3>Επίδοση</h3><p>Χαμηλότερη επίδοση μπορεί να αυξήσει την προτεραιότητα.</p></div>", unsafe_allow_html=True)
+        with u2:
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>INACTIVITY</div><h3>Αδράνεια</h3><p>Περισσότερες ημέρες αδράνειας μπορούν να αυξήσουν την ένδειξη.</p></div>", unsafe_allow_html=True)
+        with u3:
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>ATTEMPTS</div><h3>Προσπάθειες</h3><p>Μπορούν να χρησιμοποιηθούν ως λειτουργικό σήμα, ανάλογα με το dataset.</p></div>", unsafe_allow_html=True)
+        with u4:
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>ENGAGEMENT</div><h3>Συμμετοχή</h3><p>Χαμηλό engagement μπορεί να λειτουργήσει ως πρόσθετη ένδειξη.</p></div>", unsafe_allow_html=True)
+
+        with st.expander("Μεθοδολογική σημείωση", expanded=False):
+            st.write(
+                "Ο δείκτης είναι παραμετρικός και διαφανής. Δεν παρουσιάζεται ως επικυρωμένο predictive model "
+                "χωρίς ανεξάρτητη αξιολόγηση. Τα βάρη και τα κατώφλια ορίζονται ρητά από τον χρήστη."
+            )
+
+    with s16_tabs[1]:
+        st.markdown("### 1. Αντιστοίχιση πεδίων")
         cols = ["— καμία —"] + list(ew_df.columns.astype(str))
+        m1,m2 = st.columns(2)
+        with m1:
+            learner_col = st.selectbox("Αναγνωριστικό μαθητή", cols, key="ew_learner")
+            grade_col = st.selectbox("Βαθμός / score", cols, key="ew_grade")
+            inactivity_col = st.selectbox("Ημέρες αδράνειας", cols, key="ew_inactivity")
+        with m2:
+            attempts_col = st.selectbox("Αριθμός προσπαθειών / submissions", cols, key="ew_attempts")
+            engagement_col = st.selectbox("Engagement / activity score", cols, key="ew_engagement")
 
-        learner_col = st.selectbox("Αναγνωριστικό μαθητή", cols, key="ew_learner")
-        grade_col = st.selectbox("Βαθμός / score", cols, key="ew_grade")
-        inactivity_col = st.selectbox("Ημέρες αδράνειας", cols, key="ew_inactivity")
-        attempts_col = st.selectbox("Αριθμός προσπαθειών / submissions", cols, key="ew_attempts")
-        engagement_col = st.selectbox("Engagement / activity score", cols, key="ew_engagement")
+        st.markdown("### 2. Βάρη")
+        w1,w2,w3,w4 = st.columns(4)
+        with w1:
+            w_grade = st.slider("Χαμηλή επίδοση",0,100,35,5,key="s16_w_grade")
+        with w2:
+            w_inactivity = st.slider("Αδράνεια",0,100,30,5,key="s16_w_inactivity")
+        with w3:
+            w_attempts = st.slider("Προσπάθειες",0,100,15,5,key="s16_w_attempts")
+        with w4:
+            w_engagement = st.slider("Χαμηλό engagement",0,100,20,5,key="s16_w_engagement")
 
-        st.subheader("Βάρη κινδύνου")
-        w_grade = st.slider("Βάρος χαμηλής επίδοσης",0,100,35,5)
-        w_inactivity = st.slider("Βάρος αδράνειας",0,100,30,5)
-        w_attempts = st.slider("Βάρος προσπαθειών",0,100,15,5)
-        w_engagement = st.slider("Βάρος χαμηλού engagement",0,100,20,5)
+        st.markdown("### 3. Κατώφλια προτεραιότητας")
+        t1,t2 = st.columns(2)
+        with t1:
+            high_thr = st.slider("Υψηλή προτεραιότητα από",50,90,70,5,key="s16_high_thr")
+        with t2:
+            med_thr = st.slider("Μεσαία προτεραιότητα από",20,70,45,5,key="s16_med_thr")
 
-        total_w = w_grade+w_inactivity+w_attempts+w_engagement
-        if total_w == 0:
-            total_w = 1
+        st.caption("Τα βάρη κανονικοποιούνται μόνο στα πεδία που έχουν επιλεγεί.")
 
-        high_thr = st.slider("Κατώφλι υψηλού κινδύνου",50,90,70,5)
-        med_thr = st.slider("Κατώφλι μεσαίου κινδύνου",20,70,45,5)
-
-        if st.button("Υπολογισμός κινδύνου"):
+        if st.button("Υπολογισμός προτεραιότητας", type="primary", use_container_width=True, key="s16_compute"):
             out_df = ew_df.copy()
 
             def norm_low(series):
@@ -4954,22 +5059,19 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
 
             components = []
             weights = []
+            active_signals = []
 
             if grade_col != "— καμία —":
-                components.append(norm_low(out_df[grade_col]))
-                weights.append(w_grade)
+                components.append(norm_low(out_df[grade_col])); weights.append(w_grade); active_signals.append("επίδοση")
             if inactivity_col != "— καμία —":
-                components.append(norm_high(out_df[inactivity_col]))
-                weights.append(w_inactivity)
+                components.append(norm_high(out_df[inactivity_col])); weights.append(w_inactivity); active_signals.append("αδράνεια")
             if attempts_col != "— καμία —":
-                components.append(norm_high(out_df[attempts_col]))
-                weights.append(w_attempts)
+                components.append(norm_high(out_df[attempts_col])); weights.append(w_attempts); active_signals.append("προσπάθειες")
             if engagement_col != "— καμία —":
-                components.append(norm_low(out_df[engagement_col]))
-                weights.append(w_engagement)
+                components.append(norm_low(out_df[engagement_col])); weights.append(w_engagement); active_signals.append("engagement")
 
             if not components:
-                st.error("Επίλεξε τουλάχιστον ένα ένδειξη.")
+                st.error("Επίλεξε τουλάχιστον μία πραγματική ένδειξη.")
             else:
                 active_total = max(1,sum(weights))
                 risk = sum(comp*w for comp,w in zip(components,weights))/active_total
@@ -4983,87 +5085,135 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
                     return "ΧΑΜΗΛΟΣ"
 
                 out_df["Κατηγορία κινδύνου"] = out_df["Δείκτης κινδύνου"].apply(risk_class)
-
-                if learner_col != "— καμία —":
-                    out_df["Μαθητής"] = out_df[learner_col].astype(str)
-                else:
-                    out_df["Μαθητής"] = [f"Εγγραφή {i+1}" for i in range(len(out_df))]
-
+                out_df["Μαθητής"] = (
+                    out_df[learner_col].astype(str)
+                    if learner_col != "— καμία —"
+                    else [f"Εγγραφή {i+1}" for i in range(len(out_df))]
+                )
                 out_df["Προτεινόμενη ενέργεια"] = out_df["Κατηγορία κινδύνου"].map({
                     "ΥΨΗΛΟΣ":"Άμεσος ανθρώπινος έλεγχος",
                     "ΜΕΣΑΙΟΣ":"Στοχευμένη επικοινωνία / παρακολούθηση",
                     "ΧΑΜΗΛΟΣ":"Κανονική παρακολούθηση"
                 })
-
-                active_ενδείξεις = []
-                if grade_col != "— καμία —":
-                    active_ενδείξεις.append("επίδοση")
-                if inactivity_col != "— καμία —":
-                    active_ενδείξεις.append("αδράνεια")
-                if attempts_col != "— καμία —":
-                    active_ενδείξεις.append("προσπάθειες")
-                if engagement_col != "— καμία —":
-                    active_ενδείξεις.append("engagement")
-
                 out_df["Εξήγηση"] = (
-                    "Risk score από: " + ", ".join(active_ενδείξεις) +
+                    "Risk score από: " + ", ".join(active_signals) +
                     ". Βάρη και κατώφλια ορίζονται από τον χρήστη."
                 )
 
                 st.session_state["early_warning_results"] = out_df
+                st.session_state["early_warning_config"] = {
+                    "signals": active_signals,
+                    "high_thr": high_thr,
+                    "med_thr": med_thr,
+                    "weights": {
+                        "grade":w_grade,
+                        "inactivity":w_inactivity,
+                        "attempts":w_attempts,
+                        "engagement":w_engagement,
+                    }
+                }
+                st.success("Η ανάλυση ολοκληρώθηκε. Τα αποτελέσματα είναι διαθέσιμα στο tab «Αποτελέσματα».")
 
-                counts = out_df["Κατηγορία κινδύνου"].value_counts()
-                a,b,c = st.columns(3)
-                a.metric("Υψηλός κίνδυνος",int(counts.get("ΥΨΗΛΟΣ",0)))
-                b.metric("Μεσαίος κίνδυνος",int(counts.get("ΜΕΣΑΙΟΣ",0)))
-                c.metric("Χαμηλός κίνδυνος",int(counts.get("ΧΑΜΗΛΟΣ",0)))
+    with s16_tabs[2]:
+        if "early_warning_results" not in st.session_state:
+            render_empty_state(
+                "Δεν έχει εκτελεστεί ακόμη ανάλυση",
+                "Ρυθμίστε τις πραγματικές μεταβλητές και τα κατώφλια στο tab «Ρύθμιση δείκτη».",
+                "Πατήστε «Υπολογισμός προτεραιότητας»."
+            )
+        else:
+            out_df = st.session_state["early_warning_results"]
+            counts = out_df["Κατηγορία κινδύνου"].value_counts()
+            a,b,c3,d = st.columns(4)
+            a.metric("Σύνολο", len(out_df))
+            b.metric("Υψηλή", int(counts.get("ΥΨΗΛΟΣ",0)))
+            c3.metric("Μεσαία", int(counts.get("ΜΕΣΑΙΟΣ",0)))
+            d.metric("Χαμηλή", int(counts.get("ΧΑΜΗΛΟΣ",0)))
 
-                view_cols = ["Μαθητής","Δείκτης κινδύνου","Κατηγορία κινδύνου","Προτεινόμενη ενέργεια","Εξήγηση"]
-                ranked = out_df.sort_values("Δείκτης κινδύνου",ascending=False)
+            ranked = out_df.sort_values("Δείκτης κινδύνου",ascending=False)
+            top = ranked.iloc[0] if len(ranked) else None
+            if top is not None:
+                st.markdown(
+                    f"<div class='inelso-action-banner'><strong>Υψηλότερη τρέχουσα προτεραιότητα:</strong> "
+                    f"{top['Μαθητής']} · δείκτης {top['Δείκτης κινδύνου']}/100 · {top['Κατηγορία κινδύνου']}.</div>",
+                    unsafe_allow_html=True
+                )
+
+            view_cols = ["Μαθητής","Δείκτης κινδύνου","Κατηγορία κινδύνου","Προτεινόμενη ενέργεια"]
+            st.dataframe(ranked[view_cols], use_container_width=True, hide_index=True)
+
+            with st.expander("Αναλυτική εξήγηση ανά εγγραφή", expanded=False):
                 st.dataframe(
-                    ranked[view_cols],
+                    ranked[["Μαθητής","Δείκτης κινδύνου","Κατηγορία κινδύνου","Προτεινόμενη ενέργεια","Εξήγηση"]],
                     use_container_width=True,
                     hide_index=True
                 )
 
-                st.markdown("### Human-in-the-loop παρέμβαση")
-                selected_risk_learner = st.selectbox(
-                    "Learner για προτεινόμενη παρέμβαση",
-                    ranked["Μαθητής"].astype(str).tolist(),
-                    key="s16_intervention_learner"
-                )
-                selected_row = ranked[
-                    ranked["Μαθητής"].astype(str) == str(selected_risk_learner)
-                ].iloc[0]
+            st.download_button(
+                "Λήψη αποτελεσμάτων CSV",
+                out_df.to_csv(index=False).encode("utf-8-sig"),
+                "INELSO_Early_Warning.csv",
+                "text/csv",
+                use_container_width=True,
+                key="s16_download_results"
+            )
 
-                default_s16_note = (
-                    f"Μαθησιακή Ανάλυση early-warning review για learner {selected_risk_learner}. "
-                    f"Δείκτης κινδύνου: {selected_row['Δείκτης κινδύνου']}/100 "
-                    f"({selected_row['Κατηγορία κινδύνου']}). "
-                    f"Προτεινόμενη ενέργεια: {selected_row['Προτεινόμενη ενέργεια']}. "
-                    "Απαιτείται ανθρώπινος έλεγχος πριν από οποιαδήποτε παρέμβαση."
-                )
+    with s16_tabs[3]:
+        if "early_warning_results" not in st.session_state:
+            render_empty_state(
+                "Δεν υπάρχει ακόμη περίπτωση για παρέμβαση",
+                "Η παρέμβαση εμφανίζεται μόνο αφού ολοκληρωθεί πραγματική ανάλυση.",
+                "Εκτελέστε πρώτα τον υπολογισμό προτεραιότητας."
+            )
+        else:
+            ranked = st.session_state["early_warning_results"].sort_values("Δείκτης κινδύνου",ascending=False)
+            st.markdown("### Human-in-the-loop παρέμβαση")
+            selected_risk_learner = st.selectbox(
+                "Learner",
+                ranked["Μαθητής"].astype(str).tolist(),
+                key="s16_intervention_learner"
+            )
+            selected_row = ranked[
+                ranked["Μαθητής"].astype(str) == str(selected_risk_learner)
+            ].iloc[0]
 
+            p1,p2,p3 = st.columns(3)
+            p1.metric("Δείκτης", f"{selected_row['Δείκτης κινδύνου']}/100")
+            p2.metric("Προτεραιότητα", selected_row["Κατηγορία κινδύνου"])
+            p3.metric("Επόμενο βήμα", selected_row["Προτεινόμενη ενέργεια"])
+
+            default_s16_note = (
+                f"Μαθησιακή Ανάλυση early-warning review για learner {selected_risk_learner}. "
+                f"Δείκτης κινδύνου: {selected_row['Δείκτης κινδύνου']}/100 "
+                f"({selected_row['Κατηγορία κινδύνου']}). "
+                f"Προτεινόμενη ενέργεια: {selected_row['Προτεινόμενη ενέργεια']}. "
+                "Απαιτείται ανθρώπινος έλεγχος πριν από οποιαδήποτε παρέμβαση."
+            )
+
+            with st.expander("Κείμενο παρέμβασης", expanded=True):
                 s16_note_text = st.text_area(
-                    "Προτεινόμενο κείμενο παρέμβασης",
+                    "Προσχέδιο προς έλεγχο",
                     value=default_s16_note,
                     height=130,
                     key="s16_note_preview"
                 )
 
-                if st.button("Προώθηση draft στην Ελεγχόμενη Εγγραφή Moodle", key="s16_stage_note"):
-                    st.session_state["pending_moodle_note_text"] = s16_note_text
-                    st.session_state["pending_moodle_intervention_type"] = "Μαθησιακή Ανάλυση — Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος"
-                    st.success(
-                        "Το draft αποθηκεύτηκε στη συνεδρία. Πήγαινε στην «Ελεγχόμενη Εγγραφή Moodle», "
-                        "επέλεξε learner/course και έλεγξέ το πριν από πραγματικό write."
-                    )
+            st.info("Το παρακάτω βήμα δημιουργεί μόνο draft. Δεν γράφει αυτόματα βαθμό ή παρέμβαση στο Moodle.")
+            if st.button("Προώθηση draft στην Ελεγχόμενη Εγγραφή Moodle", use_container_width=True, key="s16_stage_note"):
+                st.session_state["pending_moodle_note_text"] = s16_note_text
+                st.session_state["pending_moodle_intervention_type"] = "Μαθησιακή Ανάλυση — Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος"
+                st.success("Το draft προωθήθηκε στην Ελεγχόμενη Εγγραφή Moodle. Απαιτείται ρητή ανθρώπινη επιβεβαίωση.")
 
-                st.download_button(
-                    "Λήψη Έγκαιρη υποστήριξη αποτελεσμάτων",
-                    out_df.to_csv(index=False).encode("utf-8-sig"),
-                    "INELSO_Early_Warning.csv",
-                    "text/csv"
+            with st.expander("Τεχνική σύνδεση / provenance Moodle", expanded=False):
+                render_moodle_rest_service_panel(
+                    "Μαθησιακή Ανάλυση",
+                    summary=f"Early-warning analysis · compatibility {service_dataset_compatibility('S16', ACTIVE_DF)}",
+                    score=None,
+                    status="Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος",
+                    entity=ACTIVE_NAME,
+                    enabled=True,
+                    intervention_type="Μαθησιακή Ανάλυση — Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος",
+                    note="Ο operational risk index δεν γράφεται ως επίσημος βαθμός.",
                 )
 
 # ==========================================================
