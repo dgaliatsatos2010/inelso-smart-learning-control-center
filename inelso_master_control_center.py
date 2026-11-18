@@ -1059,16 +1059,16 @@ ACTIVE_KIND = active_dataset_kind(ACTIVE_DF)
 # ΠΡΑΓΜΑΤΙΚΑ / ΕΛΕΓΧΟΜΕΝΑ SIGNALS SERVICE 21
 # ==========================================================
 service21 = pd.DataFrame([
-    {"ερώτηση":"S21 Marketing Q01","facility":2.00,"διάκριση":34.92,"αποτελεσματικότητα":100.00},
-    {"ερώτηση":"S21 Marketing Q02","facility":2.00,"διάκριση":34.92,"αποτελεσματικότητα":100.00},
-    {"ερώτηση":"S21 Marketing Q04","facility":0.67,"διάκριση":39.68,"αποτελεσματικότητα":100.00},
-    {"ερώτηση":"S21 Marketing Q07","facility":0.00,"διάκριση":np.nan,"αποτελεσματικότητα":np.nan},
-    {"ερώτηση":"S21 Marketing Q10","facility":2.00,"διάκριση":34.92,"αποτελεσματικότητα":100.00},
-    {"ερώτηση":"S21 Marketing Q05","facility":20.00,"διάκριση":44.11,"αποτελεσματικότητα":61.54},
-    {"ερώτηση":"S21 Marketing Q09","facility":72.00,"διάκριση":12.88,"αποτελεσματικότητα":21.49},
-    {"ερώτηση":"S21 Marketing Q03","facility":44.00,"διάκριση":73.22,"αποτελεσματικότητα":92.35},
-    {"ερώτηση":"S21 Marketing Q06","facility":32.00,"διάκριση":44.38,"αποτελεσματικότητα":52.03},
-    {"ερώτηση":"S21 Marketing Q08","facility":52.00,"διάκριση":60.89,"αποτελεσματικότητα":80.71},
+    {"ερώτηση":"Marketing Q01","facility":2.00,"διάκριση":34.92,"αποτελεσματικότητα":100.00},
+    {"ερώτηση":"Marketing Q02","facility":2.00,"διάκριση":34.92,"αποτελεσματικότητα":100.00},
+    {"ερώτηση":"Marketing Q04","facility":0.67,"διάκριση":39.68,"αποτελεσματικότητα":100.00},
+    {"ερώτηση":"Marketing Q07","facility":0.00,"διάκριση":np.nan,"αποτελεσματικότητα":np.nan},
+    {"ερώτηση":"Marketing Q10","facility":2.00,"διάκριση":34.92,"αποτελεσματικότητα":100.00},
+    {"ερώτηση":"Marketing Q05","facility":20.00,"διάκριση":44.11,"αποτελεσματικότητα":61.54},
+    {"ερώτηση":"Marketing Q09","facility":72.00,"διάκριση":12.88,"αποτελεσματικότητα":21.49},
+    {"ερώτηση":"Marketing Q03","facility":44.00,"διάκριση":73.22,"αποτελεσματικότητα":92.35},
+    {"ερώτηση":"Marketing Q06","facility":32.00,"διάκριση":44.38,"αποτελεσματικότητα":52.03},
+    {"ερώτηση":"Marketing Q08","facility":52.00,"διάκριση":60.89,"αποτελεσματικότητα":80.71},
 ])
 
 def κατηγορία_διάκρισης(x):
@@ -2652,7 +2652,7 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
     c4.metric("Δείκτης υγείας",f"{health31:.1f}/100")
     render_moodle_rest_service_panel(
         "Ενοποιημένες Μαθησιακές Ενδείξεις",
-        summary=f"Integrated ενδείξεις {len(service31_integrated)} · high priority {high31}",
+        summary=f"Ενοποιημένες ενδείξεις {len(service31_integrated)} · υψηλής προτεραιότητας {high31}",
         score=None,
         status="Integrated learning insight",
         entity="Integrated learning ενδείξεις",
@@ -2767,7 +2767,7 @@ elif section == "Κύκλος Ζωής Ενεργειών":
             (service21["κατάσταση"]=="ΜΗ ΕΚΤΙΜΗΣΙΜΗ")
         ].iterrows():
             actions.append({
-                "Κωδικός":f"S21-{r['ερώτηση'].split()[-1]}",
+                "Κωδικός":f"ΕΡΩΤΗΣΗ-{r['ερώτηση'].split()[-1]}",
                 "Ενότητα":"Ποιότητα Αξιολόγησης",
                 "Οντότητα":r["ερώτηση"],
                 "Προτεραιότητα":1 if r["κατάσταση"]=="ΜΗ ΕΚΤΙΜΗΣΙΜΗ" else 2,
@@ -2778,7 +2778,7 @@ elif section == "Κύκλος Ζωής Ενεργειών":
     if "custom_s26" in st.session_state:
         for i,(_,r) in enumerate(cohort26[cohort26["κατάσταση"]!="ΕΤΟΙΜΟ"].iterrows(), start=1):
             actions.append({
-                "Κωδικός":f"S26-{i:02d}",
+                "Κωδικός":f"ΕΞΑΣΚΗΣΗ-{i:02d}",
                 "Ενότητα":"Προσαρμοστική Εξάσκηση",
                 "Οντότητα":r["μαθητής"],
                 "Προτεραιότητα":1 if r["κατάσταση"]=="ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ" else 2,
@@ -2788,7 +2788,7 @@ elif section == "Κύκλος Ζωής Ενεργειών":
 
     for i,(_,r) in enumerate(service31_integrated[service31_integrated["προτεραιότητα"]=="ΥΨΗΛΗ"].iterrows(), start=1):
         actions.append({
-            "Κωδικός":f"S31-{i:02d}",
+            "Κωδικός":f"ΕΝΔΕΙΞΗ-{i:02d}",
             "Ενότητα":"Ενοποιημένες Μαθησιακές Ενδείξεις",
             "Οντότητα":r["οντότητα"],
             "Προτεραιότητα":2,
@@ -2862,14 +2862,14 @@ elif section == "Μεθοδολογία & Προέλευση":
     provenance = pd.DataFrame([
         {
             "Ενότητα":"Ποιότητα Αξιολόγησης",
-            "Πηγή": (f"ενεργή πηγή: {ACTIVE_NAME}" if "custom_s21" in st.session_state else (f"ενεργή πηγή: {ACTIVE_NAME} — μη συμβατό με S21" if ACTIVE_DF is not None else "Μη διαθέσιμο")),
+            "Πηγή": (f"ενεργή πηγή: {ACTIVE_NAME}" if "custom_s21" in st.session_state else (f"ενεργή πηγή: {ACTIVE_NAME} — μη συμβατή με την Ποιότητα Αξιολόγησης" if ACTIVE_DF is not None else "Μη διαθέσιμο")),
             "Τύπος":"Item-level psychometric ενδείξεις",
             "Χρήση":"Ποιότητα ερωτήσεων και ουρά ελέγχου",
             "Περιορισμός":"Δεν επιτρέπεται αυτόματη διαγραφή/αλλαγή item"
         },
         {
             "Ενότητα":"Προσαρμοστική Εξάσκηση",
-            "Πηγή": (f"ενεργή πηγή: {ACTIVE_NAME}" if "custom_s26" in st.session_state else (f"ενεργή πηγή: {ACTIVE_NAME} — μη mapped για S26" if ACTIVE_DF is not None else "Μη διαθέσιμο")),
+            "Πηγή": (f"ενεργή πηγή: {ACTIVE_NAME}" if "custom_s26" in st.session_state else (f"ενεργή πηγή: {ACTIVE_NAME} — δεν έχει αντιστοιχιστεί για την Προσαρμοστική Εξάσκηση" if ACTIVE_DF is not None else "Μη διαθέσιμο")),
             "Τύπος":"Rubric levels, score, mastery, confidence",
             "Χρήση":"Retry / enrichment / ανθρώπινος έλεγχος",
             "Περιορισμός":"Δεν αλλάζει επίσημο βαθμό Moodle"
@@ -2904,7 +2904,7 @@ elif section == "Μεθοδολογία & Προέλευση":
         with c4:
             st.markdown("<div class='inelso-feature-card'><div class='kicker'>4 · Απόφαση</div><h3>Human-in-the-loop</h3><p>Η πλατφόρμα υποστηρίζει· δεν αντικαθιστά την εκπαιδευτική κρίση.</p></div>", unsafe_allow_html=True)
 
-        st.info("Η ενεργή πηγή δεν μετατρέπεται αυτόματα σε αποτέλεσμα για κάθε service. Αν λείπουν τα απαιτούμενα πεδία, η αντίστοιχη λειτουργία παραμένει κενή ή δηλώνεται ως μη συμβατή.")
+        st.info("Η ενεργή πηγή δεν μετατρέπεται αυτόματα σε αποτέλεσμα για κάθε λειτουργία. Αν λείπουν τα απαιτούμενα πεδία, η αντίστοιχη λειτουργία παραμένει κενή ή δηλώνεται ως μη συμβατή.")
 
         with st.expander("🔍 Τι σημαίνει «προέλευση» και γιατί είναι σημαντική;"):
             st.write(
@@ -2982,7 +2982,7 @@ elif section == "Μεθοδολογία & Προέλευση":
     with tab_s31:
         st.markdown("### Κανόνες Ενοποιημένων Μαθησιακών Ενδείξεων")
         i1,i2,i3 = st.columns(3)
-        i1.metric("Πηγή", "S21 / S26")
+        i1.metric("Πηγή", "Ποιότητα Αξιολόγησης / Προσαρμοστική Εξάσκηση")
         i2.metric("Αυτόματη απόφαση", "ΟΧΙ")
         i3.metric("Υψηλή προτεραιότητα", "Human review")
 
@@ -3090,14 +3090,14 @@ elif section == "Έλεγχος Ετοιμότητας":
 
         s1,s2,s3,s4 = st.columns(4)
         s1.metric("Dataset", "Ενεργό" if dataset_loaded else "Απαιτείται")
-        s2.metric("S21", s21_compat if dataset_loaded else "—")
-        s3.metric("S26", s26_compat if dataset_loaded else "—")
-        s4.metric("S16", s16_compat if dataset_loaded else "—")
+        s2.metric("Ποιότητα Αξιολόγησης", s21_compat if dataset_loaded else "—")
+        s3.metric("Προσαρμοστική Εξάσκηση", s26_compat if dataset_loaded else "—")
+        s4.metric("Έγκαιρη Υποστήριξη", s16_compat if dataset_loaded else "—")
 
         with st.expander("🎯 Τι πρέπει να είναι έτοιμο για live demo;", expanded=True):
             st.markdown("""
 - Ενεργό dataset ή επιβεβαιωμένη SCORM/Moodle πηγή
-- Ορατή συμβατότητα ανά service
+- Ορατή συμβατότητα ανά λειτουργία
 - Human-in-the-loop για κρίσιμες αποφάσεις
 - Καμία αυτόματη αλλαγή επίσημου βαθμού
 - Moodle write μόνο με preview, ρητή έγκριση και verification
@@ -3112,10 +3112,10 @@ elif section == "Έλεγχος Ετοιμότητας":
         a2.metric("Προσαρμοστική Εξάσκηση", "Έτοιμο" if "custom_s26" in st.session_state else "Αναμονή")
         a3.metric("Μαθησιακές Ενδείξεις", "Έτοιμο" if ("custom_s21" in st.session_state or "custom_s26" in st.session_state) else "Αναμονή")
 
-        with st.expander("🔎 Γιατί κάποια services μένουν σε αναμονή;"):
+        with st.expander("🔎 Γιατί κάποιες λειτουργίες μένουν σε αναμονή;"):
             st.write(
                 "Η εφαρμογή δεν δημιουργεί τεχνητά αποτελέσματα. "
-                "Κάθε service ενεργοποιείται μόνο όταν η ενεργή πηγή περιέχει τα απαιτούμενα πεδία."
+                "Κάθε λειτουργία ενεργοποιείται μόνο όταν η ενεργή πηγή περιέχει τα απαιτούμενα πεδία."
             )
 
     with tab_data:
@@ -3123,9 +3123,9 @@ elif section == "Έλεγχος Ετοιμότητας":
         st.dataframe(df_tab, use_container_width=True, hide_index=True)
 
         d1,d2,d3 = st.columns(3)
-        d1.metric("S21 συμβατότητα", s21_compat if dataset_loaded else "—")
-        d2.metric("S26 συμβατότητα", s26_compat if dataset_loaded else "—")
-        d3.metric("S16 συμβατότητα", s16_compat if dataset_loaded else "—")
+        d1.metric("Ποιότητα Αξιολόγησης", s21_compat if dataset_loaded else "—")
+        d2.metric("Προσαρμοστική Εξάσκηση", s26_compat if dataset_loaded else "—")
+        d3.metric("Έγκαιρη Υποστήριξη", s16_compat if dataset_loaded else "—")
 
         with st.expander("🧩 Τι σημαίνει πλήρης / μερική / χωρίς συμβατότητα;"):
             st.markdown("""
@@ -5073,7 +5073,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
 
     if ACTIVE_DF is None:
         st.markdown(
-            "<div class='inelso-action-banner'><strong>Το service είναι έτοιμο — χρειάζεται πραγματική πηγή δεδομένων.</strong><br>"
+            "<div class='inelso-action-banner'><strong>Η λειτουργία είναι έτοιμη — χρειάζεται πραγματική πηγή δεδομένων.</strong><br>"
             "Δεν δημιουργούνται demo κίνδυνοι ή τεχνητές περιπτώσεις. Μόλις φορτωθεί συμβατό learner-level dataset, "
             "η σελίδα μετατρέπεται αυτόματα σε ενεργό workspace ανάλυσης.</div>",
             unsafe_allow_html=True
@@ -5188,7 +5188,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
         else:
             r4.metric("Υψηλή προτεραιότητα", "—")
 
-        st.markdown("#### Τι χρησιμοποιεί το service")
+        st.markdown("#### Τι χρησιμοποιεί η λειτουργία")
         u1,u2,u3,u4 = st.columns(4)
         with u1:
             st.markdown("<div class='inelso-feature-card'><div class='kicker'>PERFORMANCE</div><h3>Επίδοση</h3><p>Χαμηλότερη επίδοση μπορεί να αυξήσει την προτεραιότητα.</p></div>", unsafe_allow_html=True)
@@ -5408,7 +5408,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             with st.expander("Τεχνική σύνδεση / provenance Moodle", expanded=False):
                 render_moodle_rest_service_panel(
                     "Μαθησιακή Ανάλυση",
-                    summary=f"Early-warning analysis · compatibility {service_dataset_compatibility('S16', ACTIVE_DF)}",
+                    summary=f"Ανάλυση έγκαιρης υποστήριξης · συμβατότητα {service_dataset_compatibility('S16', ACTIVE_DF)}",
                     score=None,
                     status="Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος",
                     entity=ACTIVE_NAME,
