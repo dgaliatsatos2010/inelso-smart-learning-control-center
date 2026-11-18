@@ -4475,37 +4475,13 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
         st.dataframe(meta_preview, use_container_width=True, hide_index=True)
 
 
-    st.markdown(
-        "<div class='inelso-danger-lite'><b>Προστατευμένη ενέργεια.</b> "
-        "Καμία εγγραφή δεν γίνεται χωρίς δύο ρητές επιβεβαιώσεις και τελική επαλήθευση.</div>",
-        unsafe_allow_html=True,
-    )
-
     moodle_url = st.session_state.get("moodle_base_url", "")
     token = st.session_state.get("moodle_shared_token", "")
 
     if moodle_url and token:
-        st.success("🔐 Χρησιμοποιούνται τα στοιχεία σύνδεσης που έχουν ήδη δοθεί στη συνεδρία.")
+        st.success("🔐 Η σύνδεση Moodle είναι ενεργή για αυτή τη συνεδρία. Δεν χρειάζεται νέα εισαγωγή στοιχείων.")
     else:
-        st.info("Δώστε πρώτα τα στοιχεία στην «Ανάλυση SCORM» ή στη «Ζωντανή Σύνδεση Moodle».")
-
-    with st.expander("⚙️ Αλλαγή στοιχείων σύνδεσης", expanded=False):
-        st.caption("Χρησιμοποιήστε το μόνο αν θέλετε να αλλάξετε τα ήδη αποθηκευμένα στοιχεία της συνεδρίας.")
-        moodle_url = st.text_input(
-            "Διεύθυνση Moodle",
-            value=moodle_url,
-            key="write_moodle_url"
-        ).rstrip("/")
-        token = st.text_input(
-            "Κλειδί ασφαλούς πρόσβασης",
-            value=token,
-            type="password",
-            key="write_moodle_token"
-        )
-        if moodle_url:
-            st.session_state["moodle_base_url"] = moodle_url
-        if token:
-            st.session_state["moodle_shared_token"] = token
+        st.info("Για να ενεργοποιηθεί η καταγραφή, δώστε τα στοιχεία σύνδεσης μία φορά στην «Ανάλυση SCORM» ή στη «Ζωντανή Σύνδεση Moodle».")
 
     if "moodle_write_audit" not in st.session_state:
         st.session_state["moodle_write_audit"] = pd.DataFrame(columns=[
@@ -5600,11 +5576,6 @@ elif section == "Μητρώο Ενεργειών":
         )
     else:
         st.info("Δεν υπάρχουν ακόμη καταχωρίσεις.")
-
-    st.warning(
-        "Στο Streamlit Community Cloud η τοπική αποθήκευση δεν είναι εγγυημένα μόνιμη. "
-        "Χρησιμοποίησε το CSV για ασφαλή μεταφορά/αρχειοθέτηση ή σύνδεσε μελλοντικά βάση δεδομένων/Moodle storage."
-    )
 
 # ==========================================================
 # ΚΕΝΤΡΙΚΗ ΑΝΑΦΟΡΑ
