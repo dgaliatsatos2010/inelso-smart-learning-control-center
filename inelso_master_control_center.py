@@ -288,7 +288,7 @@ MODULE_HELP = {
             "Ελέγξτε τους φοιτητές που εμφανίζονται με αυξημένη προτεραιότητα.",
             "Η ένδειξη είναι υποστήριξη απόφασης και όχι αυτόματη παιδαγωγική κρίση."
         ],
-        "data": "Ενδεικτικές στήλες: learner_id, score, inactivity_days, submissions, engagement_score, completion_rate."
+        "data": ""
     },
     "s21": {
         "title": "Ποιότητα Αξιολόγησης",
@@ -300,7 +300,7 @@ MODULE_HELP = {
             "Η πλατφόρμα διαβάζει δείκτη ευκολίας, δείκτη διάκρισης και, όπου υπάρχει, αποτελεσματικότητα διάκρισης.",
             "Οι προτάσεις αναθεώρησης είναι συμβουλευτικές· ο διδάσκων εγκρίνει κάθε αλλαγή."
         ],
-        "data": "Ιδανικά κάθε ερώτηση πρέπει να έχει μοναδικό ID/όνομα και item-level στατιστικά. Μην συγχωνεύετε διαφορετικές ερωτήσεις στην ίδια γραμμή."
+        "data": ""
     },
     "s25": {
         "title": "Δημιουργία Μαθήματος & Αξιολόγησης",
@@ -312,7 +312,7 @@ MODULE_HELP = {
             "Ελέγξτε και επεξεργαστείτε το προσχέδιο πριν το χαρακτηρίσετε εγκεκριμένο.",
             "Τίποτα δεν δημοσιεύεται αυτόματα στο μάθημα."
         ],
-        "data": "Για καλύτερα αποτελέσματα δώστε σύντομο θεματική μαθήματος, μαθησιακός στόχος και αντιπροσωπευτικό απόσπασμα περιεχομένου."
+        "data": ""
     },
     "s26": {
         "title": "Προσαρμοστική Εξάσκηση",
@@ -324,7 +324,7 @@ MODULE_HELP = {
             "Το score είναι 0–100 και η confidence 0–1. Τα RC-01…RC-05 περιέχουν το επίπεδο επίδοσης κάθε κριτηρίου.",
             "Βεβαιότητα < 0,70 ή RC-01 στο 0–1 οδηγεί σε ανθρώπινο έλεγχο. Επίδοση < 70 με επαρκή confidence οδηγεί σε νέα προσπάθεια."
         ],
-        "data": "Ελάχιστη πρακτική δομή: learner, attempt, score, confidence, RC-01, RC-02, RC-03, RC-04, RC-05."
+        "data": ""
     },
     "s28": {
         "title": "Υποστήριξη Διδάσκοντα",
@@ -369,7 +369,7 @@ MODULE_HELP = {
             "Πατήστε «Ενημέρωση Ποιότητας Αξιολόγησης» ώστε τα πραγματικά SCORM αποτελέσματα να γίνουν η ενεργή πηγή της Ποιότητας Αξιολόγησης.",
             "Δεν αλλάζει κανένας βαθμός ή SCORM attempt· η λειτουργία είναι μόνο ανάγνωσης και ανάλυσης."
         ],
-        "data": "Απαιτούνται οι Moodle REST functions mod_scorm_get_scorm_attempt_count, mod_scorm_get_scorm_scoes και mod_scorm_get_scorm_sco_tracks, καθώς και δικαίωμα προβολής SCORM reports."
+        "data": ""
     },
     "flow": {
         "title": "Ενιαία Ροή Ενεργειών",
@@ -1619,7 +1619,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
 # ==========================================================
 elif section == "Ποιότητα Αξιολόγησης":
     if ACTIVE_DF is None:
-        render_module_header("Ποιότητα Αξιολόγησης", "Έλεγχος της ποιότητας των ερωτήσεων quiz με κατανοητούς δείκτες και προτεινόμενες ενέργειες.", "s21")
+        render_module_header("Ποιότητα Αξιολόγησης", "", "s21")
         show_active_dataset_context("S21")
         c1,c2,c3,c4,c5 = st.columns(5)
         c1.metric("Ερωτήσεις","—")
@@ -1629,7 +1629,7 @@ elif section == "Ποιότητα Αξιολόγησης":
         c5.metric("Ανοικτές ενέργειες","—")
         st.stop()
     if "custom_s21" not in st.session_state:
-        render_module_header("Ποιότητα Αξιολόγησης", "Έλεγχος της ποιότητας των ερωτήσεων quiz με κατανοητούς δείκτες και προτεινόμενες ενέργειες.", "s21")
+        render_module_header("Ποιότητα Αξιολόγησης", "", "s21")
         show_active_dataset_context("S21")
         st.warning(
             "Το ενεργή πηγή έχει φορτωθεί, αλλά δεν έχει δημιουργηθεί συμβατό σύνολο δεδομένων ανά ερώτηση για το Ποιότητα Αξιολόγησης. "
@@ -1643,7 +1643,7 @@ elif section == "Ποιότητα Αξιολόγησης":
         c5.metric("Ανοικτές ενέργειες","—")
         st.stop()
 
-    render_module_header("Ποιότητα Αξιολόγησης", "Έλεγχος της ποιότητας των ερωτήσεων quiz με κατανοητούς δείκτες και προτεινόμενες ενέργειες.", "s21")
+    render_module_header("Ποιότητα Αξιολόγησης", "", "s21")
     show_active_dataset_context("S21")
     st.caption("Μετατρέπει τα στατιστικά του quiz σε κατανοητές ενδείξεις για έλεγχο και βελτίωση ερωτήσεων.")
 
@@ -1725,7 +1725,7 @@ elif section == "Ποιότητα Αξιολόγησης":
 elif section == "Ανάλυση SCORM Αξιολόγησης":
     render_module_header(
         "Ανάλυση SCORM Αξιολόγησης",
-        "Ζωντανή ανάκτηση πραγματικών SCORM προσπαθειών και μετατροπή τους σε δείκτες ποιότητας ερωτήσεων.",
+        "",
         "scorm_analysis"
     )
     # Reuse remembered Moodle URL where available.
@@ -2071,7 +2071,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
 # ==========================================================
 elif section == "Προσαρμοστική Εξάσκηση":
     if ACTIVE_DF is None:
-        render_module_header("Προσαρμοστική Εξάσκηση", "Παρακολούθηση προσπάθειας, rubric, βεβαιότητας και προόδου με σαφή επόμενα βήματα.", "s26")
+        render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
         show_active_dataset_context("S26")
         st.info("Δεν έχει φορτωθεί ενεργή πηγή. Η ενότητα Προσαρμοστικής Εξάσκησης παραμένει κενό μέχρι να φορτωθεί πραγματικό σύνολο δεδομένων ανά φοιτητή.")
         c1,c2,c3,c4,c5 = st.columns(5)
@@ -2082,7 +2082,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
         c5.metric("Δείκτης υγείας","—")
         st.stop()
     if "custom_s26" not in st.session_state:
-        render_module_header("Προσαρμοστική Εξάσκηση", "Παρακολούθηση προσπάθειας, rubric, βεβαιότητας και προόδου με σαφή επόμενα βήματα.", "s26")
+        render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
         show_active_dataset_context("S26")
         st.warning(
             "Το ενεργή πηγή έχει φορτωθεί, αλλά δεν έχει γίνει ακόμη mapping για Προσαρμοστική Εξάσκηση. "
@@ -2096,7 +2096,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
         c5.metric("Δείκτης υγείας","—")
         st.stop()
 
-    render_module_header("Προσαρμοστική Εξάσκηση", "Παρακολούθηση προσπάθειας, rubric, βεβαιότητας και προόδου με σαφή επόμενα βήματα.", "s26")
+    render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
     show_active_dataset_context("S26")
     st.caption("Αναλύει την επίδοση ανά κριτήριο, την πρόοδο και τη βεβαιότητα και προτείνει το επόμενο εκπαιδευτικό βήμα.")
 
@@ -4442,36 +4442,36 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
 
     render_module_header(
         "Μαθησιακή Ανάλυση & Έγκαιρη Υποστήριξη",
-        "Έγκαιρος εντοπισμός περιπτώσεων που μπορεί να χρειάζονται εκπαιδευτική υποστήριξη.",
+        "",
         "s16"
     )
     show_active_dataset_context("S16")
 
     if ACTIVE_DF is None:
-        no_data_tabs = st.tabs(["Τι κάνει", "Τι χρειάζεται", "Ασφάλεια"])
+        no_data_tabs = st.tabs(["Τι κάνει", "Τι χρειάζεται"])
         with no_data_tabs[0]:
             a,b,c1,c2 = st.columns(4)
             with a:
                 st.markdown(
-                    "<div class='inelso-feature-card'><div class='kicker'>MONITOR</div><h3>Παρακολουθεί</h3>"
-                    "<p>Επίδοση, αδράνεια, προσπάθειες και engagement, μόνο όταν υπάρχουν πραγματικά πεδία.</p></div>",
+                    "<div class='inelso-feature-card'><div class='kicker'>ΠΑΡΑΚΟΛΟΥΘΗΣΗ</div><h3>Παρακολουθεί</h3>"
+                    "<p>Επίδοση, αδράνεια, προσπάθειες και συμμετοχή, μόνο όταν υπάρχουν πραγματικά πεδία.</p></div>",
                     unsafe_allow_html=True
                 )
             with b:
                 st.markdown(
-                    "<div class='inelso-feature-card'><div class='kicker'>SCORE</div><h3>Ιεραρχεί</h3>"
+                    "<div class='inelso-feature-card'><div class='kicker'>ΙΕΡΑΡΧΗΣΗ</div><h3>Ιεραρχεί</h3>"
                     "<p>Συνδυάζει διαθέσιμες ενδείξεις σε διαφανή λειτουργικό δείκτη προτεραιότητας.</p></div>",
                     unsafe_allow_html=True
                 )
             with c1:
                 st.markdown(
-                    "<div class='inelso-feature-card'><div class='kicker'>EXPLAIN</div><h3>Εξηγεί</h3>"
+                    "<div class='inelso-feature-card'><div class='kicker'>ΕΡΜΗΝΕΙΑ</div><h3>Εξηγεί</h3>"
                     "<p>Δείχνει ποιες μεταβλητές και ποια βάρη συνέβαλαν στην τελική ένδειξη.</p></div>",
                     unsafe_allow_html=True
                 )
             with c2:
                 st.markdown(
-                    "<div class='inelso-feature-card'><div class='kicker'>SUPPORT</div><h3>Προτείνει</h3>"
+                    "<div class='inelso-feature-card'><div class='kicker'>ΥΠΟΣΤΗΡΙΞΗ</div><h3>Προτείνει</h3>"
                     "<p>Παράγει επόμενο βήμα για ανθρώπινο έλεγχο, επικοινωνία ή απλή παρακολούθηση.</p></div>",
                     unsafe_allow_html=True
                 )
@@ -4487,9 +4487,9 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             st.markdown("### Ελάχιστα χρήσιμα πεδία")
             st.markdown(
                 "<div class='inelso-process'>"
-                "<div class='step active'><strong>1 · Learner ID</strong><span>Ανώνυμο ή εσωτερικό αναγνωριστικό μαθητή.</span></div>"
-                "<div class='step'><strong>2 · Επίδοση</strong><span>Score ή grade, εφόσον είναι διαθέσιμο.</span></div>"
-                "<div class='step'><strong>3 · Συμμετοχή</strong><span>Αδράνεια, submissions ή activity/engagement.</span></div>"
+                "<div class='step active'><strong>1 · Αναγνωριστικό μαθητή</strong><span>Ανώνυμο ή εσωτερικό αναγνωριστικό μαθητή.</span></div>"
+                "<div class='step'><strong>2 · Επίδοση</strong><span>Βαθμολογία ή επίδοση, εφόσον είναι διαθέσιμη.</span></div>"
+                "<div class='step'><strong>3 · Συμμετοχή</strong><span>Αδράνεια, υποβολές ή δραστηριότητα/συμμετοχή.</span></div>"
                 "<div class='step safe'><strong>4 · Ανθρώπινος έλεγχος</strong><span>Η ένδειξη δεν εκτελεί καμία αυτόματη παρέμβαση.</span></div>"
                 "</div>",
                 unsafe_allow_html=True
@@ -4511,16 +4511,6 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
                     args=("Ανάλυση SCORM",),
                     key="s16_empty_scorm"
                 )
-
-        with no_data_tabs[2]:
-            st.markdown(
-                "<div class='inelso-feature-card'><div class='kicker'>HUMAN IN THE LOOP</div>"
-                "<h3>Δεν είναι αυτόματη απόφαση για φοιτητή</h3>"
-                "<p>Ο δείκτης είναι λειτουργικό εργαλείο προτεραιοποίησης. Δεν είναι επικυρωμένο προγνωστικό μοντέλο, "
-                "δεν αλλάζει βαθμούς και δεν στέλνει παρεμβάσεις χωρίς ανθρώπινη έγκριση.</p></div>",
-                unsafe_allow_html=True
-            )
-            st.info("Καμία επίσημη βαθμολογία ή κρίσιμη ενέργεια δεν μεταβάλλεται αυτόματα.")
 
         st.stop()
 
@@ -4560,13 +4550,13 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
         st.markdown("#### Τι χρησιμοποιεί η λειτουργία")
         u1,u2,u3,u4 = st.columns(4)
         with u1:
-            st.markdown("<div class='inelso-feature-card'><div class='kicker'>PERFORMANCE</div><h3>Επίδοση</h3><p>Χαμηλότερη επίδοση μπορεί να αυξήσει την προτεραιότητα.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>ΕΠΙΔΟΣΗ</div><h3>Επίδοση</h3><p>Χαμηλότερη επίδοση μπορεί να αυξήσει την προτεραιότητα.</p></div>", unsafe_allow_html=True)
         with u2:
-            st.markdown("<div class='inelso-feature-card'><div class='kicker'>INACTIVITY</div><h3>Αδράνεια</h3><p>Περισσότερες ημέρες αδράνειας μπορούν να αυξήσουν την ένδειξη.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>ΑΔΡΑΝΕΙΑ</div><h3>Αδράνεια</h3><p>Περισσότερες ημέρες αδράνειας μπορούν να αυξήσουν την ένδειξη.</p></div>", unsafe_allow_html=True)
         with u3:
-            st.markdown("<div class='inelso-feature-card'><div class='kicker'>ATTEMPTS</div><h3>Προσπάθειες</h3><p>Μπορούν να χρησιμοποιηθούν ως λειτουργικό σήμα, ανάλογα με το dataset.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>ΠΡΟΣΠΑΘΕΙΕΣ</div><h3>Προσπάθειες</h3><p>Μπορούν να χρησιμοποιηθούν ως λειτουργικό σήμα, ανάλογα με το dataset.</p></div>", unsafe_allow_html=True)
         with u4:
-            st.markdown("<div class='inelso-feature-card'><div class='kicker'>ENGAGEMENT</div><h3>Συμμετοχή</h3><p>Χαμηλό engagement μπορεί να λειτουργήσει ως πρόσθετη ένδειξη.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><div class='kicker'>ΣΥΜΜΕΤΟΧΗ</div><h3>Συμμετοχή</h3><p>Χαμηλό engagement μπορεί να λειτουργήσει ως πρόσθετη ένδειξη.</p></div>", unsafe_allow_html=True)
 
         with st.expander("Μεθοδολογική σημείωση", expanded=False):
             st.write(
