@@ -277,7 +277,7 @@ MODULE_HELP = {
             "Ανοίξτε την αντίστοιχη ενότητα για λεπτομερή αποτελέσματα και προτεινόμενες ενέργειες.",
             "Οι ενέργειες προς Moodle περνούν πάντα από ανθρώπινη επιβεβαίωση."
         ],
-        "data": "Το ίδιο ενεργό αρχείο είναι διαθέσιμο σε όλες τις ενότητες. Κάθε ενότητα χρησιμοποιεί μόνο τις στήλες που χρειάζεται."
+        "data": ""
     },
     "s16": {
         "title": "Μαθησιακή Ανάλυση & Έγκαιρη Υποστήριξη",
@@ -498,8 +498,9 @@ def render_info_button(key):
             with st.expander("Περισσότερες οδηγίες"):
                 for i, step in enumerate(info['steps'][3:], start=4):
                     st.markdown(f"**{i}.** {step}")
-        st.markdown("**Τι δεδομένα χρειάζονται**")
-        st.info(info['data'])
+        if info.get("data"):
+            st.markdown("**Τι δεδομένα χρειάζονται**")
+            st.info(info['data'])
 
 def render_module_header(title, subtitle, help_key=None, badge=None):
     st.markdown("<div id='inelso-page-top'></div>", unsafe_allow_html=True)
@@ -1403,20 +1404,13 @@ if section == "Κεντρική Εικόνα Ελέγχου":
 
     st.markdown("""
     <div class="inelso-home-hero">
-      <div class="inelso-home-eyebrow">INELSO Academia · SMART LEARNING CONTROL CENTER</div>
       <h1>Πλατφόρμα Έξυπνης Μάθησης</h1>
-      <p>Από πραγματικά δεδομένα Moodle, SCORM ή αρχεία σε κατανοητές ενδείξεις, προτεραιότητες και ελεγχόμενες εκπαιδευτικές ενέργειες.</p>
     </div>
     """, unsafe_allow_html=True)
 
     show_active_dataset_context("DASHBOARD", compact=False)
 
     if ACTIVE_DF is None:
-        render_empty_state(
-            "Ξεκινήστε με πραγματικά δεδομένα",
-            "Δεν εμφανίζονται τεχνητοί δείκτες. Συνδέστε SCORM του Moodle ή εισαγάγετε CSV/Excel και η Αρχική θα ενημερωθεί αυτόματα.",
-            "Επιλέξτε μία από τις δύο πηγές παρακάτω."
-        )
         a,b = st.columns(2)
         with a:
             st.markdown(
