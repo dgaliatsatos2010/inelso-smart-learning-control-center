@@ -1726,343 +1726,367 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
         "scorm_analysis"
     )
     with st.expander("🔎 Ρυθμίσεις σύνδεσης & εντοπισμός SCORM", expanded=False):
-        # Reuse remembered Moodle URL where available.
         default_scorm_url = st.session_state.get("moodle_base_url", "https://contentsolutions.eu") or "https://contentsolutions.eu"
-        col_a, col_b = st.columns([2,1])
-        with col_a:
-            scorm_moodle_url = st.text_input(
-                "Moodle URL",
-                value=default_scorm_url,
-                key="scorm_moodle_url"
-            ).rstrip("/")
-        with col_b:
-            scorm_course_id = st.number_input(
-                "ID Μαθήματος",
-                min_value=1,
-                value=int(st.session_state.get("scorm_course_id", 6)),
-                step=1,
-                key="scorm_course_id_input"
-            )
-        st.session_state["moodle_base_url"] = scorm_moodle_url
-        st.session_state["scorm_course_id"] = int(scorm_course_id)
 
-        secret_token = ""
-        for secret_key in ("MOODLE_TOKEN", "moodle_token", "WSTOKEN", "wstoken"):
-            try:
-                if secret_key in st.secrets and st.secrets[secret_key]:
-                    secret_token = str(st.secrets[secret_key])
-                    break
-            except Exception:
-                pass
-        scorm_token = st.text_input(
-            "Κλειδί πρόσβασης Moodle",
-            value=st.session_state.get("moodle_shared_token", secret_token),
-            type="password",
-            key="scorm_rest_token",
-            help="Δίνεται μία φορά ανά συνεδρία και χρησιμοποιείται στις συνδεδεμένες λειτουργίες Moodle."
-        )
-        if scorm_token:
-            st.session_state["moodle_shared_token"] = scorm_token
+        if st.session_state.get("scorm_discovery_ready", False):
+            st.success("Η σύνδεση είναι ενεργή και τα στοιχεία πρόσβασης έχουν αποθηκευτεί μόνο για την τρέχουσα συνεδρία.")
+            c1, c2 = st.columns([2, 1])
+            with c1:
+                st.caption(
+                    f"Moodle: {st.session_state.get('moodle_base_url', default_scorm_url)} · "
+                    f"Μάθημα ID {st.session_state.get('scorm_course_id', 6)}"
+                )
+            with c2:
+                if st.button("Αλλαγή στοιχείων", use_container_width=True, key="scorm_change_connection"):
+                    st.session_state["scorm_discovery_ready"] = False
+                    st.rerun()
+            scorm_moodle_url = st.session_state.get("moodle_base_url", default_scorm_url)
+            scorm_course_id = int(st.session_state.get("scorm_course_id", 6))
+            scorm_token = st.session_state.get("moodle_shared_token", "")
+        else:
+            col_a, col_b = st.columns([2,1])
+            with col_a:
+                scorm_moodle_url = st.text_input(
+                    "Moodle URL",
+                    value=default_scorm_url,
+                    key="scorm_moodle_url"
+                ).rstrip("/")
+            with col_b:
+                scorm_course_id = st.number_input(
+                    "ID Μαθήματος",
+                    min_value=1,
+                    value=int(st.session_state.get("scorm_course_id", 6)),
+                    step=1,
+                    key="scorm_course_id_input"
+                )
+            st.session_state["moodle_base_url"] = scorm_moodle_url
+            st.session_state["scorm_course_id"] = int(scorm_course_id)
 
-        if st.button("🔎 Εντοπισμός SCORM και χρηστών", type="primary", key="scorm_discover"):
-            if not scorm_moodle_url or not scorm_token:
-                st.error("Συμπλήρωσε Moodle URL και token.")
-            else:
+            secret_token = ""
+            for secret_key in ("MOODLE_TOKEN", "moodle_token", "WSTOKEN", "wstoken"):
                 try:
-                    contents = scorm_rest_call(
-                        scorm_moodle_url, scorm_token, "core_course_get_contents",
-                        {"courseid": int(scorm_course_id)}
-                    )
-                    found_scorms = []
-                    for sec in contents if isinstance(contents, list) else []:
-                        for mod in sec.get("modules", []):
-                            if str(mod.get("modname", "")).lower() == "scorm":
-                                found_scorms.append({
-                                    "section": sec.get("name"),
-                                    "name": mod.get("name"),
-                                    "cmid": mod.get("id"),
-                                    "scorm_id": mod.get("instance"),
-                                    "url": mod.get("url"),
-                                })
-                    users = scorm_rest_call(
-                        scorm_moodle_url, scorm_token, "core_enrol_get_enrolled_users",
-                        {"courseid": int(scorm_course_id)}
-                    )
-                    user_rows = [
-                        {"id": u.get("id"), "fullname": u.get("fullname"), "username": u.get("username")}
-                        for u in users if isinstance(u, dict) and u.get("id")
-                    ]
-                    st.session_state["scorm_discovered_activities"] = found_scorms
-                    st.session_state["scorm_discovered_users"] = user_rows
-                    st.success(f"Βρέθηκαν {len(found_scorms)} SCORM δραστηριότητες και {len(user_rows)} εγγεγραμμένοι χρήστες.")
-                except Exception as e:
-                    st.error(f"Αποτυχία εντοπισμού: {e}")
+                    if secret_key in st.secrets and st.secrets[secret_key]:
+                        secret_token = str(st.secrets[secret_key])
+                        break
+                except Exception:
+                    pass
+
+            scorm_token = st.text_input(
+                "Κλειδί πρόσβασης Moodle",
+                value=st.session_state.get("moodle_shared_token", secret_token),
+                type="password",
+                key="scorm_rest_token",
+                help="Δίνεται μία φορά ανά συνεδρία και δεν εμφανίζεται μετά την επιτυχή σύνδεση."
+            )
+            if scorm_token:
+                st.session_state["moodle_shared_token"] = scorm_token
+
+            if st.button("🔎 Εντοπισμός SCORM και χρηστών", type="primary", key="scorm_discover"):
+                if not scorm_moodle_url or not scorm_token:
+                    st.error("Συμπληρώστε το Moodle URL και το κλειδί πρόσβασης.")
+                else:
+                    try:
+                        contents = scorm_rest_call(
+                            scorm_moodle_url, scorm_token, "core_course_get_contents",
+                            {"courseid": int(scorm_course_id)}
+                        )
+                        found_scorms = []
+                        for sec in contents if isinstance(contents, list) else []:
+                            for mod in sec.get("modules", []):
+                                if str(mod.get("modname", "")).lower() == "scorm":
+                                    found_scorms.append({
+                                        "section": sec.get("name"),
+                                        "name": mod.get("name"),
+                                        "cmid": mod.get("id"),
+                                        "scorm_id": mod.get("instance"),
+                                        "url": mod.get("url"),
+                                    })
+                        users = scorm_rest_call(
+                            scorm_moodle_url, scorm_token, "core_enrol_get_enrolled_users",
+                            {"courseid": int(scorm_course_id)}
+                        )
+                        user_rows = [
+                            {"id": u.get("id"), "fullname": u.get("fullname"), "username": u.get("username")}
+                            for u in users if isinstance(u, dict) and u.get("id")
+                        ]
+                        st.session_state["scorm_discovered_activities"] = found_scorms
+                        st.session_state["scorm_discovered_users"] = user_rows
+                        st.session_state["scorm_discovery_ready"] = True
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Αποτυχία εντοπισμού: {e}")
 
     found_scorms = st.session_state.get("scorm_discovered_activities", [])
     discovered_users = st.session_state.get("scorm_discovered_users", [])
 
     if found_scorms:
-        st.subheader("Επιλογή SCORM")
-        st.dataframe(pd.DataFrame(found_scorms), use_container_width=True, hide_index=True)
-        scorm_opts = {
-            f"{x['name']} — SCORM ID {x['scorm_id']}": x for x in found_scorms
-        }
-        selected_scorm_label = st.selectbox("SCORM δραστηριότητα", list(scorm_opts.keys()), key="scorm_selected_label")
-        selected_scorm = scorm_opts[selected_scorm_label]
-        selected_scorm_id = int(selected_scorm["scorm_id"])
-
-        st.markdown("### Ανάκτηση πραγματικών προσπαθειών")
-        st.caption(
-            "Η ομαδική ανάλυση διαβάζει τις υπάρχουσες προσπάθειες όλων των εγγεγραμμένων χρηστών. "
-            "Χρήστες χωρίς προσπάθεια αγνοούνται."
+        st.success(
+            f"Έτοιμα αποτελέσματα: {len(found_scorms)} δραστηριότητες SCORM και "
+            f"{len(discovered_users)} εγγεγραμμένοι χρήστες."
         )
+        with st.expander("📊 Προβολή αποτελεσμάτων SCORM", expanded=False):
+            st.subheader("Επιλογή SCORM")
+            st.dataframe(pd.DataFrame(found_scorms), use_container_width=True, hide_index=True)
+            scorm_opts = {
+                f"{x['name']} — SCORM ID {x['scorm_id']}": x for x in found_scorms
+            }
+            selected_scorm_label = st.selectbox("SCORM δραστηριότητα", list(scorm_opts.keys()), key="scorm_selected_label")
+            selected_scorm = scorm_opts[selected_scorm_label]
+            selected_scorm_id = int(selected_scorm["scorm_id"])
 
-        min_n = st.number_input(
-            "Ελάχιστες απαντήσεις ανά ερώτηση για υπολογισμό δείκτη διάκρισης",
-            min_value=6, max_value=50, value=8, step=1,
-            key="scorm_min_discrimination_n"
-        )
-
-        if st.button("📊 Ανάλυση όλων των υπαρχουσών προσπαθειών", key="scorm_fetch_all"):
-            if not discovered_users:
-                st.error("Δεν έχει ανακτηθεί λίστα χρηστών. Πάτησε πρώτα «Εντοπισμός SCORM και χρηστών».")
-            else:
-                progress = st.progress(0)
-                status_box = st.empty()
-                interaction_rows = []
-                attempt_summary_rows = []
-                errors = []
-                users_with_attempts = 0
-
-                try:
-                    scoes = scorm_rest_call(
-                        scorm_moodle_url, scorm_token, "mod_scorm_get_scorm_scoes",
-                        {"scormid": selected_scorm_id}
-                    )
-                    sco_list = scoes.get("scoes", []) if isinstance(scoes, dict) else []
-
-                    total_users = max(1, len(discovered_users))
-                    for pos, u in enumerate(discovered_users, start=1):
-                        uid = int(u["id"])
-                        learner_name = str(u.get("fullname") or f"User {uid}")
-                        status_box.caption(f"Έλεγχος {pos}/{total_users}: {learner_name}")
-                        try:
-                            count = scorm_rest_call(
-                                scorm_moodle_url, scorm_token, "mod_scorm_get_scorm_attempt_count",
-                                {"scormid": selected_scorm_id, "userid": uid}
-                            )
-                            attempts = int(count.get("attemptscount", count.get("attempts", 0)) or 0)
-                            if attempts <= 0:
-                                progress.progress(pos/total_users)
-                                continue
-                            users_with_attempts += 1
-
-                            for attempt_no in range(1, attempts + 1):
-                                attempt_score = np.nan
-                                attempt_status = None
-                                attempt_total_time = None
-                                attempt_session_time = None
-                                attempt_interactions = []
-                                for sco in sco_list:
-                                    sco_id = sco.get("id")
-                                    if not sco_id:
-                                        continue
-                                    response = scorm_rest_call(
-                                        scorm_moodle_url, scorm_token, "mod_scorm_get_scorm_sco_tracks",
-                                        {"scoid": int(sco_id), "userid": uid, "attempt": attempt_no}
-                                    )
-                                    tracks = flatten_scorm_track_response(response)
-                                    score_candidate = tracks.get("cmi.core.score.raw", tracks.get("score_raw"))
-                                    if pd.notna(pd.to_numeric(pd.Series([score_candidate]), errors="coerce").iloc[0]):
-                                        attempt_score = pd.to_numeric(pd.Series([score_candidate]), errors="coerce").iloc[0]
-                                    attempt_status = tracks.get("cmi.core.lesson_status", tracks.get("status", attempt_status))
-                                    attempt_total_time = tracks.get("cmi.core.total_time", tracks.get("total_time", attempt_total_time))
-                                    attempt_session_time = tracks.get("session_time", tracks.get("cmi.core.session_time", attempt_session_time))
-
-                                    attempt_interactions.extend(
-                                        extract_scorm_interactions(
-                                            tracks,
-                                            user_id=uid,
-                                            learner=learner_name,
-                                            attempt=attempt_no,
-                                            sco_id=sco_id,
-                                            score=attempt_score,
-                                            status=attempt_status,
-                                        )
-                                    )
-
-                                # ensure all rows receive final score/status found across SCOs
-                                for rr in attempt_interactions:
-                                    rr["attempt_score"] = attempt_score
-                                    rr["scorm_status"] = attempt_status
-                                interaction_rows.extend(attempt_interactions)
-                                attempt_summary_rows.append({
-                                    "user_id": uid,
-                                    "learner": learner_name,
-                                    "attempt": attempt_no,
-                                    "score": attempt_score,
-                                    "status": attempt_status,
-                                    "total_time": attempt_total_time,
-                                    "session_time": attempt_session_time,
-                                    "interactions": len(attempt_interactions),
-                                })
-                        except Exception as user_exc:
-                            errors.append(f"{learner_name} (ID {uid}): {user_exc}")
-                        progress.progress(pos/total_users)
-
-                    progress.empty()
-                    status_box.empty()
-
-                    interactions_df = pd.DataFrame(interaction_rows)
-                    attempts_df = pd.DataFrame(attempt_summary_rows)
-                    st.session_state["scorm_live_interactions"] = interactions_df
-                    st.session_state["scorm_live_attempts"] = attempts_df
-                    st.session_state["scorm_live_name"] = selected_scorm.get("name", f"SCORM {selected_scorm_id}")
-                    st.session_state["scorm_live_id"] = selected_scorm_id
-                    st.session_state["scorm_live_errors"] = errors
-
-                    if interactions_df.empty:
-                        st.warning("Βρέθηκαν προσπάθειες, αλλά δεν ανακτήθηκαν interactions για ανάλυση.")
-                    else:
-                        psych = scorm_question_statistics(interactions_df, min_discrimination_n=int(min_n))
-                        st.session_state["scorm_live_psychometrics"] = psych
-                        unified_scorm, learner_scorm = build_scorm_unified_dataset(
-                            interactions_df, attempts_df, psych,
-                            scorm_name=selected_scorm.get("name", f"SCORM {selected_scorm_id}"),
-                            scorm_id=selected_scorm_id,
-                        )
-                        st.session_state["scorm_unified_dataset"] = unified_scorm
-                        st.session_state["scorm_learner_summary"] = learner_scorm
-                        st.success(
-                            f"Ανακτήθηκαν {len(interactions_df)} πραγματικές απαντήσεις από "
-                            f"{users_with_attempts} χρήστες με καταγεγραμμένη προσπάθεια."
-                        )
-                except Exception as e:
-                    progress.empty()
-                    status_box.empty()
-                    st.error(f"Αποτυχία SCORM ανάλυσης: {e}")
-
-        interactions_df = st.session_state.get("scorm_live_interactions")
-        attempts_df = st.session_state.get("scorm_live_attempts")
-        psych = st.session_state.get("scorm_live_psychometrics")
-
-        if isinstance(attempts_df, pd.DataFrame) and not attempts_df.empty:
-            st.subheader("Προσπάθειες")
-            c1,c2,c3,c4 = st.columns(4)
-            c1.metric("Χρήστες με προσπάθεια", attempts_df["user_id"].nunique())
-            c2.metric("Συνολικές προσπάθειες", len(attempts_df))
-            c3.metric("Μέσο score", f"{attempts_df['score'].dropna().mean():.1f}" if attempts_df["score"].notna().any() else "—")
-            c4.metric("SCORM", st.session_state.get("scorm_live_name", "—"))
-            st.dataframe(attempts_df, use_container_width=True, hide_index=True)
-
-        if isinstance(interactions_df, pd.DataFrame) and not interactions_df.empty:
-            st.subheader("Πραγματικά SCORM interactions")
-            st.dataframe(interactions_df, use_container_width=True, hide_index=True)
-            st.download_button(
-                "⬇️ Λήψη interactions CSV",
-                interactions_df.to_csv(index=False).encode("utf-8-sig"),
-                "INELSO Academia_SCORM_interactions.csv",
-                "text/csv",
-                key="scorm_download_interactions"
-            )
-
-        if isinstance(psych, pd.DataFrame) and not psych.empty:
-            st.subheader("Δείκτες ποιότητας ανά ερώτηση")
+            st.markdown("### Ανάκτηση πραγματικών προσπαθειών")
             st.caption(
-                "Facility = ποσοστό σωστών απαντήσεων. Discrimination = διαφορά επιτυχίας μεταξύ άνω και κάτω 27% "
-                "βάσει συνολικού score. Όταν το δείγμα δεν επαρκεί, ο δείκτης διάκρισης παραμένει μη εκτιμήσιμος."
+                "Η ομαδική ανάλυση διαβάζει τις υπάρχουσες προσπάθειες όλων των εγγεγραμμένων χρηστών. "
+                "Χρήστες χωρίς προσπάθεια αγνοούνται."
             )
-            psych_view = psych.copy()
-            psych_view["κατάσταση"] = psych_view["διάκριση"].apply(κατηγορία_διάκρισης)
-            psych_view["ενέργεια"] = psych_view.apply(ενέργεια_ερώτησης, axis=1)
-            st.dataframe(psych_view, use_container_width=True, hide_index=True)
 
-            n_learners = interactions_df["user_id"].nunique() if isinstance(interactions_df, pd.DataFrame) else 0
-            if n_learners < int(min_n):
-                st.warning(
-                    f"Υπάρχουν μόνο {n_learners} εκπαιδευόμενοι με interactions. "
-                    f"Ο δείκτης διάκρισης απαιτεί τουλάχιστον {int(min_n)} και γι' αυτό δεν ερμηνεύεται ακόμη."
+            min_n = st.number_input(
+                "Ελάχιστες απαντήσεις ανά ερώτηση για υπολογισμό δείκτη διάκρισης",
+                min_value=6, max_value=50, value=8, step=1,
+                key="scorm_min_discrimination_n"
+            )
+
+            if st.button("📊 Ανάλυση όλων των υπαρχουσών προσπαθειών", key="scorm_fetch_all"):
+                if not discovered_users:
+                    st.error("Δεν έχει ανακτηθεί λίστα χρηστών. Πάτησε πρώτα «Εντοπισμός SCORM και χρηστών».")
+                else:
+                    progress = st.progress(0)
+                    status_box = st.empty()
+                    interaction_rows = []
+                    attempt_summary_rows = []
+                    errors = []
+                    users_with_attempts = 0
+
+                    try:
+                        scoes = scorm_rest_call(
+                            scorm_moodle_url, scorm_token, "mod_scorm_get_scorm_scoes",
+                            {"scormid": selected_scorm_id}
+                        )
+                        sco_list = scoes.get("scoes", []) if isinstance(scoes, dict) else []
+
+                        total_users = max(1, len(discovered_users))
+                        for pos, u in enumerate(discovered_users, start=1):
+                            uid = int(u["id"])
+                            learner_name = str(u.get("fullname") or f"User {uid}")
+                            status_box.caption(f"Έλεγχος {pos}/{total_users}: {learner_name}")
+                            try:
+                                count = scorm_rest_call(
+                                    scorm_moodle_url, scorm_token, "mod_scorm_get_scorm_attempt_count",
+                                    {"scormid": selected_scorm_id, "userid": uid}
+                                )
+                                attempts = int(count.get("attemptscount", count.get("attempts", 0)) or 0)
+                                if attempts <= 0:
+                                    progress.progress(pos/total_users)
+                                    continue
+                                users_with_attempts += 1
+
+                                for attempt_no in range(1, attempts + 1):
+                                    attempt_score = np.nan
+                                    attempt_status = None
+                                    attempt_total_time = None
+                                    attempt_session_time = None
+                                    attempt_interactions = []
+                                    for sco in sco_list:
+                                        sco_id = sco.get("id")
+                                        if not sco_id:
+                                            continue
+                                        response = scorm_rest_call(
+                                            scorm_moodle_url, scorm_token, "mod_scorm_get_scorm_sco_tracks",
+                                            {"scoid": int(sco_id), "userid": uid, "attempt": attempt_no}
+                                        )
+                                        tracks = flatten_scorm_track_response(response)
+                                        score_candidate = tracks.get("cmi.core.score.raw", tracks.get("score_raw"))
+                                        if pd.notna(pd.to_numeric(pd.Series([score_candidate]), errors="coerce").iloc[0]):
+                                            attempt_score = pd.to_numeric(pd.Series([score_candidate]), errors="coerce").iloc[0]
+                                        attempt_status = tracks.get("cmi.core.lesson_status", tracks.get("status", attempt_status))
+                                        attempt_total_time = tracks.get("cmi.core.total_time", tracks.get("total_time", attempt_total_time))
+                                        attempt_session_time = tracks.get("session_time", tracks.get("cmi.core.session_time", attempt_session_time))
+
+                                        attempt_interactions.extend(
+                                            extract_scorm_interactions(
+                                                tracks,
+                                                user_id=uid,
+                                                learner=learner_name,
+                                                attempt=attempt_no,
+                                                sco_id=sco_id,
+                                                score=attempt_score,
+                                                status=attempt_status,
+                                            )
+                                        )
+
+                                    # ensure all rows receive final score/status found across SCOs
+                                    for rr in attempt_interactions:
+                                        rr["attempt_score"] = attempt_score
+                                        rr["scorm_status"] = attempt_status
+                                    interaction_rows.extend(attempt_interactions)
+                                    attempt_summary_rows.append({
+                                        "user_id": uid,
+                                        "learner": learner_name,
+                                        "attempt": attempt_no,
+                                        "score": attempt_score,
+                                        "status": attempt_status,
+                                        "total_time": attempt_total_time,
+                                        "session_time": attempt_session_time,
+                                        "interactions": len(attempt_interactions),
+                                    })
+                            except Exception as user_exc:
+                                errors.append(f"{learner_name} (ID {uid}): {user_exc}")
+                            progress.progress(pos/total_users)
+
+                        progress.empty()
+                        status_box.empty()
+
+                        interactions_df = pd.DataFrame(interaction_rows)
+                        attempts_df = pd.DataFrame(attempt_summary_rows)
+                        st.session_state["scorm_live_interactions"] = interactions_df
+                        st.session_state["scorm_live_attempts"] = attempts_df
+                        st.session_state["scorm_live_name"] = selected_scorm.get("name", f"SCORM {selected_scorm_id}")
+                        st.session_state["scorm_live_id"] = selected_scorm_id
+                        st.session_state["scorm_live_errors"] = errors
+
+                        if interactions_df.empty:
+                            st.warning("Βρέθηκαν προσπάθειες, αλλά δεν ανακτήθηκαν interactions για ανάλυση.")
+                        else:
+                            psych = scorm_question_statistics(interactions_df, min_discrimination_n=int(min_n))
+                            st.session_state["scorm_live_psychometrics"] = psych
+                            unified_scorm, learner_scorm = build_scorm_unified_dataset(
+                                interactions_df, attempts_df, psych,
+                                scorm_name=selected_scorm.get("name", f"SCORM {selected_scorm_id}"),
+                                scorm_id=selected_scorm_id,
+                            )
+                            st.session_state["scorm_unified_dataset"] = unified_scorm
+                            st.session_state["scorm_learner_summary"] = learner_scorm
+                            st.success(
+                                f"Ανακτήθηκαν {len(interactions_df)} πραγματικές απαντήσεις από "
+                                f"{users_with_attempts} χρήστες με καταγεγραμμένη προσπάθεια."
+                            )
+                    except Exception as e:
+                        progress.empty()
+                        status_box.empty()
+                        st.error(f"Αποτυχία SCORM ανάλυσης: {e}")
+
+            interactions_df = st.session_state.get("scorm_live_interactions")
+            attempts_df = st.session_state.get("scorm_live_attempts")
+            psych = st.session_state.get("scorm_live_psychometrics")
+
+            if isinstance(attempts_df, pd.DataFrame) and not attempts_df.empty:
+                st.subheader("Προσπάθειες")
+                c1,c2,c3,c4 = st.columns(4)
+                c1.metric("Χρήστες με προσπάθεια", attempts_df["user_id"].nunique())
+                c2.metric("Συνολικές προσπάθειες", len(attempts_df))
+                c3.metric("Μέσο score", f"{attempts_df['score'].dropna().mean():.1f}" if attempts_df["score"].notna().any() else "—")
+                c4.metric("SCORM", st.session_state.get("scorm_live_name", "—"))
+                st.dataframe(attempts_df, use_container_width=True, hide_index=True)
+
+            if isinstance(interactions_df, pd.DataFrame) and not interactions_df.empty:
+                st.subheader("Πραγματικά SCORM interactions")
+                st.dataframe(interactions_df, use_container_width=True, hide_index=True)
+                st.download_button(
+                    "⬇️ Λήψη interactions CSV",
+                    interactions_df.to_csv(index=False).encode("utf-8-sig"),
+                    "INELSO Academia_SCORM_interactions.csv",
+                    "text/csv",
+                    key="scorm_download_interactions"
                 )
 
-            unified_scorm = st.session_state.get("scorm_unified_dataset")
-            learner_scorm = st.session_state.get("scorm_learner_summary")
-            if isinstance(unified_scorm, pd.DataFrame) and not unified_scorm.empty:
-                st.subheader("Ενιαίο dataset από SCORM")
+            if isinstance(psych, pd.DataFrame) and not psych.empty:
+                st.subheader("Δείκτες ποιότητας ανά ερώτηση")
                 st.caption(
-                    "Το κύριο σύνολο δεδομένων συνδυάζει πραγματικά δεδομένα ανά εκπαιδευόμενο και ανά ερώτηση. "
-                    "Μπορεί να γίνει άμεσα ενεργή πηγή για όλη την πλατφόρμα ή να εξαχθεί σε CSV."
+                    "Facility = ποσοστό σωστών απαντήσεων. Discrimination = διαφορά επιτυχίας μεταξύ άνω και κάτω 27% "
+                    "βάσει συνολικού score. Όταν το δείγμα δεν επαρκεί, ο δείκτης διάκρισης παραμένει μη εκτιμήσιμος."
                 )
-                a,b,c = st.columns(3)
-                a.metric("Γραμμές Master Dataset", len(unified_scorm))
-                b.metric("Εκπαιδευόμενοι", unified_scorm["user_id"].nunique() if "user_id" in unified_scorm.columns else "—")
-                c.metric("Ερωτήσεις", unified_scorm["question_id"].nunique() if "question_id" in unified_scorm.columns else "—")
+                psych_view = psych.copy()
+                psych_view["κατάσταση"] = psych_view["διάκριση"].apply(κατηγορία_διάκρισης)
+                psych_view["ενέργεια"] = psych_view.apply(ενέργεια_ερώτησης, axis=1)
+                st.dataframe(psych_view, use_container_width=True, hide_index=True)
 
-                d1,d2,d3 = st.columns(3)
-                with d1:
-                    st.download_button(
-                        "⬇️ SCORM Master Dataset",
-                        unified_scorm.to_csv(index=False).encode("utf-8-sig"),
-                        "INELSO Academia_SCORM_MASTER_DATASET.csv",
-                        "text/csv",
-                        key="scorm_download_master",
-                        use_container_width=True,
+                n_learners = interactions_df["user_id"].nunique() if isinstance(interactions_df, pd.DataFrame) else 0
+                if n_learners < int(min_n):
+                    st.warning(
+                        f"Υπάρχουν μόνο {n_learners} εκπαιδευόμενοι με interactions. "
+                        f"Ο δείκτης διάκρισης απαιτεί τουλάχιστον {int(min_n)} και γι' αυτό δεν ερμηνεύεται ακόμη."
                     )
-                with d2:
-                    if isinstance(learner_scorm, pd.DataFrame) and not learner_scorm.empty:
+
+                unified_scorm = st.session_state.get("scorm_unified_dataset")
+                learner_scorm = st.session_state.get("scorm_learner_summary")
+                if isinstance(unified_scorm, pd.DataFrame) and not unified_scorm.empty:
+                    st.subheader("Ενιαίο dataset από SCORM")
+                    st.caption(
+                        "Το κύριο σύνολο δεδομένων συνδυάζει πραγματικά δεδομένα ανά εκπαιδευόμενο και ανά ερώτηση. "
+                        "Μπορεί να γίνει άμεσα ενεργή πηγή για όλη την πλατφόρμα ή να εξαχθεί σε CSV."
+                    )
+                    a,b,c = st.columns(3)
+                    a.metric("Γραμμές Master Dataset", len(unified_scorm))
+                    b.metric("Εκπαιδευόμενοι", unified_scorm["user_id"].nunique() if "user_id" in unified_scorm.columns else "—")
+                    c.metric("Ερωτήσεις", unified_scorm["question_id"].nunique() if "question_id" in unified_scorm.columns else "—")
+
+                    d1,d2,d3 = st.columns(3)
+                    with d1:
                         st.download_button(
-                            "⬇️ Σύνοψη φοιτητών",
-                            learner_scorm.to_csv(index=False).encode("utf-8-sig"),
-                            "INELSO Academia_SCORM_LEARNER_SUMMARY.csv",
+                            "⬇️ SCORM Master Dataset",
+                            unified_scorm.to_csv(index=False).encode("utf-8-sig"),
+                            "INELSO Academia_SCORM_MASTER_DATASET.csv",
                             "text/csv",
-                            key="scorm_download_learners",
+                            key="scorm_download_master",
                             use_container_width=True,
                         )
-                with d3:
-                    st.download_button(
-                        "⬇️ Item Statistics",
-                        psych_view.to_csv(index=False).encode("utf-8-sig"),
-                        "INELSO Academia_SCORM_ITEM_STATISTICS.csv",
-                        "text/csv",
-                        key="scorm_download_items",
-                        use_container_width=True,
+                    with d2:
+                        if isinstance(learner_scorm, pd.DataFrame) and not learner_scorm.empty:
+                            st.download_button(
+                                "⬇️ Σύνοψη φοιτητών",
+                                learner_scorm.to_csv(index=False).encode("utf-8-sig"),
+                                "INELSO Academia_SCORM_LEARNER_SUMMARY.csv",
+                                "text/csv",
+                                key="scorm_download_learners",
+                                use_container_width=True,
+                            )
+                    with d3:
+                        st.download_button(
+                            "⬇️ Item Statistics",
+                            psych_view.to_csv(index=False).encode("utf-8-sig"),
+                            "INELSO Academia_SCORM_ITEM_STATISTICS.csv",
+                            "text/csv",
+                            key="scorm_download_items",
+                            use_container_width=True,
+                        )
+
+                    st.info(
+                        "Συμβατότητα: Μαθησιακή Ανάλυση = άμεση, Ποιότητα Αξιολόγησης = άμεση, "
+                        "Ενοποιημένες Ενδείξεις = μέσω των πραγματικών signals, Δημιουργία/Υποστήριξη Διδάσκοντα = context. "
+                        "Η Προσαρμοστική Εξάσκηση είναι μερική, επειδή το SCORM δεν παρέχει από μόνο του βεβαιότητα ή κλίμακα αξιολόγησης RC-01–RC-05."
                     )
 
-                st.info(
-                    "Συμβατότητα: Μαθησιακή Ανάλυση = άμεση, Ποιότητα Αξιολόγησης = άμεση, "
-                    "Ενοποιημένες Ενδείξεις = μέσω των πραγματικών signals, Δημιουργία/Υποστήριξη Διδάσκοντα = context. "
-                    "Η Προσαρμοστική Εξάσκηση είναι μερική, επειδή το SCORM δεν παρέχει από μόνο του βεβαιότητα ή κλίμακα αξιολόγησης RC-01–RC-05."
-                )
+                    if st.button(
+                        "✅ Χρήση SCORM Master Dataset σε όλη την πλατφόρμα",
+                        type="primary",
+                        key="scorm_activate_global",
+                        use_container_width=True,
+                    ):
+                        mapped = psych[["ερώτηση","facility","διάκριση","αποτελεσματικότητα"]].copy()
+                        st.session_state["custom_s21"] = mapped
+                        st.session_state["custom_s21_source"] = f"Live SCORM — {st.session_state.get('scorm_live_name','SCORM')}"
+                        st.session_state["inelso_scorm_active_df"] = unified_scorm.copy()
+                        st.session_state["inelso_scorm_active_name"] = f"SCORM Master Dataset — {st.session_state.get('scorm_live_name','δραστηριότητα')}"
+                        # SCORM becomes the chosen active source; external uploads remain a separate workflow and can replace it later.
+                        st.session_state.pop("inelso_uploaded_clean", None)
+                        st.session_state.pop("inelso_uploaded_original", None)
+                        st.session_state.pop("inelso_uploaded_name", None)
+                        st.success("Το SCORM Master Dataset έγινε η ενεργή πηγή για όλη την πλατφόρμα.")
+                        st.rerun()
 
-                if st.button(
-                    "✅ Χρήση SCORM Master Dataset σε όλη την πλατφόρμα",
-                    type="primary",
-                    key="scorm_activate_global",
-                    use_container_width=True,
-                ):
+                if st.button("✅ Ενημέρωση μόνο της Ποιότητας Αξιολόγησης από το SCORM", key="scorm_activate_s21"):
                     mapped = psych[["ερώτηση","facility","διάκριση","αποτελεσματικότητα"]].copy()
                     st.session_state["custom_s21"] = mapped
                     st.session_state["custom_s21_source"] = f"Live SCORM — {st.session_state.get('scorm_live_name','SCORM')}"
-                    st.session_state["inelso_scorm_active_df"] = unified_scorm.copy()
-                    st.session_state["inelso_scorm_active_name"] = f"SCORM Master Dataset — {st.session_state.get('scorm_live_name','δραστηριότητα')}"
-                    # SCORM becomes the chosen active source; external uploads remain a separate workflow and can replace it later.
-                    st.session_state.pop("inelso_uploaded_clean", None)
-                    st.session_state.pop("inelso_uploaded_original", None)
-                    st.session_state.pop("inelso_uploaded_name", None)
-                    st.success("Το SCORM Master Dataset έγινε η ενεργή πηγή για όλη την πλατφόρμα.")
+                    st.success("Η Ποιότητα Αξιολόγησης ενημερώθηκε από τα πραγματικά SCORM δεδομένα. Η ενεργή πηγή των άλλων λειτουργιών δεν άλλαξε.")
                     st.rerun()
 
-            if st.button("✅ Ενημέρωση μόνο της Ποιότητας Αξιολόγησης από το SCORM", key="scorm_activate_s21"):
-                mapped = psych[["ερώτηση","facility","διάκριση","αποτελεσματικότητα"]].copy()
-                st.session_state["custom_s21"] = mapped
-                st.session_state["custom_s21_source"] = f"Live SCORM — {st.session_state.get('scorm_live_name','SCORM')}"
-                st.success("Η Ποιότητα Αξιολόγησης ενημερώθηκε από τα πραγματικά SCORM δεδομένα. Η ενεργή πηγή των άλλων λειτουργιών δεν άλλαξε.")
-                st.rerun()
+            errors = st.session_state.get("scorm_live_errors", [])
+            if errors:
+                with st.expander(f"⚠️ Παραλείψεις / σφάλματα χρηστών ({len(errors)})"):
+                    for err in errors[:50]:
+                        st.write("•", err)
 
-        errors = st.session_state.get("scorm_live_errors", [])
-        if errors:
-            with st.expander(f"⚠️ Παραλείψεις / σφάλματα χρηστών ({len(errors)})"):
-                for err in errors[:50]:
-                    st.write("•", err)
 
 # ==========================================================
 # SERVICE 26
