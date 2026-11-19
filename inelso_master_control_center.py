@@ -17,9 +17,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import (
-    accuracy_βαθμολογία, balanced_accuracy_βαθμολογία, f1_βαθμολογία,
-    mean_absolute_error, mean_squared_error, r2_βαθμολογία,
-    silhouette_βαθμολογία
+    accuracy_score, balanced_accuracy_score, f1_score,
+    mean_absolute_error, mean_squared_error, r2_score,
+    silhouette_score
 )
 from sklearn.linear_model import LogisticRegression, LinearRegression
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
@@ -39,7 +39,7 @@ def render_moodle_rest_service_panel(
     service_name,
     *,
     summary,
-    βαθμολογία=None,
+    score=None,
     status=None,
     entity=None,
     enabled=True,
@@ -80,8 +80,8 @@ def render_moodle_rest_service_panel(
             lines.append(f"Οντότητα: {entity}")
         if status:
             lines.append(f"Κατάσταση: {status}")
-        if βαθμολογία is not None:
-            lines.append(f"Βαθμολογία: {float(βαθμολογία):.2f}/100")
+        if score is not None:
+            lines.append(f"Βαθμολογία: {float(score):.2f}/100")
         lines.append(f"Σύνοψη: {summary}")
 
         draft = "\n".join(lines)
@@ -94,7 +94,7 @@ def render_moodle_rest_service_panel(
             "service": service_name,
             "entity": entity,
             "status": status,
-            "βαθμολογία": βαθμολογία,
+            "score": score,
             "summary": summary,
         }
 
@@ -272,7 +272,7 @@ MODULE_HELP = {
         "title": "Κεντρική Εικόνα Ελέγχου",
         "purpose": "Συνοψίζει την κατάσταση των δεδομένων και των επιμέρους λειτουργιών σε μία οθόνη.",
         "steps": [
-            "Φορτώστε CSV/Excel από την «Εισαγωγή CSV / Excel» ή ενεργοποιήστε πραγματικό SCORM Κύριο Σύνολο Δεδομένων.",
+            "Φορτώστε CSV/Excel από την «Εισαγωγή CSV / Excel» ή ενεργοποιήστε πραγματικό SCORM Master Dataset.",
             "Ελέγξτε ποια λειτουργία είναι συμβατή με τις διαθέσιμες στήλες.",
             "Ανοίξτε την αντίστοιχη ενότητα για λεπτομερή αποτελέσματα και προτεινόμενες ενέργειες.",
             "Οι ενέργειες προς Moodle περνούν πάντα από ανθρώπινη επιβεβαίωση."
@@ -728,7 +728,7 @@ def _scorm_interaction_value(tracks, idx, *suffixes):
     return None
 
 
-def extract_scorm_interactions(tracks, *, user_id=None, learner=None, attempt=None, sco_id=None, βαθμολογία=None, status=None):
+def extract_scorm_interactions(tracks, *, user_id=None, learner=None, attempt=None, sco_id=None, score=None, status=None):
     rows = []
     for idx in _scorm_interaction_indexes(tracks):
         result = _scorm_interaction_value(tracks, idx, "result")
@@ -747,7 +747,7 @@ def extract_scorm_interactions(tracks, *, user_id=None, learner=None, attempt=No
             "weighting": _scorm_interaction_value(tracks, idx, "weighting"),
             "latency": _scorm_interaction_value(tracks, idx, "latency"),
             "time": _scorm_interaction_value(tracks, idx, "time"),
-            "attempt_βαθμολογία": pd.to_numeric(pd.Series([βαθμολογία]), errors="coerce").iloc[0],
+            "attempt_score": pd.to_numeric(pd.Series([score]), errors="coerce").iloc[0],
             "scorm_status": status,
         })
     return rows
@@ -764,7 +764,7 @@ def scorm_question_statistics(interactions_df, min_discrimination_n=8):
 
     d = interactions_df.copy()
     d["attempt"] = pd.to_numeric(d["attempt"], errors="coerce")
-    d["attempt_βαθμολογία"] = pd.to_numeric(d["attempt_βαθμολογία"], errors="coerce")
+    d["attempt_score"] = pd.to_numeric(d["attempt_score"], errors="coerce")
     d["is_correct"] = d["is_correct"].astype(bool)
 
     if "user_id" in d.columns and d["user_id"].notna().any():
@@ -779,9 +779,9 @@ def scorm_question_statistics(interactions_df, min_discrimination_n=8):
             continue
         facility = float(g["is_correct"].mean() * 100.0)
         discrimination = np.nan
-        eligible = g.dropna(subset=["attempt_βαθμολογία"]).copy()
-        if len(eligible) >= int(min_discrimination_n) and eligible["attempt_βαθμολογία"].nunique() >= 2:
-            eligible = eligible.sort_values("attempt_βαθμολογία")
+        eligible = g.dropna(subset=["attempt_score"]).copy()
+        if len(eligible) >= int(min_discrimination_n) and eligible["attempt_score"].nunique() >= 2:
+            eligible = eligible.sort_values("attempt_score")
             k = max(1, int(np.ceil(len(eligible) * 0.27)))
             low = float(eligible.head(k)["is_correct"].mean())
             high = float(eligible.tail(k)["is_correct"].mean())
@@ -808,7 +808,7 @@ def build_scorm_unified_dataset(interactions_df, attempts_df, psych_df=None, sco
 
     x = interactions_df.copy()
     x["attempt"] = pd.to_numeric(x.get("attempt"), errors="coerce")
-    x["attempt_βαθμολογία"] = pd.to_numeric(x.get("attempt_βαθμολογία"), errors="coerce")
+    x["attempt_score"] = pd.to_numeric(x.get("attempt_score"), errors="coerce")
     x["is_correct"] = x.get("is_correct", False).astype(bool)
 
     # learner/attempt summary from the actual interactions
@@ -816,7 +816,7 @@ def build_scorm_unified_dataset(interactions_df, attempts_df, psych_df=None, sco
     learner_summary = (
         x.groupby(group_cols, dropna=False)
          .agg(
-             βαθμολογία=("attempt_βαθμολογία", "max"),
+             score=("attempt_score", "max"),
              status=("scorm_status", "last"),
              questions_answered=("question_id", "count"),
              correct_count=("is_correct", "sum"),
@@ -877,7 +877,7 @@ def build_scorm_unified_dataset(interactions_df, attempts_df, psych_df=None, sco
     unified["scorm_id"] = scorm_id
 
     preferred = [
-        "learner_id","user_id","learner","attempt","βαθμολογία","status","completion",
+        "learner_id","user_id","learner","attempt","score","status","completion",
         "total_time","session_time","questions_answered","correct_count","incorrect_count",
         "accuracy_pct","sco_id","interaction_index","question_id","type",
         "student_response","correct_response","result","is_correct","weighting","latency","time",
@@ -959,14 +959,14 @@ def active_dataset_kind(df):
     if any(str(c).startswith("Response ") for c in df.columns) and any("grade" in c.lower() for c in cols):
         return "MOODLE_RESPONSES"
     if (
-        detect_column(df, ["βαθμολογία", "grade", "final βαθμολογία"]) is not None
+        detect_column(df, ["score", "grade", "final score"]) is not None
         and detect_column(df, ["attempt", "προσπάθεια"]) is not None
     ):
         return "LEARNER_LEVEL"
     return "GENERIC"
 
 
-def dataset_πλαίσιο_summary(df, max_cols=12):
+def dataset_context_summary(df, max_cols=12):
     if not isinstance(df, pd.DataFrame):
         return "Δεν υπάρχει ενεργό σύνολο δεδομένων."
     p = dataset_profile(df)
@@ -992,9 +992,9 @@ def service_dataset_compatibility(service_key, df):
     if service_key == "S26":
         if st.session_state.get("custom_s26") is not None:
             return "ΠΛΗΡΗΣ"
-        βαθμολογία = detect_column(df, ["βαθμολογία","grade","final βαθμολογία"])
+        score = detect_column(df, ["score","grade","final score"])
         attempt = detect_column(df, ["attempt","προσπάθεια"])
-        return "ΜΕΡΙΚΗ" if βαθμολογία is not None or attempt is not None else "ΜΗ ΣΥΜΒΑΤΗ"
+        return "ΜΕΡΙΚΗ" if score is not None or attempt is not None else "ΜΗ ΣΥΜΒΑΤΗ"
     if service_key == "S16":
         numeric = df.select_dtypes(include=np.number).shape[1]
         return "ΠΛΗΡΗΣ" if numeric >= 1 else "ΜΕΡΙΚΗ"
@@ -1009,7 +1009,7 @@ def service_dataset_compatibility(service_key, df):
     return "CONTEXT"
 
 
-def show_active_dataset_πλαίσιο(service_key=None, compact=True):
+def show_active_dataset_context(service_key=None, compact=True):
     df = get_active_dataset()
     if df is None:
         st.caption("Δεν υπάρχει ενεργή πηγή δεδομένων.")
@@ -1029,10 +1029,10 @@ def show_active_dataset_πλαίσιο(service_key=None, compact=True):
         c4.metric("Διπλότυπα", p["duplicates"])
 
 
-def csv_πλαίσιο_as_text(df, max_rows=5):
+def csv_context_as_text(df, max_rows=5):
     if not isinstance(df, pd.DataFrame):
         return ""
-    summary = dataset_πλαίσιο_summary(df)
+    summary = dataset_context_summary(df)
     sample = df.head(max_rows).astype(str).to_dict(orient="records")
     return summary + "\nΔείγμα γραμμών:\n" + json.dumps(sample, ensure_ascii=False, indent=2)
 
@@ -1112,28 +1112,28 @@ rubric = pd.DataFrame([
 
 service26 = pd.DataFrame([
     {"προσπάθεια":1,"RC-01":3,"RC-02":2,"RC-03":2,"RC-04":2,"RC-05":3,
-     "βαθμολογία":61.25,"κατάκτηση":"Αναπτυσσόμενο","βεβαιότητα":0.65},
+     "score":61.25,"κατάκτηση":"Αναπτυσσόμενο","βεβαιότητα":0.65},
     {"προσπάθεια":2,"RC-01":4,"RC-02":4,"RC-03":4,"RC-04":4,"RC-05":4,
-     "βαθμολογία":100.00,"κατάκτηση":"Κατάκτηση","βεβαιότητα":0.85},
+     "score":100.00,"κατάκτηση":"Κατάκτηση","βεβαιότητα":0.85},
 ])
 
-def κατάσταση_26(βαθμολογία, conf, rc01):
+def κατάσταση_26(score, conf, rc01):
     if conf < 0.70 or rc01 <= 1:
         return "ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ"
-    if βαθμολογία < 70:
+    if score < 70:
         return "ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ"
     return "ΕΤΟΙΜΟ"
 
 service26["κατάσταση"] = service26.apply(
-    lambda r: κατάσταση_26(r["βαθμολογία"], r["βεβαιότητα"], r["RC-01"]), axis=1
+    lambda r: κατάσταση_26(r["score"], r["βεβαιότητα"], r["RC-01"]), axis=1
 )
 
 cohort26 = pd.DataFrame([
-    {"μαθητής":"Demo Student 0201","βαθμολογία":100.00,"βεβαιότητα":0.85,"κατάκτηση":"Κατάκτηση","κατάσταση":"ΕΤΟΙΜΟ"},
-    {"μαθητής":"Demo Student 0202","βαθμολογία":78.75,"βεβαιότητα":0.81,"κατάκτηση":"Επαρκής","κατάσταση":"ΕΤΟΙΜΟ"},
-    {"μαθητής":"Demo Student 0203","βαθμολογία":66.25,"βεβαιότητα":0.68,"κατάκτηση":"Αναπτυσσόμενο","κατάσταση":"ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ"},
-    {"μαθητής":"Demo Student 0204","βαθμολογία":91.25,"βεβαιότητα":0.88,"κατάκτηση":"Κατάκτηση","κατάσταση":"ΕΤΟΙΜΟ"},
-    {"μαθητής":"Demo Student 0205","βαθμολογία":57.50,"βεβαιότητα":0.72,"κατάκτηση":"Αναπτυσσόμενο","κατάσταση":"ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ"},
+    {"μαθητής":"Demo Student 0201","score":100.00,"βεβαιότητα":0.85,"κατάκτηση":"Κατάκτηση","κατάσταση":"ΕΤΟΙΜΟ"},
+    {"μαθητής":"Demo Student 0202","score":78.75,"βεβαιότητα":0.81,"κατάκτηση":"Επαρκής","κατάσταση":"ΕΤΟΙΜΟ"},
+    {"μαθητής":"Demo Student 0203","score":66.25,"βεβαιότητα":0.68,"κατάκτηση":"Αναπτυσσόμενο","κατάσταση":"ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ"},
+    {"μαθητής":"Demo Student 0204","score":91.25,"βεβαιότητα":0.88,"κατάκτηση":"Κατάκτηση","κατάσταση":"ΕΤΟΙΜΟ"},
+    {"μαθητής":"Demo Student 0205","score":57.50,"βεβαιότητα":0.72,"κατάκτηση":"Αναπτυσσόμενο","κατάσταση":"ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ"},
 ])
 
 # Αν υπάρχει mapped Προσαρμοστική Εξάσκηση dataset από το ενεργή πηγή, γίνεται η ενεργή cohort πηγή.
@@ -1146,14 +1146,14 @@ if "custom_s26" in st.session_state and isinstance(st.session_state["custom_s26"
             ]
         if "κατάκτηση" not in mapped26_active.columns:
             mapped26_active["κατάκτηση"] = np.where(
-                pd.to_numeric(mapped26_active["βαθμολογία"], errors="coerce") >= 70,
+                pd.to_numeric(mapped26_active["score"], errors="coerce") >= 70,
                 "Επαρκής",
                 "Αναπτυσσόμενο"
             )
         if "κατάσταση" not in mapped26_active.columns:
             mapped26_active["κατάσταση"] = mapped26_active.apply(
                 lambda r: κατάσταση_26(
-                    float(r.get("βαθμολογία",0)) if pd.notna(r.get("βαθμολογία",np.nan)) else 0,
+                    float(r.get("score",0)) if pd.notna(r.get("score",np.nan)) else 0,
                     float(r.get("βεβαιότητα",0)) if pd.notna(r.get("βεβαιότητα",np.nan)) else 0,
                     float(r.get("RC-01",2)) if pd.notna(r.get("RC-01",np.nan)) else 2
                 ),
@@ -1167,11 +1167,11 @@ if "custom_s26" in st.session_state and isinstance(st.session_state["custom_s26"
                 .tail(1).index
             )
             cohort26 = mapped26_active.loc[_latest_idx, [
-                "μαθητής","βαθμολογία","βεβαιότητα","κατάκτηση","κατάσταση"
+                "μαθητής","score","βεβαιότητα","κατάκτηση","κατάσταση"
             ]].copy().reset_index(drop=True)
         else:
             cohort26 = mapped26_active[
-                ["μαθητής","βαθμολογία","βεβαιότητα","κατάκτηση","κατάσταση"]
+                ["μαθητής","score","βεβαιότητα","κατάκτηση","κατάσταση"]
             ].copy()
 
 # ==========================================================
@@ -1235,7 +1235,7 @@ if "custom_s26" in st.session_state and isinstance(st.session_state["custom_s26"
     active26 = cohort26.copy()
     for _, rr in active26.iterrows():
         status = str(rr.get("κατάσταση",""))
-        βαθμολογία = pd.to_numeric(pd.Series([rr.get("βαθμολογία")]), errors="coerce").iloc[0]
+        score = pd.to_numeric(pd.Series([rr.get("score")]), errors="coerce").iloc[0]
         conf = pd.to_numeric(pd.Series([rr.get("βεβαιότητα")]), errors="coerce").iloc[0]
 
         if status == "ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ":
@@ -1244,11 +1244,11 @@ if "custom_s26" in st.session_state and isinstance(st.session_state["custom_s26"
             action = "Ανθρώπινος έλεγχος"
         elif status == "ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ":
             direction = "ΜΕΣΑΙΑ"
-            strength = 100.0 if pd.isna(βαθμολογία) else round(max(0, 100-float(βαθμολογία)),2)
+            strength = 100.0 if pd.isna(score) else round(max(0, 100-float(score)),2)
             action = "Στοχευμένη νέα προσπάθεια"
         else:
             direction = "ΘΕΤΙΚΗ"
-            strength = 0.0 if pd.isna(βαθμολογία) else round(float(βαθμολογία),2)
+            strength = 0.0 if pd.isna(score) else round(float(score),2)
             action = "Παρακολούθηση"
 
         s26_rows.append({
@@ -1295,7 +1295,7 @@ health21 = περιορισμός(
 
 ready_rate = (cohort26["κατάσταση"]=="ΕΤΟΙΜΟ").mean()*100
 health26 = περιορισμός(
-    .55*cohort26["βαθμολογία"].mean()
+    .55*cohort26["score"].mean()
     + .25*(cohort26["βεβαιότητα"].mean()*100)
     + .20*ready_rate
 )
@@ -1324,7 +1324,7 @@ st.sidebar.markdown("<div class='inelso-section-label'>Κύριες λειτου
 NAV_DISPLAY_TO_INTERNAL = {
     "Αρχική": "Κεντρική Εικόνα Ελέγχου",
     "Έγκαιρη Υποστήριξη": "Μαθησιακή Ανάλυση & Έγκαιρη Υποστήριξη",
-    "Ποιότητα Κουίζ": "Ποιότητα Αξιολόγησης",
+    "Ποιότητα Quiz": "Ποιότητα Αξιολόγησης",
     "Ανάλυση SCORM": "Ανάλυση SCORM Αξιολόγησης",
     "Δημιουργία Αξιολόγησης": "Δημιουργία Μαθήματος & Αξιολόγησης",
     "Προσαρμοστική Εξάσκηση": "Προσαρμοστική Εξάσκηση",
@@ -1408,7 +1408,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
     with hright:
         render_info_button("dashboard")
 
-    show_active_dataset_πλαίσιο("DASHBOARD", compact=False)
+    show_active_dataset_context("DASHBOARD", compact=False)
 
     if ACTIVE_DF is None:
         a,b = st.columns(2)
@@ -1464,7 +1464,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
             st.markdown("### Επιχειρησιακή εικόνα")
             c1,c2,c3,c4,c5 = st.columns(5)
             c1.metric("Συνολικός δείκτης", f"{dashboard_overall:.1f}/100" if dashboard_overall is not None else "—")
-            c2.metric("Ποιότητα Κουίζ", f"{health21:.1f}/100" if "custom_s21" in st.session_state else "—")
+            c2.metric("Ποιότητα Quiz", f"{health21:.1f}/100" if "custom_s21" in st.session_state else "—")
             c3.metric("Προσαρμοστική Εξάσκηση", f"{health26:.1f}/100" if "custom_s26" in st.session_state else "—")
             c4.metric("Μαθησιακές Ενδείξεις", f"{health31:.1f}/100" if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—")
             c5.metric("Ανοικτές ενέργειες", dashboard_open if valid_healths else "—")
@@ -1487,7 +1487,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
                     f"<div class='inelso-feature-value'>{s21_value}</div><p>{s21_note}</p></div>",
                     unsafe_allow_html=True
                 )
-                st.button("Άνοιγμα Ποιότητας Κουίζ", use_container_width=True, on_click=_home_nav, args=("Ποιότητα Κουίζ",), key="home_open_s21")
+                st.button("Άνοιγμα Ποιότητας Κουίζ", use_container_width=True, on_click=_home_nav, args=("Ποιότητα Quiz",), key="home_open_s21")
             with a2:
                 s26_value = f"{health26:.1f}/100" if "custom_s26" in st.session_state else "—"
                 s26_note = f"{open26} περιπτώσεις για ενέργεια" if "custom_s26" in st.session_state else "Χρειάζονται δεδομένα ανά εκπαιδευόμενο"
@@ -1534,7 +1534,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
             with st.expander("Τεχνική κατάσταση όλων των λειτουργιών", expanded=False):
                 comparison = pd.DataFrame([
                     {"Ενότητα":"Έγκαιρη Υποστήριξη","Συμβατότητα":service_dataset_compatibility("S16", ACTIVE_DF),"Αποτέλεσμα":"Έτοιμο για ανάλυση","Πηγή":ACTIVE_NAME},
-                    {"Ενότητα":"Ποιότητα Κουίζ","Συμβατότητα":service_dataset_compatibility("S21", ACTIVE_DF),"Αποτέλεσμα":f"{health21:.1f}/100" if "custom_s21" in st.session_state else "Αναμονή δεδομένων ανά ερώτηση","Πηγή":ACTIVE_NAME},
+                    {"Ενότητα":"Ποιότητα Quiz","Συμβατότητα":service_dataset_compatibility("S21", ACTIVE_DF),"Αποτέλεσμα":f"{health21:.1f}/100" if "custom_s21" in st.session_state else "Αναμονή δεδομένων ανά ερώτηση","Πηγή":ACTIVE_NAME},
                     {"Ενότητα":"Δημιουργία Αξιολόγησης","Συμβατότητα":service_dataset_compatibility("S25", ACTIVE_DF),"Αποτέλεσμα":"Διαθέσιμο ως πλαίσιο","Πηγή":ACTIVE_NAME},
                     {"Ενότητα":"Προσαρμοστική Εξάσκηση","Συμβατότητα":service_dataset_compatibility("S26", ACTIVE_DF),"Αποτέλεσμα":f"{health26:.1f}/100" if "custom_s26" in st.session_state else "Αναμονή αντιστοίχισης ανά εκπαιδευόμενο","Πηγή":ACTIVE_NAME},
                     {"Ενότητα":"Υποστήριξη Διδάσκοντα","Συμβατότητα":service_dataset_compatibility("S28", ACTIVE_DF),"Αποτέλεσμα":"Διαθέσιμο ως πλαίσιο","Πηγή":ACTIVE_NAME},
@@ -1565,7 +1565,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
 
             c1,c2 = st.columns(2)
             with c1:
-                st.button("Άνοιγμα Ποιότητας Κουίζ", use_container_width=True, on_click=_home_nav, args=("Ποιότητα Κουίζ",), key="home_actions_s21")
+                st.button("Άνοιγμα Ποιότητας Κουίζ", use_container_width=True, on_click=_home_nav, args=("Ποιότητα Quiz",), key="home_actions_s21")
             with c2:
                 st.button("Άνοιγμα Προσαρμοστικής Εξάσκησης", use_container_width=True, on_click=_home_nav, args=("Προσαρμοστική Εξάσκηση",), key="home_actions_s26")
 
@@ -1599,7 +1599,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
 elif section == "Ποιότητα Αξιολόγησης":
     if ACTIVE_DF is None:
         render_module_header("Ποιότητα Αξιολόγησης", "", "s21")
-        show_active_dataset_πλαίσιο("S21")
+        show_active_dataset_context("S21")
         c1,c2,c3,c4,c5 = st.columns(5)
         c1.metric("Ερωτήσεις","—")
         c2.metric("Μέσος δείκτης ευκολίας","—")
@@ -1609,7 +1609,7 @@ elif section == "Ποιότητα Αξιολόγησης":
         st.stop()
     if "custom_s21" not in st.session_state:
         render_module_header("Ποιότητα Αξιολόγησης", "", "s21")
-        show_active_dataset_πλαίσιο("S21")
+        show_active_dataset_context("S21")
         st.warning(
             "Το ενεργή πηγή έχει φορτωθεί, αλλά δεν έχει δημιουργηθεί συμβατό σύνολο δεδομένων ανά ερώτηση για το Ποιότητα Αξιολόγησης. "
             "Χρησιμοποίησε την Αυτόματη αναγνώριση ή την Αντιστοίχιση στηλών στο Κέντρο Δεδομένων."
@@ -1623,7 +1623,7 @@ elif section == "Ποιότητα Αξιολόγησης":
         st.stop()
 
     render_module_header("Ποιότητα Αξιολόγησης", "", "s21")
-    show_active_dataset_πλαίσιο("S21")
+    show_active_dataset_context("S21")
     st.caption("Μετατρέπει τα στατιστικά του κουίζ σε κατανοητές ενδείξεις για έλεγχο και βελτίωση ερωτήσεων.")
 
     with st.expander("📘 Πώς πρέπει να είναι δομημένο το Quiz;", expanded=False):
@@ -1656,7 +1656,7 @@ elif section == "Ποιότητα Αξιολόγησης":
     render_moodle_rest_service_panel(
         "Ποιότητα Αξιολόγησης",
         summary=f"Assessment health {health21:.1f}/100 · open actions {open21}",
-        βαθμολογία=None,
+        score=None,
         status="Assessment quality review",
         entity=ACTIVE_NAME if ACTIVE_DF is not None else "σύνολο δεδομένων Ποιότητας Αξιολόγησης",
         enabled=True,
@@ -1863,7 +1863,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                                 users_with_attempts += 1
 
                                 for attempt_no in range(1, attempts + 1):
-                                    attempt_βαθμολογία = np.nan
+                                    attempt_score = np.nan
                                     attempt_status = None
                                     attempt_total_time = None
                                     attempt_session_time = None
@@ -1877,9 +1877,9 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                                             {"scoid": int(sco_id), "userid": uid, "attempt": attempt_no}
                                         )
                                         tracks = flatten_scorm_track_response(response)
-                                        βαθμολογία_candidate = tracks.get("cmi.core.βαθμολογία.raw", tracks.get("βαθμολογία_raw"))
-                                        if pd.notna(pd.to_numeric(pd.Series([βαθμολογία_candidate]), errors="coerce").iloc[0]):
-                                            attempt_βαθμολογία = pd.to_numeric(pd.Series([βαθμολογία_candidate]), errors="coerce").iloc[0]
+                                        score_candidate = tracks.get("cmi.core.score.raw", tracks.get("score_raw"))
+                                        if pd.notna(pd.to_numeric(pd.Series([score_candidate]), errors="coerce").iloc[0]):
+                                            attempt_score = pd.to_numeric(pd.Series([score_candidate]), errors="coerce").iloc[0]
                                         attempt_status = tracks.get("cmi.core.lesson_status", tracks.get("status", attempt_status))
                                         attempt_total_time = tracks.get("cmi.core.total_time", tracks.get("total_time", attempt_total_time))
                                         attempt_session_time = tracks.get("session_time", tracks.get("cmi.core.session_time", attempt_session_time))
@@ -1891,21 +1891,21 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                                                 learner=learner_name,
                                                 attempt=attempt_no,
                                                 sco_id=sco_id,
-                                                βαθμολογία=attempt_βαθμολογία,
+                                                score=attempt_score,
                                                 status=attempt_status,
                                             )
                                         )
 
-                                    # ensure all rows receive final βαθμολογία/status found across SCOs
+                                    # ensure all rows receive final score/status found across SCOs
                                     for rr in attempt_interactions:
-                                        rr["attempt_βαθμολογία"] = attempt_βαθμολογία
+                                        rr["attempt_score"] = attempt_score
                                         rr["scorm_status"] = attempt_status
                                     interaction_rows.extend(attempt_interactions)
                                     attempt_summary_rows.append({
                                         "user_id": uid,
                                         "learner": learner_name,
                                         "attempt": attempt_no,
-                                        "βαθμολογία": attempt_βαθμολογία,
+                                        "score": attempt_score,
                                         "status": attempt_status,
                                         "total_time": attempt_total_time,
                                         "session_time": attempt_session_time,
@@ -1956,7 +1956,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                 c1,c2,c3,c4 = st.columns(4)
                 c1.metric("Χρήστες με προσπάθεια", attempts_df["user_id"].nunique())
                 c2.metric("Συνολικές προσπάθειες", len(attempts_df))
-                c3.metric("Μέσο βαθμολογία", f"{attempts_df['βαθμολογία'].dropna().mean():.1f}" if attempts_df["βαθμολογία"].notna().any() else "—")
+                c3.metric("Μέσο score", f"{attempts_df['score'].dropna().mean():.1f}" if attempts_df["score"].notna().any() else "—")
                 c4.metric("SCORM", st.session_state.get("scorm_live_name", "—"))
                 st.dataframe(attempts_df, use_container_width=True, hide_index=True)
 
@@ -1975,7 +1975,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                 st.subheader("Δείκτες ποιότητας ανά ερώτηση")
                 st.caption(
                     "Facility = ποσοστό σωστών απαντήσεων. Discrimination = διαφορά επιτυχίας μεταξύ άνω και κάτω 27% "
-                    "βάσει συνολικού βαθμολογία. Όταν το δείγμα δεν επαρκεί, ο δείκτης διάκρισης παραμένει μη εκτιμήσιμος."
+                    "βάσει συνολικού score. Όταν το δείγμα δεν επαρκεί, ο δείκτης διάκρισης παραμένει μη εκτιμήσιμος."
                 )
                 psych_view = psych.copy()
                 psych_view["κατάσταση"] = psych_view["διάκριση"].apply(κατηγορία_διάκρισης)
@@ -1998,14 +1998,14 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                         "Μπορεί να γίνει άμεσα ενεργή πηγή για όλη την πλατφόρμα ή να εξαχθεί σε CSV."
                     )
                     a,b,c = st.columns(3)
-                    a.metric("Γραμμές Κύριο Σύνολο Δεδομένων", len(unified_scorm))
+                    a.metric("Γραμμές Master Dataset", len(unified_scorm))
                     b.metric("Εκπαιδευόμενοι", unified_scorm["user_id"].nunique() if "user_id" in unified_scorm.columns else "—")
                     c.metric("Ερωτήσεις", unified_scorm["question_id"].nunique() if "question_id" in unified_scorm.columns else "—")
 
                     d1,d2,d3 = st.columns(3)
                     with d1:
                         st.download_button(
-                            "⬇️ SCORM Κύριο Σύνολο Δεδομένων",
+                            "⬇️ SCORM Master Dataset",
                             unified_scorm.to_csv(index=False).encode("utf-8-sig"),
                             "INELSO Academia_SCORM_MASTER_DATASET.csv",
                             "text/csv",
@@ -2024,7 +2024,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                             )
                     with d3:
                         st.download_button(
-                            "⬇️ Στατιστικά Ερωτήσεων",
+                            "⬇️ Item Statistics",
                             psych_view.to_csv(index=False).encode("utf-8-sig"),
                             "INELSO Academia_SCORM_ITEM_STATISTICS.csv",
                             "text/csv",
@@ -2034,12 +2034,12 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
 
                     st.info(
                         "Συμβατότητα: Μαθησιακή Ανάλυση = άμεση, Ποιότητα Αξιολόγησης = άμεση, "
-                        "Ενοποιημένες Ενδείξεις = μέσω των πραγματικών ενδείξεων, Δημιουργία/Υποστήριξη Διδάσκοντα = πλαίσιο. "
+                        "Ενοποιημένες Ενδείξεις = μέσω των πραγματικών signals, Δημιουργία/Υποστήριξη Διδάσκοντα = context. "
                         "Η Προσαρμοστική Εξάσκηση είναι μερική, επειδή το SCORM δεν παρέχει από μόνο του βεβαιότητα ή κλίμακα αξιολόγησης RC-01–RC-05."
                     )
 
                     if st.button(
-                        "✅ Χρήση SCORM Κύριο Σύνολο Δεδομένων σε όλη την πλατφόρμα",
+                        "✅ Χρήση SCORM Master Dataset σε όλη την πλατφόρμα",
                         type="primary",
                         key="scorm_activate_global",
                         use_container_width=True,
@@ -2048,12 +2048,12 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                         st.session_state["custom_s21"] = mapped
                         st.session_state["custom_s21_source"] = f"Live SCORM — {st.session_state.get('scorm_live_name','SCORM')}"
                         st.session_state["inelso_scorm_active_df"] = unified_scorm.copy()
-                        st.session_state["inelso_scorm_active_name"] = f"SCORM Κύριο Σύνολο Δεδομένων — {st.session_state.get('scorm_live_name','δραστηριότητα')}"
+                        st.session_state["inelso_scorm_active_name"] = f"SCORM Master Dataset — {st.session_state.get('scorm_live_name','δραστηριότητα')}"
                         # SCORM becomes the chosen active source; external uploads remain a separate workflow and can replace it later.
                         st.session_state.pop("inelso_uploaded_clean", None)
                         st.session_state.pop("inelso_uploaded_original", None)
                         st.session_state.pop("inelso_uploaded_name", None)
-                        st.success("Το SCORM Κύριο Σύνολο Δεδομένων έγινε η ενεργή πηγή για όλη την πλατφόρμα.")
+                        st.success("Το SCORM Master Dataset έγινε η ενεργή πηγή για όλη την πλατφόρμα.")
                         st.rerun()
 
                 if st.button("✅ Ενημέρωση μόνο της Ποιότητας Αξιολόγησης από το SCORM", key="scorm_activate_s21"):
@@ -2076,7 +2076,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
 elif section == "Προσαρμοστική Εξάσκηση":
     if ACTIVE_DF is None:
         render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
-        show_active_dataset_πλαίσιο("S26")
+        show_active_dataset_context("S26")
         c1,c2,c3,c4,c5 = st.columns(5)
         c1.metric("Τρέχουσα επίδοση","—")
         c2.metric("Κατάκτηση","—")
@@ -2086,7 +2086,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
         st.stop()
     if "custom_s26" not in st.session_state:
         render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
-        show_active_dataset_πλαίσιο("S26")
+        show_active_dataset_context("S26")
         st.warning(
             "Το ενεργή πηγή έχει φορτωθεί, αλλά δεν έχει γίνει ακόμη mapping για Προσαρμοστική Εξάσκηση. "
             "Χρειάζονται πραγματικά πεδία ανά εκπαιδευόμενο, π.χ. εκπαιδευόμενος/βαθμολογία και, όπου υπάρχουν, προσπάθεια/βεβαιότητα/κλίμακα αξιολόγησης."
@@ -2100,7 +2100,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
         st.stop()
 
     render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
-    show_active_dataset_πλαίσιο("S26")
+    show_active_dataset_context("S26")
     st.caption("Αναλύει την επίδοση ανά κριτήριο, την πρόοδο και τη βεβαιότητα και προτείνει το επόμενο εκπαιδευτικό βήμα.")
 
     with st.expander("📘 Τι είναι η Rubric και πώς περνά στο σύστημα;", expanded=False):
@@ -2135,10 +2135,10 @@ elif section == "Προσαρμοστική Εξάσκηση":
     )
     latest = service26_current.iloc[-1]
     prev = service26_current.iloc[0]
-    gain = float(latest["βαθμολογία"])-float(prev["βαθμολογία"])
+    gain = float(latest["score"])-float(prev["score"])
 
     c1,c2,c3,c4,c5 = st.columns(5)
-    c1.metric("Τρέχουσα επίδοση",f"{latest['βαθμολογία']:.0f}/100")
+    c1.metric("Τρέχουσα επίδοση",f"{latest['score']:.0f}/100")
     c2.metric("Κατάκτηση",latest["κατάκτηση"])
     c3.metric("Βεβαιότητα",f"{latest['βεβαιότητα']:.2f}")
     c4.metric("Πρόοδος",f"+{gain:.2f}")
@@ -2150,7 +2150,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
             f"βεβαιότητα {float(latest['βεβαιότητα']):.2f} · "
             f"progress +{gain:.2f}"
         ),
-        βαθμολογία=float(latest["βαθμολογία"]),
+        score=float(latest["score"]),
         status=str(latest["κατάσταση"]),
         entity=selected_learner,
         enabled=True,
@@ -2205,7 +2205,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
                     "Τελευταία προσπάθεια":plot_latest
                 }, index=plot_index))
         with tabs[2]:
-            st.line_chart(service26_current.set_index("προσπάθεια")[["βαθμολογία","βεβαιότητα"]])
+            st.line_chart(service26_current.set_index("προσπάθεια")[["score","βεβαιότητα"]])
             st.dataframe(service26_current,use_container_width=True,hide_index=True)
         with tabs[3]:
             st.markdown("""
@@ -2231,12 +2231,12 @@ elif section == "Προσαρμοστική Εξάσκηση":
 elif section == "Δημιουργία Μαθήματος & Αξιολόγησης":
     if ACTIVE_DF is None:
         render_module_header("Δημιουργία Μαθήματος & Αξιολόγησης", "", "s25")
-        show_active_dataset_πλαίσιο("S25")
+        show_active_dataset_context("S25")
         st.metric("Κατάσταση","—")
         st.stop()
 
     render_module_header("Δημιουργία Μαθήματος & Αξιολόγησης", "", "s25")
-    show_active_dataset_πλαίσιο("S25")
+    show_active_dataset_context("S25")
     st.caption(
         "Χώρος εργασίας για γρήγορη δημιουργία προσχεδίων ερωτήσεων, κουίζ, κλιμάκων αξιολόγησης και ασκήσεων "
         "από υπάρχον εκπαιδευτικό περιεχόμενο — πάντα με έλεγχο και έγκριση διδάσκοντα."
@@ -2256,7 +2256,7 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
             if s25_scorm_ready else
             "Το προσχέδιο αναμένει έλεγχο διδάσκοντα"
         ),
-        βαθμολογία=None,
+        score=None,
         status="completed" if s25_scorm_ready else "incomplete",
         entity=ACTIVE_NAME if ACTIVE_DF is not None else "Δημιουργία Μαθήματος & Αξιολόγησης authoring session",
         enabled=True,
@@ -2297,10 +2297,10 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
     if use_csv_s25 and ACTIVE_DF is not None:
         st.text_area(
             "Πλαίσιο από το CSV που θα ληφθεί υπόψη",
-            value=dataset_πλαίσιο_summary(ACTIVE_DF),
+            value=dataset_context_summary(ACTIVE_DF),
             height=110,
             disabled=True,
-            key="s25_csv_πλαίσιο_preview"
+            key="s25_csv_context_preview"
         )
 
     c1, c2, c3 = st.columns(3)
@@ -2327,7 +2327,7 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
 
     if st.button("Δημιουργία προσχεδίου για έλεγχο", key="s25_generate"):
         raw_manual = " ".join(s25_content.strip().split())
-        raw_csv = csv_πλαίσιο_as_text(ACTIVE_DF, max_rows=3) if use_csv_s25 and ACTIVE_DF is not None else ""
+        raw_csv = csv_context_as_text(ACTIVE_DF, max_rows=3) if use_csv_s25 and ACTIVE_DF is not None else ""
         raw = " ".join((raw_manual + " " + raw_csv).split())
         if not raw:
             st.error("Χρειάζεται εκπαιδευτικό περιεχόμενο ή ενεργό πλαίσιο από CSV.")
@@ -2422,12 +2422,12 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
 elif section == "Υποστήριξη Διδάσκοντα":
     if ACTIVE_DF is None:
         render_module_header("Υποστήριξη Διδάσκοντα", "", "s28")
-        show_active_dataset_πλαίσιο("S28")
+        show_active_dataset_context("S28")
         st.metric("Κατάσταση","—")
         st.stop()
 
     render_module_header("Υποστήριξη Διδάσκοντα", "", "s28")
-    show_active_dataset_πλαίσιο("S28")
+    show_active_dataset_context("S28")
     st.caption(
         "Χώρος υποστήριξης διδάσκοντα για συνήθεις ερωτήσεις φοιτητών, διευκρινίσεις κλίμακας αξιολόγησης και προσχέδια ανατροφοδότησης, "
         "με τελικό έλεγχο από τον διδάσκοντα."
@@ -2446,7 +2446,7 @@ elif section == "Υποστήριξη Διδάσκοντα":
             if s28_scorm_ready else
             "Αναμένεται έλεγχος διδάσκοντα"
         ),
-        βαθμολογία=None,
+        score=None,
         status="completed" if s28_scorm_ready else "incomplete",
         entity="Υποστήριξη Διδάσκοντα",
         enabled=True,
@@ -2462,25 +2462,25 @@ elif section == "Υποστήριξη Διδάσκοντα":
         key="s28_mode"
     )
 
-    source_πλαίσιο = st.text_area(
+    source_context = st.text_area(
         "Εγκεκριμένο πλαίσιο μαθήματος / πολιτική / κλίμακα αξιολόγησης",
         height=180,
         placeholder="Επικόλλησε μόνο το εγκεκριμένο υλικό στο οποίο πρέπει να βασιστεί η απάντηση.",
-        key="s28_πλαίσιο"
+        key="s28_context"
     )
 
     use_csv_s28 = st.checkbox(
-        "Συμπερίληψη ενεργού CSV ως τεκμηριωμένου πλαίσιο",
+        "Συμπερίληψη ενεργού CSV ως τεκμηριωμένου context",
         value=ACTIVE_DF is not None,
         key="s28_use_active_csv"
     )
     if use_csv_s28 and ACTIVE_DF is not None:
         st.text_area(
-            "CSV πλαίσιο",
-            value=dataset_πλαίσιο_summary(ACTIVE_DF),
+            "CSV context",
+            value=dataset_context_summary(ACTIVE_DF),
             height=110,
             disabled=True,
-            key="s28_csv_πλαίσιο_preview"
+            key="s28_csv_context_preview"
         )
 
     student_input = st.text_area(
@@ -2491,28 +2491,28 @@ elif section == "Υποστήριξη Διδάσκοντα":
     )
 
     if st.button("Δημιουργία faculty-assist draft", key="s28_generate"):
-        combined_πλαίσιο = source_πλαίσιο.strip()
+        combined_context = source_context.strip()
         if use_csv_s28 and ACTIVE_DF is not None:
-            combined_πλαίσιο = (
-                combined_πλαίσιο + "\n\n" + csv_πλαίσιο_as_text(ACTIVE_DF, max_rows=3)
+            combined_context = (
+                combined_context + "\n\n" + csv_context_as_text(ACTIVE_DF, max_rows=3)
             ).strip()
 
-        if not combined_πλαίσιο or not student_input.strip():
-            st.error("Χρειάζονται πλαίσιο (κείμενο ή ενεργή πηγή) και ερώτηση/περίπτωση.")
+        if not combined_context or not student_input.strip():
+            st.error("Χρειάζονται context (κείμενο ή ενεργή πηγή) και ερώτηση/περίπτωση.")
         else:
             chunks = [
                 s.strip()
-                for s in re.split(r"(?<=[.!?;])\s+", " ".join(combined_πλαίσιο.split()))
+                for s in re.split(r"(?<=[.!?;])\s+", " ".join(combined_context.split()))
                 if s.strip()
             ]
             q_terms = set(re.findall(r"\w{4,}", student_input.lower(), flags=re.UNICODE))
 
-            def βαθμολογία_chunk(s):
+            def score_chunk(s):
                 terms = set(re.findall(r"\w{4,}", s.lower(), flags=re.UNICODE))
                 return len(q_terms.intersection(terms))
 
-            ranked_chunks = sorted(chunks, key=βαθμολογία_chunk, reverse=True)
-            evidence = ranked_chunks[:3] if ranked_chunks else [source_πλαίσιο.strip()]
+            ranked_chunks = sorted(chunks, key=score_chunk, reverse=True)
+            evidence = ranked_chunks[:3] if ranked_chunks else [source_context.strip()]
             evidence_text = "\n".join(f"• {x}" for x in evidence)
 
             if s28_mode == "Προσχέδιο απάντησης σε συχνή ερώτηση":
@@ -2533,7 +2533,7 @@ elif section == "Υποστήριξη Διδάσκοντα":
             else:
                 draft = (
                     "Προσχέδιο ανατροφοδότησης προς έλεγχο διδάσκοντα:\n\n"
-                    f"Σχετικά σημεία του course πλαίσιο:\n{evidence_text}\n\n"
+                    f"Σχετικά σημεία του course context:\n{evidence_text}\n\n"
                     "Feedback scaffold: Αναγνώρισε τι έγινε σωστά, σύνδεσε τη βελτίωση με το αντίστοιχο κριτήριο, "
                     "δώσε μία συγκεκριμένη επόμενη ενέργεια και απόφυγε αλλαγή επίσημου βαθμού."
                 )
@@ -2597,7 +2597,7 @@ elif section == "Υποστήριξη Διδάσκοντα":
 elif section == "Ενοποιημένες Μαθησιακές Ενδείξεις":
     if ACTIVE_DF is None:
         render_module_header("Ενοποιημένες Μαθησιακές Ενδείξεις", "", "s31")
-        show_active_dataset_πλαίσιο("S31")
+        show_active_dataset_context("S31")
         c1,c2,c3,c4 = st.columns(4)
         c1.metric("Συνολικά ενδείξεις","—")
         c2.metric("Υψηλή προτεραιότητα","—")
@@ -2606,7 +2606,7 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
         st.stop()
     if ("custom_s21" not in st.session_state) and ("custom_s26" not in st.session_state):
         render_module_header("Ενοποιημένες Μαθησιακές Ενδείξεις", "", "s31")
-        show_active_dataset_πλαίσιο("S31")
+        show_active_dataset_context("S31")
         st.warning(
             "Υπάρχει ενεργή πηγή, αλλά δεν υπάρχουν ακόμη πραγματικά αντιστοιχισμένες ενδείξεις από Ποιότητα Αξιολόγησης ή Προσαρμοστική Εξάσκηση. "
             "Η ενότητα Ενοποιημένων Μαθησιακών Ενδείξεων δεν δημιουργεί τεχνητές ενδείξεις."
@@ -2619,7 +2619,7 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
         st.stop()
 
     render_module_header("Ενοποιημένες Μαθησιακές Ενδείξεις", "", "s31")
-    show_active_dataset_πλαίσιο("S31")
+    show_active_dataset_context("S31")
     st.caption("Σύνθεση πραγματικών/ελεγχόμενων ενδείξεις από Ποιότητα Αξιολόγησης και Προσαρμοστική Εξάσκηση — χωρίς επινοημένες θεματικές αντιστοιχίσεις.")
 
     c1,c2,c3,c4 = st.columns(4)
@@ -2630,7 +2630,7 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
     render_moodle_rest_service_panel(
         "Ενοποιημένες Μαθησιακές Ενδείξεις",
         summary=f"Ενοποιημένες ενδείξεις {len(service31_integrated)} · υψηλής προτεραιότητας {high31}",
-        βαθμολογία=None,
+        score=None,
         status="Ενοποιημένη μαθησιακή ένδειξη",
         entity="Ενοποιημένες μαθησιακές ενδείξεις",
         enabled=True,
@@ -2671,7 +2671,7 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
 # ==========================================================
 elif section == "Ενιαία Ροή Ενεργειών":
     render_module_header("Ενιαία Ροή Ενεργειών", "", "flow")
-    show_active_dataset_πλαίσιο("S31")
+    show_active_dataset_context("S31")
 
     actions=[]
     if "custom_s21" in st.session_state:
@@ -2735,7 +2735,7 @@ elif section == "Ενιαία Ροή Ενεργειών":
 # ==========================================================
 elif section == "Κύκλος Ζωής Ενεργειών":
     render_module_header("Κύκλος Ζωής Ενεργειών", "", "lifecycle")
-    show_active_dataset_πλαίσιο("S31")
+    show_active_dataset_context("S31")
 
     actions=[]
     if "custom_s21" in st.session_state:
@@ -2945,7 +2945,7 @@ elif section == "Μεθοδολογία & Προέλευση":
         with st.expander("🧩 Τι σημαίνει ο περιορισμός RC-01;"):
             st.write(
                 "Το RC-01 αφορά εννοιολογική ακρίβεια. Πολύ χαμηλή επίδοση στο RC-01 "
-                "δεν επιτρέπεται να θεωρηθεί υψηλή κατάκτηση ακόμη και αν ο συνολικός βαθμολογία είναι καλύτερος."
+                "δεν επιτρέπεται να θεωρηθεί υψηλή κατάκτηση ακόμη και αν ο συνολικός score είναι καλύτερος."
             )
         with st.expander("👤 Πότε απαιτείται ανθρώπινος έλεγχος;"):
             st.write(
@@ -3015,7 +3015,7 @@ elif section == "Μεθοδολογία & Προέλευση":
 # ==========================================================
 elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
     render_module_header("Εργαστήριο Ανάλυσης Δεδομένων", "", "analytics_lab")
-    show_active_dataset_πλαίσιο("ANALYTICS")
+    show_active_dataset_context("ANALYTICS")
 
     source_options = ["Χρήση τελευταίου αρχείου από το Κέντρο Δεδομένων"]
     if "inelso_uploaded_original" not in st.session_state:
@@ -3032,7 +3032,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         st.success(f"Ενεργό dataset: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρχείο')}")
 
         # ------------------------------------------------------
-        # Automated data-quality βαθμολογία
+        # Automated data-quality score
         # ------------------------------------------------------
         nrows, ncols = lab_df.shape
         total_cells = max(1, nrows*ncols)
@@ -3040,7 +3040,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         duplicate_rate = float(lab_df.duplicated().mean()) if nrows else 0
         constant_cols = sum(lab_df[c].nunique(dropna=True) <= 1 for c in lab_df.columns)
         constant_rate = constant_cols / max(1,ncols)
-        quality_βαθμολογία = max(
+        quality_score = max(
             0,
             min(100, round(100 - 45*missing_rate - 25*duplicate_rate - 30*constant_rate,1))
         )
@@ -3048,7 +3048,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         c1,c2,c3,c4 = st.columns(4)
         c1.metric("Γραμμές", nrows)
         c2.metric("Στήλες", ncols)
-        c3.metric("Δείκτης ποιότητας", f"{quality_βαθμολογία:.1f}/100")
+        c3.metric("Δείκτης ποιότητας", f"{quality_score:.1f}/100")
         c4.metric("Σταθερές στήλες", constant_cols)
 
         tabs = st.tabs([
@@ -3212,9 +3212,9 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                                     pipe.fit(Xtr,ytr)
                                     pred = pipe.predict(Xte)
 
-                                    acc = accuracy_βαθμολογία(yte,pred)
-                                    bacc = balanced_accuracy_βαθμολογία(yte,pred)
-                                    f1 = f1_βαθμολογία(yte,pred,average="weighted")
+                                    acc = accuracy_score(yte,pred)
+                                    bacc = balanced_accuracy_score(yte,pred)
+                                    f1 = f1_score(yte,pred,average="weighted")
 
                                     m1,m2,m3,m4 = st.columns(4)
                                     m1.metric("Accuracy",f"{acc:.3f}")
@@ -3319,7 +3319,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 
                             mae = mean_absolute_error(yte,pred)
                             rmse = float(np.sqrt(mean_squared_error(yte,pred)))
-                            r2 = r2_βαθμολογία(yte,pred)
+                            r2 = r2_score(yte,pred)
 
                             m1,m2,m3,m4 = st.columns(4)
                             m1.metric("MAE",f"{mae:.3f}")
@@ -3378,11 +3378,11 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                     else:
                         km = KMeans(n_clusters=k,random_state=42,n_init=20)
                         labels = km.fit_predict(Xs)
-                        sil = silhouette_βαθμολογία(Xs,labels) if len(set(labels)) > 1 else np.nan
+                        sil = silhouette_score(Xs,labels) if len(set(labels)) > 1 else np.nan
 
                         m1,m2 = st.columns(2)
                         m1.metric("Clusters",k)
-                        m2.metric("Silhouette βαθμολογία",f"{sil:.3f}")
+                        m2.metric("Silhouette score",f"{sil:.3f}")
 
                         clustered = lab_df.copy()
                         clustered["Cluster"] = labels
@@ -3443,7 +3443,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 Dataset: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρχείο')}
 Γραμμές: {len(lab_df)}
 Στήλες: {len(lab_df.columns)}
-Δείκτης ποιότητας: {quality_βαθμολογία:.1f}/100
+Δείκτης ποιότητας: {quality_score:.1f}/100
 Ποσοστό κενών τιμών: {missing_rate*100:.2f}%
 Ποσοστό διπλοεγγραφών: {duplicate_rate*100:.2f}%
 Αριθμητικές μεταβλητές: {len(numeric_cols)}
@@ -3468,7 +3468,7 @@ Dataset: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρ
 # ==========================================================
 elif section == "Προσομοίωση Σεναρίων":
     render_module_header("Προσομοίωση Σεναρίων", "", "whatif")
-    show_active_dataset_πλαίσιο("S26")
+    show_active_dataset_context("S26")
 
     st.subheader("Προσαρμοστική Εξάσκηση — δοκιμή κατωφλίων")
 
@@ -3489,8 +3489,8 @@ elif section == "Προσομοίωση Σεναρίων":
         value=0.70,
         step=0.01
     )
-    ready_βαθμολογία_threshold = st.slider(
-        "Κατώφλι βαθμολογία για ΕΤΟΙΜΟ",
+    ready_score_threshold = st.slider(
+        "Κατώφλι score για ΕΤΟΙΜΟ",
         min_value=50,
         max_value=95,
         value=70,
@@ -3500,10 +3500,10 @@ elif section == "Προσομοίωση Σεναρίων":
     sim = st.session_state['custom_s26'].copy()
 
     def simulate_status(row):
-        # For cohort demo we do not have RC-01 per learner, so βεβαιότητα + βαθμολογία only.
+        # For cohort demo we do not have RC-01 per learner, so βεβαιότητα + score only.
         if row["βεβαιότητα"] < confidence_threshold:
             return "ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ"
-        if row["βαθμολογία"] < ready_βαθμολογία_threshold:
+        if row["score"] < ready_score_threshold:
             return "ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ"
         return "ΕΤΟΙΜΟ"
 
@@ -3524,7 +3524,7 @@ elif section == "Προσομοίωση Σεναρίων":
     )
 
     st.dataframe(
-        sim[["μαθητής","βαθμολογία","βεβαιότητα","κατάσταση","Νέα κατάσταση","Αλλαγή"]],
+        sim[["μαθητής","score","βεβαιότητα","κατάσταση","Νέα κατάσταση","Αλλαγή"]],
         use_container_width=True,
         hide_index=True
     )
@@ -3552,7 +3552,7 @@ elif section == "Ζωντανή Σύνδεση Moodle":
         "",
         "moodle_live"
     )
-    show_active_dataset_πλαίσιο("REPORT")
+    show_active_dataset_context("REPORT")
 
     def moodle_rest_call(base_url, ws_token, function_name, params=None, timeout=20):
         if params is None:
@@ -3829,7 +3829,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             "Λειτουργία": pending_meta.get("service"),
             "Οντότητα": pending_meta.get("entity"),
             "Κατάσταση": pending_meta.get("status"),
-            "Βαθμολογία": pending_meta.get("βαθμολογία"),
+            "Βαθμολογία": pending_meta.get("score"),
             "Σύνοψη": pending_meta.get("summary"),
         }])
         st.dataframe(meta_preview, use_container_width=True, hide_index=True)
@@ -4463,7 +4463,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
         "",
         "s16"
     )
-    show_active_dataset_πλαίσιο("S16")
+    show_active_dataset_context("S16")
 
     if ACTIVE_DF is None:
         no_data_tabs = st.tabs(["Τι κάνει", "Τι χρειάζεται"])
@@ -4588,11 +4588,11 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
         m1,m2 = st.columns(2)
         with m1:
             learner_col = st.selectbox("Αναγνωριστικό μαθητή", cols, key="ew_learner")
-            grade_col = st.selectbox("Βαθμός / βαθμολογία", cols, key="ew_grade")
+            grade_col = st.selectbox("Βαθμός / score", cols, key="ew_grade")
             inactivity_col = st.selectbox("Ημέρες αδράνειας", cols, key="ew_inactivity")
         with m2:
             attempts_col = st.selectbox("Αριθμός προσπαθειών / submissions", cols, key="ew_attempts")
-            engagement_col = st.selectbox("Engagement / activity βαθμολογία", cols, key="ew_engagement")
+            engagement_col = st.selectbox("Engagement / activity score", cols, key="ew_engagement")
 
         st.markdown("### 2. Βάρη")
         w1,w2,w3,w4 = st.columns(4)
@@ -4637,16 +4637,16 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
 
             components = []
             weights = []
-            active_ενδείξεων = []
+            active_signals = []
 
             if grade_col != "— καμία —":
-                components.append(norm_low(out_df[grade_col])); weights.append(w_grade); active_ενδείξεων.append("επίδοση")
+                components.append(norm_low(out_df[grade_col])); weights.append(w_grade); active_signals.append("επίδοση")
             if inactivity_col != "— καμία —":
-                components.append(norm_high(out_df[inactivity_col])); weights.append(w_inactivity); active_ενδείξεων.append("αδράνεια")
+                components.append(norm_high(out_df[inactivity_col])); weights.append(w_inactivity); active_signals.append("αδράνεια")
             if attempts_col != "— καμία —":
-                components.append(norm_high(out_df[attempts_col])); weights.append(w_attempts); active_ενδείξεων.append("προσπάθειες")
+                components.append(norm_high(out_df[attempts_col])); weights.append(w_attempts); active_signals.append("προσπάθειες")
             if engagement_col != "— καμία —":
-                components.append(norm_low(out_df[engagement_col])); weights.append(w_engagement); active_ενδείξεων.append("engagement")
+                components.append(norm_low(out_df[engagement_col])); weights.append(w_engagement); active_signals.append("engagement")
 
             if not components:
                 st.error("Επίλεξε τουλάχιστον μία πραγματική ένδειξη.")
@@ -4674,13 +4674,13 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
                     "ΧΑΜΗΛΟΣ":"Κανονική παρακολούθηση"
                 })
                 out_df["Εξήγηση"] = (
-                    "Risk βαθμολογία από: " + ", ".join(active_ενδείξεων) +
+                    "Risk score από: " + ", ".join(active_signals) +
                     ". Βάρη και κατώφλια ορίζονται από τον χρήστη."
                 )
 
                 st.session_state["early_warning_results"] = out_df
                 st.session_state["early_warning_config"] = {
-                    "ενδείξεων": active_ενδείξεων,
+                    "signals": active_signals,
                     "high_thr": high_thr,
                     "med_thr": med_thr,
                     "weights": {
@@ -4786,7 +4786,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
                 render_moodle_rest_service_panel(
                     "Μαθησιακή Ανάλυση",
                     summary=f"Ανάλυση έγκαιρης υποστήριξης · συμβατότητα {service_dataset_compatibility('S16', ACTIVE_DF)}",
-                    βαθμολογία=None,
+                    score=None,
                     status="Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος",
                     entity=ACTIVE_NAME,
                     enabled=True,
@@ -4799,7 +4799,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
 # ==========================================================
 elif section == "Μητρώο Ενεργειών":
     render_module_header("Μητρώο Ενεργειών", "", "registry")
-    show_active_dataset_πλαίσιο("REPORT")
+    show_active_dataset_context("REPORT")
 
     base_columns = [
         "Ημερομηνία",
@@ -4918,7 +4918,7 @@ else:
         "",
         "report"
     )
-    show_active_dataset_πλαίσιο("REPORT", compact=False)
+    show_active_dataset_context("REPORT", compact=False)
 
     c1,c2,c3,c4=st.columns(4)
     c1.metric("Συνολικός δείκτης υγείας", f"{overall:.1f}" if ACTIVE_DF is not None else "—")
