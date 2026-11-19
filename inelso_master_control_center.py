@@ -1725,77 +1725,78 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
         "",
         "scorm_analysis"
     )
-    # Reuse remembered Moodle URL where available.
-    default_scorm_url = st.session_state.get("moodle_base_url", "https://contentsolutions.eu") or "https://contentsolutions.eu"
-    col_a, col_b = st.columns([2,1])
-    with col_a:
-        scorm_moodle_url = st.text_input(
-            "Moodle URL",
-            value=default_scorm_url,
-            key="scorm_moodle_url"
-        ).rstrip("/")
-    with col_b:
-        scorm_course_id = st.number_input(
-            "ID Μαθήματος",
-            min_value=1,
-            value=int(st.session_state.get("scorm_course_id", 6)),
-            step=1,
-            key="scorm_course_id_input"
-        )
-    st.session_state["moodle_base_url"] = scorm_moodle_url
-    st.session_state["scorm_course_id"] = int(scorm_course_id)
+    with st.expander("🔎 Ρυθμίσεις σύνδεσης & εντοπισμός SCORM", expanded=False):
+        # Reuse remembered Moodle URL where available.
+        default_scorm_url = st.session_state.get("moodle_base_url", "https://contentsolutions.eu") or "https://contentsolutions.eu"
+        col_a, col_b = st.columns([2,1])
+        with col_a:
+            scorm_moodle_url = st.text_input(
+                "Moodle URL",
+                value=default_scorm_url,
+                key="scorm_moodle_url"
+            ).rstrip("/")
+        with col_b:
+            scorm_course_id = st.number_input(
+                "ID Μαθήματος",
+                min_value=1,
+                value=int(st.session_state.get("scorm_course_id", 6)),
+                step=1,
+                key="scorm_course_id_input"
+            )
+        st.session_state["moodle_base_url"] = scorm_moodle_url
+        st.session_state["scorm_course_id"] = int(scorm_course_id)
 
-    secret_token = ""
-    for secret_key in ("MOODLE_TOKEN", "moodle_token", "WSTOKEN", "wstoken"):
-        try:
-            if secret_key in st.secrets and st.secrets[secret_key]:
-                secret_token = str(st.secrets[secret_key])
-                break
-        except Exception:
-            pass
-    scorm_token = st.text_input(
-        "Κλειδί πρόσβασης Moodle",
-        value=st.session_state.get("moodle_shared_token", secret_token),
-        type="password",
-        key="scorm_rest_token",
-        help="Δίνεται μία φορά ανά συνεδρία και χρησιμοποιείται στις συνδεδεμένες λειτουργίες Moodle."
-    )
-    if scorm_token:
-        st.session_state["moodle_shared_token"] = scorm_token
-
-    if st.button("🔎 Εντοπισμός SCORM και χρηστών", type="primary", key="scorm_discover"):
-        if not scorm_moodle_url or not scorm_token:
-            st.error("Συμπλήρωσε Moodle URL και token.")
-        else:
+        secret_token = ""
+        for secret_key in ("MOODLE_TOKEN", "moodle_token", "WSTOKEN", "wstoken"):
             try:
-                contents = scorm_rest_call(
-                    scorm_moodle_url, scorm_token, "core_course_get_contents",
-                    {"courseid": int(scorm_course_id)}
-                )
-                found_scorms = []
-                for sec in contents if isinstance(contents, list) else []:
-                    for mod in sec.get("modules", []):
-                        if str(mod.get("modname", "")).lower() == "scorm":
-                            found_scorms.append({
-                                "section": sec.get("name"),
-                                "name": mod.get("name"),
-                                "cmid": mod.get("id"),
-                                "scorm_id": mod.get("instance"),
-                                "url": mod.get("url"),
-                            })
-                users = scorm_rest_call(
-                    scorm_moodle_url, scorm_token, "core_enrol_get_enrolled_users",
-                    {"courseid": int(scorm_course_id)}
-                )
-                user_rows = [
-                    {"id": u.get("id"), "fullname": u.get("fullname"), "username": u.get("username")}
-                    for u in users if isinstance(u, dict) and u.get("id")
-                ]
-                st.session_state["scorm_discovered_activities"] = found_scorms
-                st.session_state["scorm_discovered_users"] = user_rows
-                st.success(f"Βρέθηκαν {len(found_scorms)} SCORM δραστηριότητες και {len(user_rows)} εγγεγραμμένοι χρήστες.")
-            except Exception as e:
-                st.error(f"Αποτυχία εντοπισμού: {e}")
+                if secret_key in st.secrets and st.secrets[secret_key]:
+                    secret_token = str(st.secrets[secret_key])
+                    break
+            except Exception:
+                pass
+        scorm_token = st.text_input(
+            "Κλειδί πρόσβασης Moodle",
+            value=st.session_state.get("moodle_shared_token", secret_token),
+            type="password",
+            key="scorm_rest_token",
+            help="Δίνεται μία φορά ανά συνεδρία και χρησιμοποιείται στις συνδεδεμένες λειτουργίες Moodle."
+        )
+        if scorm_token:
+            st.session_state["moodle_shared_token"] = scorm_token
+
+        if st.button("🔎 Εντοπισμός SCORM και χρηστών", type="primary", key="scorm_discover"):
+            if not scorm_moodle_url or not scorm_token:
+                st.error("Συμπλήρωσε Moodle URL και token.")
+            else:
+                try:
+                    contents = scorm_rest_call(
+                        scorm_moodle_url, scorm_token, "core_course_get_contents",
+                        {"courseid": int(scorm_course_id)}
+                    )
+                    found_scorms = []
+                    for sec in contents if isinstance(contents, list) else []:
+                        for mod in sec.get("modules", []):
+                            if str(mod.get("modname", "")).lower() == "scorm":
+                                found_scorms.append({
+                                    "section": sec.get("name"),
+                                    "name": mod.get("name"),
+                                    "cmid": mod.get("id"),
+                                    "scorm_id": mod.get("instance"),
+                                    "url": mod.get("url"),
+                                })
+                    users = scorm_rest_call(
+                        scorm_moodle_url, scorm_token, "core_enrol_get_enrolled_users",
+                        {"courseid": int(scorm_course_id)}
+                    )
+                    user_rows = [
+                        {"id": u.get("id"), "fullname": u.get("fullname"), "username": u.get("username")}
+                        for u in users if isinstance(u, dict) and u.get("id")
+                    ]
+                    st.session_state["scorm_discovered_activities"] = found_scorms
+                    st.session_state["scorm_discovered_users"] = user_rows
+                    st.success(f"Βρέθηκαν {len(found_scorms)} SCORM δραστηριότητες και {len(user_rows)} εγγεγραμμένοι χρήστες.")
+                except Exception as e:
+                    st.error(f"Αποτυχία εντοπισμού: {e}")
 
     found_scorms = st.session_state.get("scorm_discovered_activities", [])
     discovered_users = st.session_state.get("scorm_discovered_users", [])
@@ -2999,7 +3000,7 @@ elif section == "Μεθοδολογία & Προέλευση":
 - Δεν εμφανίζονται τεχνητά αποτελέσματα όταν δεν υπάρχει συμβατό ενεργό σύνολο δεδομένων.
 - Δεν αλλάζουν αυτόματα επίσημοι βαθμοί.
 - Δεν εκτελείται κρίσιμη ενέργεια καταγραφής στο Moodle χωρίς ρητή ανθρώπινη έγκριση.
-- Η επιτυχής HTTP απόκριση από μόνη της δεν θεωρείται τελική επιβεβαίωση.
+- Η επιτυχής απόκριση του συστήματος από μόνη της δεν θεωρείται τελική επιβεβαίωση.
 - Η τελική επιτυχία βασίζεται σε επαλήθευση μετά την καταγραφή και σε πλήρες ιστορικό ελέγχου.
 """)
 
@@ -3774,35 +3775,37 @@ elif section == "Ζωντανή Σύνδεση Moodle":
 
     with tab_advanced:
         st.markdown("### Προχωρημένο αίτημα")
-        st.caption("Για ειδικές λειτουργίες Moodle που δεν έχουν έτοιμο κουμπί στις προηγούμενες καρτέλες.")
-        custom_function = st.text_input(
-            "Λειτουργία διασύνδεσης Moodle",
-            placeholder="π.χ. gradereport_user_get_grade_items",
-            key="live_custom_function"
-        )
-        custom_params_text = st.text_area(
-            "Παράμετροι ως JSON",
-            value="{}",
-            height=100,
-            key="live_custom_params"
-        )
-        if st.button("▶️ Εκτέλεση αιτήματος", key="live_custom_execute"):
-            if not moodle_url or not token:
-                st.error("Πηγαίνετε πρώτα στην καρτέλα «Σύνδεση».")
-            else:
-                try:
-                    params = json.loads(custom_params_text or "{}")
-                    result = moodle_rest_call(moodle_url, token, custom_function, params)
-                    st.session_state["moodle_custom_result"] = result
-                    st.success("Το αίτημα ολοκληρώθηκε.")
-                    if isinstance(result, list):
-                        st.dataframe(pd.DataFrame(result), use_container_width=True, hide_index=True)
-                    elif isinstance(result, dict):
-                        st.json(result)
-                    else:
-                        st.write(result)
-                except Exception as e:
-                    st.error(f"Αποτυχία αιτήματος: {e}")
+        st.caption("Χρησιμοποιήστε το μόνο για ειδικές λειτουργίες Moodle που δεν καλύπτονται από τα έτοιμα εργαλεία.")
+        with st.expander("🛠️ Άνοιγμα προχωρημένου αιτήματος", expanded=False):
+            custom_function = st.text_input(
+                "Λειτουργία διασύνδεσης Moodle",
+                placeholder="π.χ. gradereport_user_get_grade_items",
+                key="live_custom_function"
+            )
+            custom_params_text = st.text_area(
+                "Παράμετροι ως JSON",
+                value="{}",
+                height=100,
+                key="live_custom_params"
+            )
+            if st.button("▶️ Εκτέλεση αιτήματος", key="live_custom_execute"):
+                if not moodle_url or not token:
+                    st.error("Πηγαίνετε πρώτα στην καρτέλα «Σύνδεση».")
+                else:
+                    try:
+                        params = json.loads(custom_params_text or "{}")
+                        result = moodle_rest_call(moodle_url, token, custom_function, params)
+                        st.session_state["moodle_custom_result"] = result
+                        st.success("Το αίτημα ολοκληρώθηκε.")
+                        if isinstance(result, list):
+                            st.dataframe(pd.DataFrame(result), use_container_width=True, hide_index=True)
+                        elif isinstance(result, dict):
+                            st.json(result)
+                        else:
+                            st.write(result)
+                    except Exception as e:
+                        st.error(f"Αποτυχία αιτήματος: {e}")
+
 
 
 # ==========================================================
