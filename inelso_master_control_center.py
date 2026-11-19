@@ -3576,54 +3576,58 @@ elif section == "Ζωντανή Σύνδεση Moodle":
 
     with tab_conn:
         st.markdown("### Σύνδεση Moodle")
-        st.caption("Συμπληρώστε τα στοιχεία μία φορά. Παραμένουν διαθέσιμα όσο διαρκεί η τρέχουσα συνεδρία.")
+        st.caption("Η φόρμα παραμένει κλειστή όταν δεν χρειάζεται, για καθαρότερη προβολή.")
+        with st.expander("🔐 Άνοιγμα ρυθμίσεων σύνδεσης", expanded=not st.session_state.get("moodle_connection_verified", False)):
+            st.markdown("### Σύνδεση Moodle")
+            st.caption("Συμπληρώστε τα στοιχεία μία φορά. Παραμένουν διαθέσιμα όσο διαρκεί η τρέχουσα συνεδρία.")
 
-        moodle_url = st.text_input(
-            "Βασικό URL Moodle",
-            value=default_live_url,
-            key="live_shared_moodle_url"
-        ).rstrip("/")
+            moodle_url = st.text_input(
+                "Βασικό URL Moodle",
+                value=default_live_url,
+                key="live_shared_moodle_url"
+            ).rstrip("/")
 
-        token = st.text_input(
-            "Κλειδί πρόσβασης Moodle",
-            value=default_live_token,
-            type="password",
-            key="live_shared_moodle_token",
-            help="Χρησιμοποιείται μόνο μέσα στην τρέχουσα συνεδρία."
-        )
+            token = st.text_input(
+                "Κλειδί πρόσβασης Moodle",
+                value=default_live_token,
+                type="password",
+                key="live_shared_moodle_token",
+                help="Χρησιμοποιείται μόνο μέσα στην τρέχουσα συνεδρία."
+            )
 
-        if moodle_url:
-            st.session_state["moodle_base_url"] = moodle_url
-        if token:
-            st.session_state["moodle_shared_token"] = token
+            if moodle_url:
+                st.session_state["moodle_base_url"] = moodle_url
+            if token:
+                st.session_state["moodle_shared_token"] = token
 
-        c1, c2 = st.columns([1, 2])
-        with c1:
-            if st.button("🔌 Έλεγχος σύνδεσης", type="primary", key="live_check_connection"):
-                if not moodle_url or not token:
-                    st.error("Συμπληρώστε URL και κλειδί πρόσβασης.")
+            c1, c2 = st.columns([1, 2])
+            with c1:
+                if st.button("🔌 Έλεγχος σύνδεσης", type="primary", key="live_check_connection"):
+                    if not moodle_url or not token:
+                        st.error("Συμπληρώστε URL και κλειδί πρόσβασης.")
+                    else:
+                        try:
+                            info = moodle_rest_call(
+                                moodle_url, token, "core_webservice_get_site_info"
+                            )
+                            st.session_state["moodle_site_info"] = info
+                            st.session_state["moodle_connection_verified"] = True
+                            st.success("Η σύνδεση με το Moodle λειτουργεί.")
+                        except Exception as e:
+                            st.session_state["moodle_connection_verified"] = False
+                            st.error(f"Αποτυχία σύνδεσης: {e}")
+
+            with c2:
+                if st.session_state.get("moodle_connection_verified"):
+                    info = st.session_state.get("moodle_site_info", {})
+                    st.markdown(
+                        f"**Συνδεδεμένο:** {info.get('sitename','Moodle')}  \\n"
+                        f"**Λογαριασμός:** {info.get('fullname','—')}  \\n"
+                        f"**Έκδοση:** {info.get('release','—')}"
+                    )
                 else:
-                    try:
-                        info = moodle_rest_call(
-                            moodle_url, token, "core_webservice_get_site_info"
-                        )
-                        st.session_state["moodle_site_info"] = info
-                        st.session_state["moodle_connection_verified"] = True
-                        st.success("Η σύνδεση με το Moodle λειτουργεί.")
-                    except Exception as e:
-                        st.session_state["moodle_connection_verified"] = False
-                        st.error(f"Αποτυχία σύνδεσης: {e}")
+                    st.caption("Μετά τον επιτυχή έλεγχο, δεν χρειάζεται να ξαναδώσετε τα στοιχεία στις άλλες καρτέλες.")
 
-        with c2:
-            if st.session_state.get("moodle_connection_verified"):
-                info = st.session_state.get("moodle_site_info", {})
-                st.markdown(
-                    f"**Συνδεδεμένο:** {info.get('sitename','Moodle')}  \\n"
-                    f"**Λογαριασμός:** {info.get('fullname','—')}  \\n"
-                    f"**Έκδοση:** {info.get('release','—')}"
-                )
-            else:
-                st.caption("Μετά τον επιτυχή έλεγχο, δεν χρειάζεται να ξαναδώσετε τα στοιχεία στις άλλες καρτέλες.")
 
     # Shared values are refreshed after the connection tab widgets run.
     moodle_url = st.session_state.get("moodle_base_url", default_live_url)
@@ -3863,12 +3867,27 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             ignore_index=True
         )
 
-    action = st.radio(
-        "Ενέργεια",
-        ["Σημείωση", "Μήνυμα", "Βαθμός"],
-        horizontal=True,
-        label_visibility="collapsed"
-    )
+    if "moodle_write_action" not in st.session_state:
+        st.session_state["moodle_write_action"] = None
+
+    st.markdown("### Επιλέξτε ενέργεια")
+    a1, a2, a3, a4 = st.columns([1, 1, 1, 0.7])
+    with a1:
+        if st.button("📝 Σημείωση", use_container_width=True, key="open_note_action"):
+            st.session_state["moodle_write_action"] = "Σημείωση"
+    with a2:
+        if st.button("💬 Μήνυμα", use_container_width=True, key="open_message_action"):
+            st.session_state["moodle_write_action"] = "Μήνυμα"
+    with a3:
+        if st.button("🎓 Βαθμός", use_container_width=True, key="open_grade_action"):
+            st.session_state["moodle_write_action"] = "Βαθμός"
+    with a4:
+        if st.button("Κλείσιμο", use_container_width=True, key="close_write_action"):
+            st.session_state["moodle_write_action"] = None
+
+    action = st.session_state.get("moodle_write_action")
+    if action is None:
+        st.caption("Επιλέξτε μία ενέργεια για να εμφανιστεί η αντίστοιχη φόρμα.")
 
     # ------------------------------------------------------
     # EDUCATIONAL NOTE / INTERVENTION
@@ -4801,9 +4820,7 @@ elif section == "Μητρώο Ενεργειών":
         int((_registry["Κατάσταση"]=="ΟΛΟΚΛΗΡΩΘΗΚΕ").sum()) if len(_registry) else 0
     )
 
-    registry_tab_new, registry_tab_list = st.tabs(["＋ Νέα ενέργεια", "Καταχωρίσεις"])
-
-    with registry_tab_new:
+    with st.expander("＋ Νέα ενέργεια", expanded=False):
         c1,c2 = st.columns(2)
 
         with c1:
@@ -4844,7 +4861,7 @@ elif section == "Μητρώο Ενεργειών":
             )
             st.success("Η καταχώριση προστέθηκε.")
 
-    with registry_tab_list:
+    with st.expander("📋 Καταχωρίσεις", expanded=False):
         with st.expander("📥 Εισαγωγή υπάρχοντος μητρώου", expanded=False):
             imported_log = st.file_uploader(
                 "Αρχείο CSV μητρώου",
