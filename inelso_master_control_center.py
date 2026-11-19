@@ -1409,7 +1409,6 @@ if section == "Κεντρική Εικόνα Ελέγχου":
 
     hleft, hright = st.columns([8.6, 1.4], vertical_alignment="center")
     with hright:
-        render_info_button("dashboard")
 
     show_active_dataset_context("DASHBOARD", compact=False)
 
@@ -1429,7 +1428,6 @@ if section == "Κεντρική Εικόνα Ελέγχου":
                 unsafe_allow_html=True
             )
             st.button("Εισαγωγή δεδομένων", use_container_width=True, on_click=_home_nav, args=("Εισαγωγή Δεδομένων",), key="home_open_data_empty")
-        render_info_button("dashboard")
 
     else:
         q = dataset_quality_metrics(ACTIVE_DF)
@@ -1503,7 +1501,6 @@ if section == "Κεντρική Εικόνα Ελέγχου":
             with b1:
                 st.markdown(
                     "<div class='inelso-feature-card'><h3>Έγκαιρη Υποστήριξη</h3>"
-                    f"<div class='inelso-feature-value'>{service_dataset_compatibility('S16', ACTIVE_DF)}</div>"
                     "<p>Κίνδυνος ανά εκπαιδευόμενο και προτεραιοποίηση υποστήριξης.</p></div>",
                     unsafe_allow_html=True
                 )
@@ -1511,14 +1508,14 @@ if section == "Κεντρική Εικόνα Ελέγχου":
             with b2:
                 st.markdown(
                     "<div class='inelso-feature-card'><h3>Ανάλυση SCORM</h3>"
-                    "<div class='inelso-feature-value'>ΕΝΕΡΓΟ</div><p>Προσπάθειες, βαθμολογία, χρόνος και πραγματικές αλληλεπιδράσεις ανά ερώτηση.</p></div>",
+                    "<p>Προσπάθειες, βαθμολογία, χρόνος και πραγματικές αλληλεπιδράσεις ανά ερώτηση.</p></div>",
                     unsafe_allow_html=True
                 )
                 st.button("Άνοιγμα Ανάλυσης SCORM", use_container_width=True, on_click=_home_nav, args=("Ανάλυση SCORM",), key="home_open_scorm")
             with b3:
                 st.markdown(
                     "<div class='inelso-feature-card'><h3>Δημιουργία Αξιολόγησης</h3>"
-                    "<div class='inelso-feature-value'>ΠΡΟΣΧΕΔΙΟ</div><p>Τράπεζα ερωτήσεων, κουίζ, κλίμακα αξιολόγησης και ασκήσεις με έλεγχο διδάσκοντα.</p></div>",
+                    "<p>Τράπεζα ερωτήσεων, κουίζ, κλίμακα αξιολόγησης και ασκήσεις με έλεγχο διδάσκοντα.</p></div>",
                     unsafe_allow_html=True
                 )
                 st.button("Άνοιγμα Δημιουργίας Αξιολόγησης", use_container_width=True, on_click=_home_nav, args=("Δημιουργία Αξιολόγησης",), key="home_open_s25")
@@ -1583,8 +1580,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
                 st.write(f"**Κενές τιμές:** {q['missing'] if q else '—'}")
                 st.write(f"**Διπλότυπα:** {q['duplicates'] if q else '—'}")
 
-            render_info_button("dashboard")
-
+    
 # ==========================================================
 # SERVICE 21
 # ==========================================================
