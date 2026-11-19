@@ -4912,26 +4912,64 @@ else:
     )
     show_active_dataset_context("REPORT", compact=False)
 
+    if "central_report_show_uploader" not in st.session_state:
+        st.session_state["central_report_show_uploader"] = False
+
     if ACTIVE_DF is None:
         st.markdown(
             "<div class='inelso-action-banner'><strong>Δεν υπάρχει ενεργή πηγή δεδομένων.</strong><br>"
             "Εισαγάγετε αρχείο CSV ή Excel για να ενεργοποιηθούν οι δείκτες και οι αναλύσεις.</div>",
             unsafe_allow_html=True
         )
-        st.button(
+        if st.button(
             "📂 Εισαγωγή αρχείου",
             type="primary",
-            on_click=navigate_main,
-            args=("Εισαγωγή Δεδομένων",),
             key="central_report_import_empty"
-        )
+        ):
+            st.session_state["central_report_show_uploader"] = True
     else:
-        st.button(
+        if st.button(
             "📂 Εισαγωγή / αλλαγή αρχείου",
-            on_click=navigate_main,
-            args=("Εισαγωγή Δεδομένων",),
             key="central_report_import_active"
-        )
+        ):
+            st.session_state["central_report_show_uploader"] = True
+
+    if st.session_state.get("central_report_show_uploader", False):
+        with st.expander("📁 Επιλογή αρχείου CSV / Excel", expanded=True):
+            central_uploaded_file = st.file_uploader(
+                "Επιλέξτε αρχείο",
+                type=["csv", "xlsx", "xls"],
+                key="central_report_file_uploader"
+            )
+
+            if central_uploaded_file is not None:
+                try:
+                    file_name = central_uploaded_file.name
+                    lower_name = file_name.lower()
+
+                    if lower_name.endswith(".csv"):
+                        try:
+                            uploaded_df = pd.read_csv(central_uploaded_file)
+                        except UnicodeDecodeError:
+                            central_uploaded_file.seek(0)
+                            uploaded_df = pd.read_csv(central_uploaded_file, encoding="latin-1")
+                    else:
+                        uploaded_df = pd.read_excel(central_uploaded_file)
+
+                    if uploaded_df.empty:
+                        st.error("Το αρχείο δεν περιέχει εγγραφές.")
+                    else:
+                        st.session_state["inelso_uploaded_original"] = uploaded_df.copy()
+                        st.session_state["inelso_uploaded_clean"] = uploaded_df.copy()
+                        st.session_state["inelso_uploaded_name"] = file_name
+                        st.session_state["central_report_show_uploader"] = False
+                        st.success(
+                            f"Το αρχείο «{file_name}» φορτώθηκε επιτυχώς "
+                            f"({len(uploaded_df)} εγγραφές × {len(uploaded_df.columns)} πεδία)."
+                        )
+                        st.rerun()
+                except Exception as e:
+                    st.error(f"Δεν ήταν δυνατή η ανάγνωση του αρχείου: {e}")
 
     c1,c2,c3,c4=st.columns(4)
     c1.metric("Συνολικός δείκτης υγείας", f"{overall:.1f}" if ACTIVE_DF is not None else "—")
