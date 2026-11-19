@@ -1445,17 +1445,6 @@ if section == "Κεντρική Εικόνα Ελέγχου":
             + (open31 if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else 0)
         )
 
-        # Compact, buyer-friendly data summary.
-        st.markdown(
-            "<div class='inelso-data-strip'>"
-            f"<div class='inelso-data-chip'><div class='label'>Εγγραφές</div><div class='value'>{len(ACTIVE_DF)}</div></div>"
-            f"<div class='inelso-data-chip'><div class='label'>Πεδία</div><div class='value'>{len(ACTIVE_DF.columns)}</div></div>"
-            f"<div class='inelso-data-chip'><div class='label'>Κενές τιμές</div><div class='value'>{q['missing'] if q else '—'}</div></div>"
-            f"<div class='inelso-data-chip'><div class='label'>Διπλότυπα</div><div class='value'>{q['duplicates'] if q else '—'}</div></div>"
-            "</div>",
-            unsafe_allow_html=True
-        )
-
         st.markdown("<div class='inelso-dashboard-tabs'>", unsafe_allow_html=True)
         home_tabs = st.tabs(["Επισκόπηση", "Αναλύσεις", "Ενέργειες", "Δεδομένα"])
         st.markdown("</div>", unsafe_allow_html=True)
