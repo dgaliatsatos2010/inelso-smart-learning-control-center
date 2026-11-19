@@ -1321,6 +1321,9 @@ st.sidebar.markdown("## 🎓 INELSO Academia")
 st.sidebar.caption("Πλατφόρμα Έξυπνης Μάθησης")
 st.sidebar.markdown("<div class='inelso-section-label'>Κύριες λειτουργίες</div>", unsafe_allow_html=True)
 
+def navigate_main(target_label):
+    st.session_state["inelso_main_navigation"] = target_label
+
 NAV_DISPLAY_TO_INTERNAL = {
     "Αρχική": "Κεντρική Εικόνα Ελέγχου",
     "Έγκαιρη Υποστήριξη": "Μαθησιακή Ανάλυση & Έγκαιρη Υποστήριξη",
@@ -4908,6 +4911,27 @@ else:
         "report"
     )
     show_active_dataset_context("REPORT", compact=False)
+
+    if ACTIVE_DF is None:
+        st.markdown(
+            "<div class='inelso-action-banner'><strong>Δεν υπάρχει ενεργή πηγή δεδομένων.</strong><br>"
+            "Εισαγάγετε αρχείο CSV ή Excel για να ενεργοποιηθούν οι δείκτες και οι αναλύσεις.</div>",
+            unsafe_allow_html=True
+        )
+        st.button(
+            "📂 Εισαγωγή αρχείου",
+            type="primary",
+            on_click=navigate_main,
+            args=("Εισαγωγή Δεδομένων",),
+            key="central_report_import_empty"
+        )
+    else:
+        st.button(
+            "📂 Εισαγωγή / αλλαγή αρχείου",
+            on_click=navigate_main,
+            args=("Εισαγωγή Δεδομένων",),
+            key="central_report_import_active"
+        )
 
     c1,c2,c3,c4=st.columns(4)
     c1.metric("Συνολικός δείκτης υγείας", f"{overall:.1f}" if ACTIVE_DF is not None else "—")
