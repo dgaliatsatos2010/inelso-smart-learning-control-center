@@ -4801,85 +4801,87 @@ elif section == "Μητρώο Ενεργειών":
         int((_registry["Κατάσταση"]=="ΟΛΟΚΛΗΡΩΘΗΚΕ").sum()) if len(_registry) else 0
     )
 
-    with st.expander("📥 Εισαγωγή υπάρχοντος μητρώου", expanded=False):
-        imported_log = st.file_uploader(
-            "Αρχείο CSV μητρώου",
-            type=["csv"],
-            key="action_log_import"
-        )
-        if imported_log is not None:
-            try:
-                imported_df = pd.read_csv(imported_log)
-                missing = [c for c in base_columns if c not in imported_df.columns]
-                if missing:
-                    for c in missing:
-                        imported_df[c] = ""
-                st.session_state["action_log"] = imported_df[base_columns]
-                st.success("Το μητρώο εισήχθη επιτυχώς.")
-            except Exception as e:
-                st.error(f"Αποτυχία εισαγωγής: {e}")
+    registry_tab_new, registry_tab_list = st.tabs(["＋ Νέα ενέργεια", "Καταχωρίσεις"])
 
-    st.subheader("Νέα ενέργεια")
-    c1,c2 = st.columns(2)
+    with registry_tab_new:
+        c1,c2 = st.columns(2)
 
-    with c1:
-        log_service = st.selectbox(
-            "Ενότητα",
-            ["Μαθησιακή Ανάλυση","Ποιότητα Αξιολόγησης","Δημιουργία Μαθήματος & Αξιολόγησης","Προσαρμοστική Εξάσκηση","Υποστήριξη Διδάσκοντα","Ενοποιημένες Μαθησιακές Ενδείξεις","Άλλο"],
-            key="log_service"
-        )
-        log_entity = st.text_input("Οντότητα / μαθητής / ερώτηση",key="log_entity")
-        log_ένδειξη = st.text_input("Ένδειξη / αιτία",key="log_ένδειξη")
-        log_priority = st.selectbox("Προτεραιότητα",[1,2,3],key="log_priority")
+        with c1:
+            log_service = st.selectbox(
+                "Ενότητα",
+                ["Μαθησιακή Ανάλυση","Ποιότητα Αξιολόγησης","Δημιουργία Μαθήματος & Αξιολόγησης","Προσαρμοστική Εξάσκηση","Υποστήριξη Διδάσκοντα","Ενοποιημένες Μαθησιακές Ενδείξεις","Άλλο"],
+                key="log_service"
+            )
+            log_entity = st.text_input("Οντότητα / μαθητής / ερώτηση",key="log_entity")
+            log_ένδειξη = st.text_input("Ένδειξη / αιτία",key="log_ένδειξη")
+            log_priority = st.selectbox("Προτεραιότητα",[1,2,3],key="log_priority")
 
-    with c2:
-        log_decision = st.text_input("Απόφαση / ενέργεια",key="log_decision")
-        log_owner = st.text_input("Υπεύθυνος",key="log_owner")
-        log_status = st.selectbox(
-            "Κατάσταση",
-            ["ΝΕΑ","ΣΕ ΕΛΕΓΧΟ","ΟΛΟΚΛΗΡΩΘΗΚΕ","ΑΚΥΡΩΘΗΚΕ"],
-            key="log_status"
-        )
-        log_notes = st.text_area("Σημειώσεις",key="log_notes",height=90)
+        with c2:
+            log_decision = st.text_input("Απόφαση / ενέργεια",key="log_decision")
+            log_owner = st.text_input("Υπεύθυνος",key="log_owner")
+            log_status = st.selectbox(
+                "Κατάσταση",
+                ["ΝΕΑ","ΣΕ ΕΛΕΓΧΟ","ΟΛΟΚΛΗΡΩΘΗΚΕ","ΑΚΥΡΩΘΗΚΕ"],
+                key="log_status"
+            )
+            log_notes = st.text_area("Σημειώσεις",key="log_notes",height=90)
 
-    if st.button("＋ Καταχώριση ενέργειας", type="primary"):
-        new_row = pd.DataFrame([{
-            "Ημερομηνία":datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "Ενότητα":log_service,
-            "Οντότητα":log_entity,
-            "Ένδειξη":log_ένδειξη,
-            "Προτεραιότητα":log_priority,
-            "Απόφαση":log_decision,
-            "Υπεύθυνος":log_owner,
-            "Κατάσταση":log_status,
-            "Σημειώσεις":log_notes
-        }])
-        st.session_state["action_log"] = pd.concat(
-            [st.session_state["action_log"],new_row],
-            ignore_index=True
-        )
-        st.success("Η καταχώριση προστέθηκε.")
+        if st.button("＋ Καταχώριση ενέργειας", type="primary"):
+            new_row = pd.DataFrame([{
+                "Ημερομηνία":datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "Ενότητα":log_service,
+                "Οντότητα":log_entity,
+                "Ένδειξη":log_ένδειξη,
+                "Προτεραιότητα":log_priority,
+                "Απόφαση":log_decision,
+                "Υπεύθυνος":log_owner,
+                "Κατάσταση":log_status,
+                "Σημειώσεις":log_notes
+            }])
+            st.session_state["action_log"] = pd.concat(
+                [st.session_state["action_log"],new_row],
+                ignore_index=True
+            )
+            st.success("Η καταχώριση προστέθηκε.")
 
-    logdf = st.session_state["action_log"]
+    with registry_tab_list:
+        with st.expander("📥 Εισαγωγή υπάρχοντος μητρώου", expanded=False):
+            imported_log = st.file_uploader(
+                "Αρχείο CSV μητρώου",
+                type=["csv"],
+                key="action_log_import"
+            )
+            if imported_log is not None:
+                try:
+                    imported_df = pd.read_csv(imported_log)
+                    missing = [c for c in base_columns if c not in imported_df.columns]
+                    if missing:
+                        for c in missing:
+                            imported_df[c] = ""
+                    st.session_state["action_log"] = imported_df[base_columns]
+                    st.success("Το μητρώο εισήχθη επιτυχώς.")
+                except Exception as e:
+                    st.error(f"Αποτυχία εισαγωγής: {e}")
 
-    if len(logdf) > 0:
-        st.subheader("Καταχωρίσεις")
-        st.dataframe(logdf,use_container_width=True,hide_index=True)
+        logdf = st.session_state["action_log"]
 
-        status_counts = logdf["Κατάσταση"].value_counts()
-        c1,c2,c3 = st.columns(3)
-        c1.metric("Σύνολο",len(logdf))
-        c2.metric("Ανοικτές",int(status_counts.get("ΝΕΑ",0)+status_counts.get("ΣΕ ΕΛΕΓΧΟ",0)))
-        c3.metric("Ολοκληρωμένες",int(status_counts.get("ΟΛΟΚΛΗΡΩΘΗΚΕ",0)))
+        if len(logdf) > 0:
+            st.dataframe(logdf,use_container_width=True,hide_index=True)
 
-        st.download_button(
-            "Λήψη μητρώου CSV",
-            logdf.to_csv(index=False).encode("utf-8-sig"),
-            "INELSO Academia_Action_Log.csv",
-            "text/csv"
-        )
-    else:
-        pass
+            status_counts = logdf["Κατάσταση"].value_counts()
+            c1,c2,c3 = st.columns(3)
+            c1.metric("Σύνολο",len(logdf))
+            c2.metric("Ανοικτές",int(status_counts.get("ΝΕΑ",0)+status_counts.get("ΣΕ ΕΛΕΓΧΟ",0)))
+            c3.metric("Ολοκληρωμένες",int(status_counts.get("ΟΛΟΚΛΗΡΩΘΗΚΕ",0)))
+
+            st.download_button(
+                "Λήψη μητρώου CSV",
+                logdf.to_csv(index=False).encode("utf-8-sig"),
+                "INELSO Academia_Action_Log.csv",
+                "text/csv"
+            )
+        else:
+            st.info("Δεν υπάρχουν ακόμη καταχωρισμένες ενέργειες.")
 
 # ==========================================================
 # ΚΕΝΤΡΙΚΗ ΑΝΑΦΟΡΑ
