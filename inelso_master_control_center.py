@@ -1409,6 +1409,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
 
     hleft, hright = st.columns([8.6, 1.4], vertical_alignment="center")
     with hright:
+        render_info_button("dashboard")
 
     show_active_dataset_context("DASHBOARD", compact=False)
 
