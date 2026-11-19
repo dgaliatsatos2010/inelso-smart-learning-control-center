@@ -4443,25 +4443,25 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             a,b,c1,c2 = st.columns(4)
             with a:
                 st.markdown(
-                    "<div class='inelso-feature-card'><div class='kicker'>ΠΑΡΑΚΟΛΟΥΘΗΣΗ</div><h3>Παρακολουθεί</h3>"
+                    "<div class='inelso-feature-card'><h3>Παρακολουθεί</h3>"
                     "<p>Επίδοση, αδράνεια, προσπάθειες και συμμετοχή, μόνο όταν υπάρχουν πραγματικά πεδία.</p></div>",
                     unsafe_allow_html=True
                 )
             with b:
                 st.markdown(
-                    "<div class='inelso-feature-card'><div class='kicker'>ΙΕΡΑΡΧΗΣΗ</div><h3>Ιεραρχεί</h3>"
+                    "<div class='inelso-feature-card'><h3>Ιεραρχεί</h3>"
                     "<p>Συνδυάζει διαθέσιμες ενδείξεις σε διαφανή λειτουργικό δείκτη προτεραιότητας.</p></div>",
                     unsafe_allow_html=True
                 )
             with c1:
                 st.markdown(
-                    "<div class='inelso-feature-card'><div class='kicker'>ΕΡΜΗΝΕΙΑ</div><h3>Εξηγεί</h3>"
+                    "<div class='inelso-feature-card'><h3>Εξηγεί</h3>"
                     "<p>Δείχνει ποιες μεταβλητές και ποια βάρη συνέβαλαν στην τελική ένδειξη.</p></div>",
                     unsafe_allow_html=True
                 )
             with c2:
                 st.markdown(
-                    "<div class='inelso-feature-card'><div class='kicker'>ΥΠΟΣΤΗΡΙΞΗ</div><h3>Προτείνει</h3>"
+                    "<div class='inelso-feature-card'><h3>Προτείνει</h3>"
                     "<p>Παράγει επόμενο βήμα για ανθρώπινο έλεγχο, επικοινωνία ή απλή παρακολούθηση.</p></div>",
                     unsafe_allow_html=True
                 )
