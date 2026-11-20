@@ -1774,16 +1774,16 @@ elif section == "Ποιότητα Αξιολόγησης":
 
 
     tabs = st.tabs(["Συνοπτική εικόνα","Τεχνική ανάλυση","Ουρά προτεραιότητας","Έλεγχος ερώτησης"])
-    with tabs[0]:
+    with diag_box:
         counts = service21["κατάσταση"].value_counts().rename_axis("Κατηγορία").reset_index(name="Πλήθος")
         st.dataframe(counts,use_container_width=True,hide_index=True)
         st.bar_chart(
             service21.dropna(subset=["διάκριση"]).sort_values("διάκριση",ascending=False)
             .set_index("ερώτηση")[["διάκριση"]]
         )
-    with tabs[1]:
+    with corr_box:
         st.dataframe(service21,use_container_width=True,hide_index=True)
-    with tabs[2]:
+    with class_box:
         q = service21[
             (service21["κατάσταση"]=="ΚΡΙΣΙΜΗ") |
             (service21["κατάσταση"]=="ΕΛΕΓΧΟΣ") |
@@ -1795,7 +1795,7 @@ elif section == "Ποιότητα Αξιολόγησης":
             "ΕΛΕΓΧΟΣ":3
         })
         st.dataframe(q.sort_values("προτεραιότητα"),use_container_width=True,hide_index=True)
-    with tabs[3]:
+    with reg_box:
         choice = st.selectbox("Επιλέξτε ερώτηση", service21["ερώτηση"].tolist())
         r = service21.loc[service21["ερώτηση"]==choice].iloc[0]
         a,b,c,d = st.columns(4)
@@ -2291,7 +2291,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
     view = st.radio("Προβολή",["Μαθητής","Εκπαιδευτής"],horizontal=True)
     if view == "Μαθητής":
         tabs = st.tabs(["Προσαρμοστικό προφίλ","Κενά κριτηρίων","Πορεία προόδου","Πώς λαμβάνεται η απόφαση"])
-        with tabs[0]:
+        with diag_box:
             _status26 = str(latest["κατάσταση"])
             if _status26 == "ΕΤΟΙΜΟ":
                 st.success("ΕΤΟΙΜΟ — η βεβαιότητα είναι επαρκής και δεν ενεργοποιείται κρίσιμος κανόνας.")
@@ -2302,7 +2302,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
             else:
                 st.info("ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ — το αποτέλεσμα ανά φοιτητή υποδεικνύει στοχευμένη νέα προσπάθεια.")
                 st.write("**Προτεινόμενο επόμενο βήμα:** νέα προσπάθεια / στοχευμένη εξάσκηση.")
-        with tabs[1]:
+        with corr_box:
             rows=[]
             plot_first, plot_latest, plot_index = [], [], []
             for _,rr in rubric.iterrows():
@@ -2327,10 +2327,10 @@ elif section == "Προσαρμοστική Εξάσκηση":
                     "1η προσπάθεια":plot_first,
                     "Τελευταία προσπάθεια":plot_latest
                 }, index=plot_index))
-        with tabs[2]:
+        with class_box:
             st.line_chart(service26_current.set_index("προσπάθεια")[["score","βεβαιότητα"]])
             st.dataframe(service26_current,use_container_width=True,hide_index=True)
-        with tabs[3]:
+        with reg_box:
             st.markdown("""
 - Βεβαιότητα < 0,70 → **ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ**
 - RC-01 επίπεδο 0–1 → **ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ**
@@ -2756,9 +2756,9 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
 
 
     tabs = st.tabs(["Ενιαίες ενδείξεις","Προτεραιότητες","Προέλευση","Αλυσίδα παρέμβασης"])
-    with tabs[0]:
+    with diag_box:
         st.dataframe(service31_integrated,use_container_width=True,hide_index=True)
-    with tabs[1]:
+    with corr_box:
         st.dataframe(
             service31_integrated.sort_values(
                 ["προτεραιότητα","ισχύς_σήματος"],
@@ -2767,10 +2767,10 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
             use_container_width=True,hide_index=True
         )
         st.warning("Υψηλή προτεραιότητα σημαίνει ότι το ένδειξη απαιτεί ανθρώπινο έλεγχο πριν από οποιαδήποτε εκπαιδευτική παρέμβαση.")
-    with tabs[2]:
+    with class_box:
         prov = service31_integrated[["οντότητα","πηγή","τύπος","προέλευση"]].copy()
         st.dataframe(prov,use_container_width=True,hide_index=True)
-    with tabs[3]:
+    with reg_box:
         st.markdown("""
 1. Εντοπισμός ένδειξη στο Ποιότητα Αξιολόγησης ή Προσαρμοστική Εξάσκηση  
 2. Διατήρηση της πραγματικής προέλευσης και του τύπου ένδειξη  
@@ -3178,20 +3178,18 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         c3.metric("Δείκτης ποιότητας", f"{quality_score:.1f}/100")
         c4.metric("Σταθερές στήλες", constant_cols)
 
-        tabs = st.tabs([
-            "Αυτόματη διάγνωση",
-            "Συσχετίσεις & σχέσεις",
-            "Classification",
-            "Regression",
-            "Clustering",
-            "Σύγκριση ομάδων",
-            "Αυτόματη αναφορά"
-        ])
+        diag_box = st.expander("🩺 Αυτόματη διάγνωση", expanded=False)
+        corr_box = st.expander("🔗 Συσχετίσεις & σχέσεις", expanded=False)
+        class_box = st.expander("🎯 Classification", expanded=False)
+        reg_box = st.expander("📈 Regression", expanded=False)
+        cluster_box = st.expander("🧩 Clustering", expanded=False)
+        group_box = st.expander("👥 Σύγκριση ομάδων", expanded=False)
+        report_box = st.expander("📄 Αυτόματη αναφορά", expanded=False)
 
         # ------------------------------------------------------
         # Automated diagnosis
         # ------------------------------------------------------
-        with tabs[0]:
+        with diag_box:
             st.subheader("Αυτόματη διάγνωση dataset")
 
             numeric_cols = lab_df.select_dtypes(include=np.number).columns.tolist()
@@ -3227,7 +3225,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         # ------------------------------------------------------
         # Correlations
         # ------------------------------------------------------
-        with tabs[1]:
+        with corr_box:
             st.subheader("Συσχετίσεις & σχέσεις")
             numeric = lab_df.select_dtypes(include=np.number)
 
@@ -3250,7 +3248,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         # ------------------------------------------------------
         # Classification
         # ------------------------------------------------------
-        with tabs[2]:
+        with class_box:
             st.subheader("Classification")
             st.caption("Επιλέγεις κατηγορικό target και το σύστημα εκτελεί leakage-safe train/test pipeline.")
 
@@ -3371,7 +3369,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         # ------------------------------------------------------
         # Regression
         # ------------------------------------------------------
-        with tabs[3]:
+        with reg_box:
             st.subheader("Regression")
             numeric_targets = lab_df.select_dtypes(include=np.number).columns.tolist()
             target_reg = st.selectbox(
@@ -3476,7 +3474,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         # ------------------------------------------------------
         # Clustering
         # ------------------------------------------------------
-        with tabs[4]:
+        with cluster_box:
             st.subheader("Clustering")
             numeric_cols = lab_df.select_dtypes(include=np.number).columns.tolist()
 
@@ -3533,7 +3531,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         # ------------------------------------------------------
         # Group comparison
         # ------------------------------------------------------
-        with tabs[5]:
+        with group_box:
             st.subheader("Σύγκριση ομάδων")
             group_cols = [
                 c for c in lab_df.columns
@@ -3559,7 +3557,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         # ------------------------------------------------------
         # Auto report
         # ------------------------------------------------------
-        with tabs[6]:
+        with report_box:
             st.subheader("Αυτόματη αναφορά")
 
             numeric_cols = lab_df.select_dtypes(include=np.number).columns.tolist()
