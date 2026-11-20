@@ -4966,11 +4966,20 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             )
 
             with st.expander("Κείμενο παρέμβασης", expanded=True):
+                note_key = f"s16_note_preview_{str(selected_risk_learner)}"
+                if note_key not in st.session_state:
+                    st.session_state[note_key] = default_s16_note
+                else:
+                    # Κάθε εκπαιδευόμενος διατηρεί το δικό του προσχέδιο,
+                    # αλλά η αρχική τιμή προέρχεται πάντα από τον τρέχοντα υπολογισμό.
+                    existing_note = str(st.session_state.get(note_key, ""))
+                    if "Δείκτης κινδύνου:" not in existing_note:
+                        st.session_state[note_key] = default_s16_note
+
                 s16_note_text = st.text_area(
                     "Προσχέδιο προς έλεγχο",
-                    value=default_s16_note,
                     height=130,
-                    key="s16_note_preview"
+                    key=note_key
                 )
 
             st.info("Το παρακάτω βήμα δημιουργεί μόνο draft. Δεν γράφει αυτόματα βαθμό ή παρέμβαση στο Moodle.")
