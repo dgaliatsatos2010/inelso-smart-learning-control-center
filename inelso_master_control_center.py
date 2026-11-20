@@ -508,7 +508,7 @@ def render_module_header(title, subtitle, help_key=None, badge=None):
             unsafe_allow_html=True
         )
     with right:
-        if help_key == "s21":
+        if help_key in {"s16", "s21", "scorm_analysis"}:
             render_info_button(help_key)
     if badge:
         st.caption(badge)
