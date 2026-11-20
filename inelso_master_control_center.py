@@ -4529,15 +4529,6 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
         st.session_state.get("inelso_uploaded_original", ACTIVE_DF)
     ).copy()
 
-    render_source_quality_strip(ACTIVE_DF, "S16")
-
-    st.markdown(
-        "<div class='inelso-action-banner'><strong>Διαφανής early-support δείκτης.</strong><br>"
-        "Ο χρήστης επιλέγει ποιες πραγματικές στήλες συμμετέχουν, ρυθμίζει βάρη/κατώφλια και βλέπει ακριβώς "
-        "πώς δημιουργήθηκε κάθε προτεραιότητα.</div>",
-        unsafe_allow_html=True
-    )
-
     s16_tabs = st.tabs(["Επισκόπηση", "Ρύθμιση δείκτη", "Αποτελέσματα", "Παρέμβαση & Moodle"])
 
     with s16_tabs[0]:
@@ -4557,13 +4548,13 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
         st.markdown("#### Τι χρησιμοποιεί η λειτουργία")
         u1,u2,u3,u4 = st.columns(4)
         with u1:
-            st.markdown("<div class='inelso-feature-card'><div class='kicker'>ΕΠΙΔΟΣΗ</div><h3>Επίδοση</h3><p>Χαμηλότερη επίδοση μπορεί να αυξήσει την προτεραιότητα.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><h3>Επίδοση</h3><p>Χαμηλότερη επίδοση μπορεί να αυξήσει την προτεραιότητα.</p></div>", unsafe_allow_html=True)
         with u2:
-            st.markdown("<div class='inelso-feature-card'><div class='kicker'>ΑΔΡΑΝΕΙΑ</div><h3>Αδράνεια</h3><p>Περισσότερες ημέρες αδράνειας μπορούν να αυξήσουν την ένδειξη.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><h3>Αδράνεια</h3><p>Περισσότερες ημέρες αδράνειας μπορούν να αυξήσουν την ένδειξη.</p></div>", unsafe_allow_html=True)
         with u3:
-            st.markdown("<div class='inelso-feature-card'><div class='kicker'>ΠΡΟΣΠΑΘΕΙΕΣ</div><h3>Προσπάθειες</h3><p>Μπορούν να χρησιμοποιηθούν ως λειτουργικό σήμα, ανάλογα με το dataset.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><h3>Προσπάθειες</h3><p>Μπορούν να χρησιμοποιηθούν ως λειτουργική ένδειξη, ανάλογα με το σύνολο δεδομένων.</p></div>", unsafe_allow_html=True)
         with u4:
-            st.markdown("<div class='inelso-feature-card'><div class='kicker'>ΣΥΜΜΕΤΟΧΗ</div><h3>Συμμετοχή</h3><p>Χαμηλό engagement μπορεί να λειτουργήσει ως πρόσθετη ένδειξη.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><h3>Συμμετοχή</h3><p>Χαμηλή συμμετοχή μπορεί να λειτουργήσει ως πρόσθετη ένδειξη.</p></div>", unsafe_allow_html=True)
 
         with st.expander("Μεθοδολογική σημείωση", expanded=False):
             st.write(
@@ -4581,7 +4572,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             inactivity_col = st.selectbox("Ημέρες αδράνειας", cols, key="ew_inactivity")
         with m2:
             attempts_col = st.selectbox("Αριθμός προσπαθειών / submissions", cols, key="ew_attempts")
-            engagement_col = st.selectbox("Engagement / activity score", cols, key="ew_engagement")
+            engagement_col = st.selectbox("Δείκτης συμμετοχής / δραστηριότητας", cols, key="ew_engagement")
 
         st.markdown("### 2. Βάρη")
         w1,w2,w3,w4 = st.columns(4)
