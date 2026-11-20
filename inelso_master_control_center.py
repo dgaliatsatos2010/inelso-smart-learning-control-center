@@ -1117,14 +1117,14 @@ def service_dataset_compatibility(service_key, df):
         numeric = df.select_dtypes(include=np.number).shape[1]
         return "ΠΛΗΡΗΣ" if numeric >= 1 else "ΜΕΡΙΚΗ"
     if service_key in {"S25","S28"}:
-        return "CONTEXT"
+        return "ΠΛΑΙΣΙΟ"
     if service_key == "S31":
         if st.session_state.get("custom_s21") is not None or st.session_state.get("custom_s26") is not None:
             return "ΔΥΝΑΜΙΚΗ"
-        return "CONTEXT"
+        return "ΠΛΑΙΣΙΟ"
     if service_key in {"ANALYTICS","DATA","REPORT","DASHBOARD","PRESENTATION"}:
         return "ΠΛΗΡΗΣ"
-    return "CONTEXT"
+    return "ΠΛΑΙΣΙΟ"
 
 
 def show_active_dataset_context(service_key=None, compact=True):
@@ -1200,7 +1200,7 @@ def ενέργεια_ερώτησης(r):
     if d < 20 and (f <= 10 or f >= 90):
         return "Αναθεώρηση λόγω ακραίας ευκολίας/δυσκολίας και ασθενούς διάκρισης"
     if d < 20:
-        return "Έλεγχος διατύπωσης, distractors και ευθυγράμμισης με μαθησιακό στόχο"
+        return "Έλεγχος διατύπωσης, παραπλανητικών επιλογών και ευθυγράμμισης με μαθησιακό στόχο"
     if d < 40:
         return "Διατήρηση με παρακολούθηση"
     return "Διατήρηση"
@@ -1315,7 +1315,7 @@ if not estimable_s21.empty:
     s21_ένδειξη_rows.append({
         "οντότητα": str(strongest["ερώτηση"]),
         "πηγή":"Ποιότητα Αξιολόγησης",
-        "τύπος":"Ισχυρό item-level ένδειξη",
+        "τύπος":"Ισχυρή ένδειξη ανά ερώτηση",
         "ισχύς_σήματος":round(float(strongest["διάκριση"]),2),
         "κατεύθυνση":"ΘΕΤΙΚΗ",
         "ενέργεια":"Διατήρηση / χρήση ως ισχυρό σημείο αναφοράς",
@@ -1326,7 +1326,7 @@ if not estimable_s21.empty:
     s21_ένδειξη_rows.append({
         "οντότητα":str(weakest["ερώτηση"]),
         "πηγή":"Ποιότητα Αξιολόγησης",
-        "τύπος":"Αδύναμο item-level ένδειξη",
+        "τύπος":"Αδύναμη ένδειξη ανά ερώτηση",
         "ισχύς_σήματος":round(weak_strength,2),
         "κατεύθυνση":"ΑΡΝΗΤΙΚΗ" if float(weakest["διάκριση"]) < 20 else "ΜΕΣΑΙΑ",
         "ενέργεια":str(weakest["ενέργεια"]),
@@ -1339,7 +1339,7 @@ if not nonestimable_s21.empty:
     s21_ένδειξη_rows.append({
         "οντότητα":str(rr["ερώτηση"]),
         "πηγή":"Ποιότητα Αξιολόγησης",
-        "τύπος":"Μη εκτιμήσιμο item-level ένδειξη",
+        "τύπος":"Μη εκτιμήσιμη ένδειξη ανά ερώτηση",
         "ισχύς_σήματος":100.0,
         "κατεύθυνση":"ΑΒΕΒΑΙΗ",
         "ενέργεια":str(rr["ενέργεια"]),
@@ -2762,7 +2762,6 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
     with tabs[2]:
         prov = service31_integrated[["οντότητα","πηγή","τύπος","προέλευση"]].copy()
         st.dataframe(prov,use_container_width=True,hide_index=True)
-        st.info("Η ενότητα Ενοποιημένων Μαθησιακών Ενδείξεων v6 δεν χρησιμοποιεί πλέον ανεξάρτητα synthetic concept values. Συνθέτει ενδείξεις που προέρχονται από τα Ποιότητα Αξιολόγησης και 26.")
     with tabs[3]:
         st.markdown("""
 1. Εντοπισμός ένδειξη στο Ποιότητα Αξιολόγησης ή Προσαρμοστική Εξάσκηση  
@@ -2911,15 +2910,20 @@ elif section == "Κύκλος Ζωής Ενεργειών":
         st.write("**Προτεινόμενη ενέργεια:**", row["Προτεινόμενη ενέργεια"])
 
         current = st.session_state["κατάσταση_ενεργειών"].get(code, "ΝΕΑ")
-        new_state = st.radio(
+        lifecycle_widget_key = f"lifecycle_state_{code}"
+        if lifecycle_widget_key not in st.session_state:
+            st.session_state[lifecycle_widget_key] = current
+
+        def _update_lifecycle_state(action_code=code, widget_key=lifecycle_widget_key):
+            st.session_state["κατάσταση_ενεργειών"][action_code] = st.session_state[widget_key]
+
+        st.radio(
             "Κατάσταση κύκλου ζωής",
             ["ΝΕΑ","ΣΕ ΕΛΕΓΧΟ","ΚΛΕΙΣΤΗ"],
-            index=["ΝΕΑ","ΣΕ ΕΛΕΓΧΟ","ΚΛΕΙΣΤΗ"].index(current),
-            horizontal=True
+            key=lifecycle_widget_key,
+            horizontal=True,
+            on_change=_update_lifecycle_state
         )
-        st.session_state["κατάσταση_ενεργειών"][code] = new_state
-
-        st.info("Η αλλαγή κατάστασης αποθηκεύεται μόνο προσωρινά στη συνεδρία του dashboard και δεν γράφεται στο Moodle.")
 
         export_lifecycle = lifecycle.copy()
         export_lifecycle["Κατάσταση κύκλου ζωής"] = export_lifecycle["Κωδικός"].map(
