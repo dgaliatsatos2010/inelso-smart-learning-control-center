@@ -508,7 +508,7 @@ def render_module_header(title, subtitle, help_key=None, badge=None):
             unsafe_allow_html=True
         )
     with right:
-        if help_key in {"s16", "s21", "scorm_analysis"}:
+        if help_key in {"s16", "s21", "s25", "scorm_analysis"}:
             render_info_button(help_key)
     if badge:
         st.caption(badge)
@@ -2223,184 +2223,169 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
 
     render_module_header("Δημιουργία Μαθήματος & Αξιολόγησης", "", "s25")
     show_active_dataset_context("S25")
-    st.caption(
-        "Χώρος εργασίας για γρήγορη δημιουργία προσχεδίων ερωτήσεων, κουίζ, κλιμάκων αξιολόγησης και ασκήσεων "
-        "από υπάρχον εκπαιδευτικό περιεχόμενο — πάντα με έλεγχο και έγκριση διδάσκοντα."
-    )
 
-    st.warning(
-        "Η ενσωματωμένη λειτουργία δημιουργεί ελεγχόμενα προσχέδια χωρίς αυτόματη δημοσίευση. "
-        "Παράγει δομημένα προσχέδια από το υλικό του εκπαιδευτή και δεν δημοσιεύει τίποτα αυτόματα."
-    )
+    s25_tabs = st.tabs(["Δημιουργία", "Οδηγίες", "Προσχέδιο"])
 
+    with s25_tabs[0]:
+        s25_content = st.text_area(
+            "Υλικό μαθήματος / πηγή",
+            height=180,
+            placeholder="Επικολλήστε σημειώσεις, μαθησιακούς στόχους, κεφάλαιο ή άλλο εκπαιδευτικό περιεχόμενο.",
+            key="s25_content"
+        )
 
-    s25_scorm_ready = "s25_approved_draft" in st.session_state
-    render_moodle_rest_service_panel(
-        "Δημιουργία Μαθήματος & Αξιολόγησης",
-        summary=(
-            "Ελεγμένο προσχέδιο εκπαιδευτικού υλικού"
-            if s25_scorm_ready else
-            "Το προσχέδιο αναμένει έλεγχο διδάσκοντα"
-        ),
-        score=None,
-        status="completed" if s25_scorm_ready else "incomplete",
-        entity=ACTIVE_NAME if ACTIVE_DF is not None else "Δημιουργία Μαθήματος & Αξιολόγησης authoring session",
-        enabled=True,
-        intervention_type="Δημιουργία Μαθήματος & Αξιολόγησης — Έλεγχος προσχεδίου",
-        note="Καταγράφεται workflow completion/provenance χωρίς τεχνητό βαθμό.",
-    )
+        use_csv_s25 = st.checkbox(
+            "Χρήση του ενεργού CSV ως πρόσθετου πλαισίου",
+            value=ACTIVE_DF is not None,
+            key="s25_use_active_csv"
+        )
 
+        if use_csv_s25 and ACTIVE_DF is not None:
+            with st.expander("Προβολή πλαισίου από το ενεργό αρχείο", expanded=False):
+                st.text_area(
+                    "Πλαίσιο δεδομένων",
+                    value=dataset_context_summary(ACTIVE_DF),
+                    height=100,
+                    disabled=True,
+                    key="s25_csv_context_preview"
+                )
 
-    with st.expander("📘 Πώς δημιουργώ σωστά Quiz και Rubric;", expanded=False):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            s25_type = st.selectbox(
+                "Τύπος προσχεδίου",
+                ["Τράπεζα ερωτήσεων", "Κουίζ / Σύντομο τεστ", "Κλίμακα αξιολόγησης", "Ασκήσεις εξάσκησης"],
+                key="s25_type"
+            )
+        with c2:
+            s25_count = st.slider("Πλήθος στοιχείων", 3, 12, 5, 1, key="s25_count")
+        with c3:
+            s25_level = st.selectbox(
+                "Επίπεδο",
+                ["Βασικό", "Μεσαίο", "Προχωρημένο"],
+                key="s25_level"
+            )
+
+        learning_goal = st.text_input(
+            "Μαθησιακός στόχος",
+            placeholder="π.χ. Ο φοιτητής να μπορεί να εφαρμόζει...",
+            key="s25_goal"
+        )
+
+        if st.button("Δημιουργία προσχεδίου", type="primary", key="s25_generate"):
+            raw_manual = " ".join(s25_content.strip().split())
+            raw_csv = csv_context_as_text(ACTIVE_DF, max_rows=3) if use_csv_s25 and ACTIVE_DF is not None else ""
+            raw = " ".join((raw_manual + " " + raw_csv).split())
+            if not raw:
+                st.error("Χρειάζεται εκπαιδευτικό περιεχόμενο ή ενεργό πλαίσιο από CSV.")
+            else:
+                sentences = [
+                    s.strip()
+                    for s in re.split(r"(?<=[.!?;])\s+", raw)
+                    if len(s.strip()) > 18
+                ]
+                if not sentences:
+                    sentences = [raw]
+
+                items = []
+                for i in range(s25_count):
+                    src_sentence = sentences[i % len(sentences)]
+                    short = src_sentence[:240].rstrip()
+
+                    if s25_type == "Τράπεζα ερωτήσεων":
+                        items.append({
+                            "ID": f"Q{i+1:02d}",
+                            "Προσχέδιο ερώτησης": f"Εξήγησε ή εφάρμοσε την ακόλουθη έννοια: {short}",
+                            "Τύπος": "Ανοικτή απάντηση",
+                            "Επίπεδο": s25_level,
+                            "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
+                        })
+                    elif s25_type == "Κουίζ / Σύντομο τεστ":
+                        items.append({
+                            "ID": f"Q{i+1:02d}",
+                            "Προσχέδιο ερώτησης": f"Ποια διατύπωση αποδίδει καλύτερα το ακόλουθο σημείο; {short}",
+                            "Σωστή απάντηση / κριτήριο": short,
+                            "Επίπεδο": s25_level,
+                            "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
+                        })
+                    elif s25_type == "Κλίμακα αξιολόγησης":
+                        criteria = ["Ακρίβεια", "Μεθοδολογία", "Τεκμηρίωση", "Πληρότητα", "Σαφήνεια"]
+                        criterion = criteria[i % len(criteria)]
+                        weights = [30, 25, 15, 15, 15]
+                        items.append({
+                            "Κριτήριο": criterion,
+                            "Προτεινόμενο βάρος": weights[i % len(weights)],
+                            "Περιγραφή": (
+                                f"Αξιολόγηση ως προς {criterion.lower()} σε σχέση με τον στόχο: "
+                                f"{learning_goal or 'τον δηλωμένο μαθησιακό στόχο'}."
+                            ),
+                            "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
+                        })
+                    else:
+                        items.append({
+                            "Άσκηση": f"Άσκηση {i+1}",
+                            "Προσχέδιο": f"Εφάρμοσε την έννοια «{short}» σε νέο παράδειγμα και αιτιολόγησε τα βήματά σου.",
+                            "Επίπεδο": s25_level,
+                            "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
+                        })
+
+                st.session_state["s25_draft"] = pd.DataFrame(items)
+                st.success("Το προσχέδιο δημιουργήθηκε.")
+
+    with s25_tabs[1]:
+        st.markdown("### Κουίζ")
         st.markdown("""
-**Για Quiz**
-1. Ξεκινήστε από έναν σαφή μαθησιακό στόχο: *τι ακριβώς πρέπει να μπορεί να κάνει ο φοιτητής;*  
-2. Κάθε ερώτηση πρέπει να ελέγχει κατά προτίμηση μία βασική γνώση ή δεξιότητα.  
-3. Ορίστε καθαρή σωστή απάντηση ή κανόνα βαθμολόγησης.  
-4. Αποφύγετε αμφίσημες διατυπώσεις και επιλογές που αποκαλύπτουν τη σωστή απάντηση.  
-5. Μετά από πραγματικές προσπάθειες, χρησιμοποιήστε την **Ποιότητα Αξιολόγησης** για έλεγχο των στατιστικά ερωτήσεων.
+1. Ξεκινήστε από έναν σαφή μαθησιακό στόχο.
+2. Κάθε ερώτηση να ελέγχει μία βασική γνώση ή δεξιότητα.
+3. Ορίστε σαφή σωστή απάντηση ή κανόνα βαθμολόγησης.
+4. Αποφύγετε αμφίσημες διατυπώσεις.
+5. Μετά από πραγματικές προσπάθειες, χρησιμοποιήστε την **Ποιότητα Αξιολόγησης**.
+""")
+        st.markdown("### Κλίμακα αξιολόγησης")
+        st.markdown("""
+1. Ορίστε 3–6 παρατηρήσιμα κριτήρια.
+2. Δώστε σαφή επίπεδα επίδοσης, π.χ. 0–4.
+3. Ορίστε βάρη που αθροίζουν σε 100%.
+4. Για προσαρμοστική εξάσκηση υποστηρίζεται η δομή RC-01 έως RC-05.
+5. Χρησιμοποιήστε την ίδια κλίμακα με συνέπεια σε όλες τις προσπάθειες.
+""")
 
-**Για Rubric**
-1. Ορίστε 3–6 κριτήρια που μπορούν να παρατηρηθούν στην απάντηση.  
-2. Δώστε σαφή επίπεδα επίδοσης (π.χ. 0–4) για κάθε κριτήριο.  
-3. Ορίστε βάρη που αθροίζουν σε **100%**.  
-4. Για προσαρμοστική εξάσκηση, η πλατφόρμα υποστηρίζει τη δομή **RC-01 έως RC-05**.  
-5. Η ίδια κλίμακα αξιολόγησης πρέπει να χρησιμοποιείται με συνέπεια σε όλες τις προσπάθειες του ίδιου φοιτητή.
-        """)
-
-    s25_content = st.text_area(
-        "Υλικό μαθήματος / πηγή",
-        height=220,
-        placeholder="Επικόλλησε σημειώσεις, learning outcomes, κεφάλαιο ή άλλο εκπαιδευτικό περιεχόμενο.",
-        key="s25_content"
-    )
-
-    use_csv_s25 = st.checkbox(
-        "Χρήση του ενεργού CSV ως πρόσθετου πλαισίου για το προσχέδιο",
-        value=ACTIVE_DF is not None,
-        key="s25_use_active_csv"
-    )
-    if use_csv_s25 and ACTIVE_DF is not None:
-        st.text_area(
-            "Πλαίσιο από το CSV που θα ληφθεί υπόψη",
-            value=dataset_context_summary(ACTIVE_DF),
-            height=110,
-            disabled=True,
-            key="s25_csv_context_preview"
-        )
-
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        s25_type = st.selectbox(
-            "Τύπος προσχεδίου",
-            ["Τράπεζα ερωτήσεων", "Quiz / Σύντομο τεστ", "Κλίμακα αξιολόγησης (Rubric)", "Ασκήσεις εξάσκησης"],
-            key="s25_type"
-        )
-    with c2:
-        s25_count = st.slider("Πλήθος στοιχείων", 3, 12, 5, 1, key="s25_count")
-    with c3:
-        s25_level = st.selectbox(
-            "Επίπεδο",
-            ["Βασικό", "Μεσαίο", "Προχωρημένο"],
-            key="s25_level"
-        )
-
-    learning_goal = st.text_input(
-        "Μαθησιακός στόχος",
-        placeholder="π.χ. Ο φοιτητής να μπορεί να εφαρμόζει...",
-        key="s25_goal"
-    )
-
-    if st.button("Δημιουργία προσχεδίου για έλεγχο", key="s25_generate"):
-        raw_manual = " ".join(s25_content.strip().split())
-        raw_csv = csv_context_as_text(ACTIVE_DF, max_rows=3) if use_csv_s25 and ACTIVE_DF is not None else ""
-        raw = " ".join((raw_manual + " " + raw_csv).split())
-        if not raw:
-            st.error("Χρειάζεται εκπαιδευτικό περιεχόμενο ή ενεργό πλαίσιο από CSV.")
+    with s25_tabs[2]:
+        if "s25_draft" not in st.session_state:
+            st.info("Δεν έχει δημιουργηθεί ακόμη προσχέδιο.")
         else:
-            sentences = [
-                s.strip()
-                for s in re.split(r"(?<=[.!?;])\s+", raw)
-                if len(s.strip()) > 18
-            ]
-            if not sentences:
-                sentences = [raw]
+            edited_s25 = st.data_editor(
+                st.session_state["s25_draft"],
+                use_container_width=True,
+                hide_index=True,
+                key="s25_editor"
+            )
 
-            items = []
-            for i in range(s25_count):
-                src_sentence = sentences[i % len(sentences)]
-                short = src_sentence[:240].rstrip()
+            faculty_ok = st.checkbox(
+                "Έλεγξα και εγκρίνω το περιεχόμενο.",
+                key="s25_faculty_ok"
+            )
 
-                if s25_type == "Τράπεζα ερωτήσεων":
-                    items.append({
-                        "ID": f"Q{i+1:02d}",
-                        "Προσχέδιο ερώτησης": f"Εξήγησε ή εφάρμοσε την ακόλουθη έννοια: {short}",
-                        "Τύπος": "Ανοικτή απάντηση",
-                        "Επίπεδο": s25_level,
-                        "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
-                    })
-                elif s25_type == "Quiz / Σύντομο τεστ":
-                    items.append({
-                        "ID": f"Q{i+1:02d}",
-                        "Προσχέδιο ερώτησης": f"Ποια διατύπωση αποδίδει καλύτερα το ακόλουθο σημείο; {short}",
-                        "Σωστή απάντηση / κριτήριο": short,
-                        "Επίπεδο": s25_level,
-                        "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
-                    })
-                elif s25_type == "Κλίμακα αξιολόγησης (Rubric)":
-                    criteria = ["Ακρίβεια", "Μεθοδολογία", "Τεκμηρίωση", "Πληρότητα", "Σαφήνεια"]
-                    criterion = criteria[i % len(criteria)]
-                    weights = [30, 25, 15, 15, 15]
-                    items.append({
-                        "Κριτήριο": criterion,
-                        "Προτεινόμενο βάρος": weights[i % len(weights)],
-                        "Περιγραφή": (
-                            f"Αξιολόγηση ως προς {criterion.lower()} σε σχέση με τον στόχο: "
-                            f"{learning_goal or 'τον δηλωμένο μαθησιακό στόχο'}."
-                        ),
-                        "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
-                    })
-                else:
-                    items.append({
-                        "Άσκηση": f"Άσκηση {i+1}",
-                        "Προσχέδιο": f"Εφάρμοσε την έννοια «{short}» σε νέο παράδειγμα και αιτιολόγησε τα βήματά σου.",
-                        "Επίπεδο": s25_level,
-                        "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
-                    })
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button(
+                    "Έγκριση προσχεδίου",
+                    disabled=not faculty_ok,
+                    use_container_width=True,
+                    key="s25_review_queue"
+                ):
+                    st.session_state["s25_approved_draft"] = edited_s25.copy()
+                    st.success("Το προσχέδιο εγκρίθηκε στην τρέχουσα συνεδρία.")
 
-            st.session_state["s25_draft"] = pd.DataFrame(items)
-            st.success("Το προσχέδιο δημιουργήθηκε. Δεν έχει δημοσιευτεί πουθενά.")
-
-    if "s25_draft" in st.session_state:
-        st.subheader("Προσχέδιο προς έλεγχο")
-        edited_s25 = st.data_editor(
-            st.session_state["s25_draft"],
-            use_container_width=True,
-            hide_index=True,
-            key="s25_editor"
-        )
-
-        faculty_ok = st.checkbox(
-            "Έλεγξα και εγκρίνω το περιεχόμενο ως ελεγμένο από διδάσκοντα draft.",
-            key="s25_faculty_ok"
-        )
-
-        if st.button(
-            "Καταχώριση στο έλεγχο διδάσκοντα queue",
-            disabled=not faculty_ok,
-            key="s25_review_queue"
-        ):
-            st.session_state["s25_approved_draft"] = edited_s25.copy()
-            st.success("Η ενότητα Δημιουργίας Μαθήματος & Αξιολόγησης draft χαρακτηρίστηκε ελεγμένο από διδάσκοντα στην τρέχουσα συνεδρία.")
-
-        st.download_button(
-            "Λήψη προσχεδίου σε CSV",
-            edited_s25.to_csv(index=False).encode("utf-8-sig"),
-            "INELSO Academia_Λειτουργία25_Authoring_Draft.csv",
-            "text/csv",
-            key="s25_download"
-        )
-
+            with c2:
+                st.download_button(
+                    "Λήψη προσχεδίου CSV",
+                    edited_s25.to_csv(index=False).encode("utf-8-sig"),
+                    "INELSO_Academia_Προσχέδιο_Αξιολόγησης.csv",
+                    "text/csv",
+                    key="s25_download",
+                    use_container_width=True
+                )
 
 # ==========================================================
 # SERVICE 28 — FACULTY TEACHING AMPLIFICATION
