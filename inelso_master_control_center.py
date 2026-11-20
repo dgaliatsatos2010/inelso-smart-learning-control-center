@@ -521,7 +521,7 @@ def render_empty_state(title, message, next_step=None):
         unsafe_allow_html=True,
     )
 
-def σύνολο δεδομένων_quality_metrics(df):
+def dataset_quality_metrics(df):
     if not isinstance(df, pd.DataFrame) or df.empty:
         return None
     cells = max(int(df.shape[0] * df.shape[1]), 1)
@@ -541,8 +541,8 @@ def σύνολο δεδομένων_quality_metrics(df):
 def render_source_quality_strip(df, service_key=None):
     if not isinstance(df, pd.DataFrame) or df.empty:
         return
-    q = σύνολο δεδομένων_quality_metrics(df)
-    compat = service_σύνολο δεδομένων_compatibility(service_key, df) if service_key else "ΕΝΕΡΓΟ"
+    q = dataset_quality_metrics(df)
+    compat = service_dataset_compatibility(service_key, df) if service_key else "ΕΝΕΡΓΟ"
     compat_class = "ok" if compat in {"ΠΛΗΡΗΣ","ΔΥΝΑΜΙΚΗ","ΕΝΕΡΓΟ"} else ("warn" if compat in {"ΜΕΡΙΚΗ","CONTEXT"} else "neutral")
     st.markdown(
         "<div class='inelso-status-row'>"
@@ -799,7 +799,7 @@ def scorm_question_statistics(interactions_df, min_discrimination_n=8):
     return pd.DataFrame(rows)
 
 
-def build_scorm_unified_σύνολο δεδομένων(interactions_df, attempts_df, psych_df=None, scorm_name=None, scorm_id=None):
+def build_scorm_unified_dataset(interactions_df, attempts_df, psych_df=None, scorm_name=None, scorm_id=None):
     """
     Δημιουργεί ένα ενιαίο long-format σύνολο δεδομένων από πραγματικές SCORM προσπάθειες.
     Δεν επινοεί confidence/rubric. Περιέχει μόνο πεδία που προκύπτουν από Moodle/SCORM.
@@ -893,7 +893,7 @@ def build_scorm_unified_σύνολο δεδομένων(interactions_df, attempt
 # ==========================================================
 # ΚΟΙΝΟ ACTIVE DATASET CONTEXT ΓΙΑ ΟΛΗ ΤΗΝ ΕΦΑΡΜΟΓΗ
 # ==========================================================
-def get_active_σύνολο δεδομένων():
+def get_active_dataset():
     df = st.session_state.get(
         "inelso_uploaded_clean",
         st.session_state.get("inelso_uploaded_original")
@@ -904,7 +904,7 @@ def get_active_σύνολο δεδομένων():
     return scorm_df.copy() if isinstance(scorm_df, pd.DataFrame) else None
 
 
-def active_σύνολο δεδομένων_name():
+def active_dataset_name():
     if st.session_state.get("inelso_uploaded_name"):
         return st.session_state.get("inelso_uploaded_name")
     if st.session_state.get("inelso_scorm_active_name"):
@@ -912,7 +912,7 @@ def active_σύνολο δεδομένων_name():
     return "Δεν έχει φορτωθεί πηγή δεδομένων"
 
 
-def σύνολο δεδομένων_profile(df):
+def dataset_profile(df):
     if not isinstance(df, pd.DataFrame):
         return None
     return {
@@ -1063,7 +1063,7 @@ def auto_map_unified_services(df, source_name="Ανεβασμένο αρχείο
     return mapped
 
 
-def active_σύνολο δεδομένων_kind(df):
+def active_dataset_kind(df):
     if not isinstance(df, pd.DataFrame):
         return "ΚΑΝΕΝΑ"
     cols = [str(c).strip().lower() for c in df.columns]
@@ -1084,24 +1084,24 @@ def active_σύνολο δεδομένων_kind(df):
     return "GENERIC"
 
 
-def σύνολο δεδομένων_context_summary(df, max_cols=12):
+def dataset_context_summary(df, max_cols=12):
     if not isinstance(df, pd.DataFrame):
         return "Δεν υπάρχει ενεργό σύνολο δεδομένων."
-    p = σύνολο δεδομένων_profile(df)
+    p = dataset_profile(df)
     cols = [str(c) for c in df.columns[:max_cols]]
     suffix = " ..." if len(df.columns) > max_cols else ""
     return (
-        f"Αρχείο: {active_σύνολο δεδομένων_name()}\n"
+        f"Αρχείο: {active_dataset_name()}\n"
         f"Γραμμές: {p['rows']} | Στήλες: {p['cols']} | "
         f"Κενά: {p['missing']} | Διπλότυπα: {p['duplicates']}\n"
         f"Στήλες: {', '.join(cols)}{suffix}"
     )
 
 
-def service_σύνολο δεδομένων_compatibility(service_key, df):
+def service_dataset_compatibility(service_key, df):
     if not isinstance(df, pd.DataFrame):
         return "ΧΩΡΙΣ DATASET"
-    kind = active_σύνολο δεδομένων_kind(df)
+    kind = active_dataset_kind(df)
 
     if service_key == "S21":
         return "ΠΛΗΡΗΣ" if st.session_state.get("custom_s21") is not None else (
@@ -1127,15 +1127,15 @@ def service_σύνολο δεδομένων_compatibility(service_key, df):
     return "ΠΛΑΙΣΙΟ"
 
 
-def show_active_σύνολο δεδομένων_context(service_key=None, compact=True):
-    df = get_active_σύνολο δεδομένων()
+def show_active_dataset_context(service_key=None, compact=True):
+    df = get_active_dataset()
     if df is None:
         st.caption("Δεν υπάρχει ενεργή πηγή δεδομένων.")
         return
 
-    p = σύνολο δεδομένων_profile(df)
+    p = dataset_profile(df)
     st.caption(
-        f"Πηγή δεδομένων: {active_σύνολο δεδομένων_name()}  •  "
+        f"Πηγή δεδομένων: {active_dataset_name()}  •  "
         f"{p['rows']} εγγραφές × {p['cols']} πεδία"
     )
     render_source_quality_strip(df, service_key)
@@ -1150,14 +1150,14 @@ def show_active_σύνολο δεδομένων_context(service_key=None, compac
 def csv_context_as_text(df, max_rows=5):
     if not isinstance(df, pd.DataFrame):
         return ""
-    summary = σύνολο δεδομένων_context_summary(df)
+    summary = dataset_context_summary(df)
     sample = df.head(max_rows).astype(str).to_dict(orient="records")
     return summary + "\nΔείγμα γραμμών:\n" + json.dumps(sample, ensure_ascii=False, indent=2)
 
 
-ACTIVE_DF = get_active_σύνολο δεδομένων()
-ACTIVE_NAME = active_σύνολο δεδομένων_name()
-ACTIVE_KIND = active_σύνολο δεδομένων_kind(ACTIVE_DF)
+ACTIVE_DF = get_active_dataset()
+ACTIVE_NAME = active_dataset_name()
+ACTIVE_KIND = active_dataset_kind(ACTIVE_DF)
 
 if isinstance(ACTIVE_DF, pd.DataFrame) and (
     "custom_s21" not in st.session_state or "custom_s26" not in st.session_state
@@ -1487,8 +1487,8 @@ if section == "__ADVANCED__":
 
 st.sidebar.markdown("---")
 if ACTIVE_DF is not None:
-    _p = σύνολο δεδομένων_profile(ACTIVE_DF)
-    _q = σύνολο δεδομένων_quality_metrics(ACTIVE_DF)
+    _p = dataset_profile(ACTIVE_DF)
+    _q = dataset_quality_metrics(ACTIVE_DF)
     st.sidebar.success(f"Πηγή ενεργή: {ACTIVE_NAME}")
     st.sidebar.caption(f"{_p['rows']} εγγραφές × {_p['cols']} πεδία")
     if _q:
@@ -1534,7 +1534,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
     with hright:
         render_info_button("dashboard")
 
-    show_active_σύνολο δεδομένων_context("DASHBOARD", compact=False)
+    show_active_dataset_context("DASHBOARD", compact=False)
 
     if ACTIVE_DF is None:
         a,b = st.columns(2)
@@ -1554,7 +1554,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
             st.button("Εισαγωγή δεδομένων", use_container_width=True, on_click=_home_nav, args=("Εισαγωγή Δεδομένων",), key="home_open_data_empty")
 
     else:
-        q = σύνολο δεδομένων_quality_metrics(ACTIVE_DF)
+        q = dataset_quality_metrics(ACTIVE_DF)
         valid_healths = []
         if "custom_s21" in st.session_state:
             valid_healths.append(float(health21))
@@ -1646,12 +1646,12 @@ if section == "Κεντρική Εικόνα Ελέγχου":
 
             with st.expander("Τεχνική κατάσταση όλων των λειτουργιών", expanded=False):
                 comparison = pd.DataFrame([
-                    {"Ενότητα":"Έγκαιρη Υποστήριξη","Συμβατότητα":service_σύνολο δεδομένων_compatibility("S16", ACTIVE_DF),"Αποτέλεσμα":"Έτοιμο για ανάλυση","Πηγή":ACTIVE_NAME},
-                    {"Ενότητα":"Ποιότητα Quiz","Συμβατότητα":service_σύνολο δεδομένων_compatibility("S21", ACTIVE_DF),"Αποτέλεσμα":f"{health21:.1f}/100" if "custom_s21" in st.session_state else "Αναμονή δεδομένων ανά ερώτηση","Πηγή":ACTIVE_NAME},
-                    {"Ενότητα":"Δημιουργία Αξιολόγησης","Συμβατότητα":service_σύνολο δεδομένων_compatibility("S25", ACTIVE_DF),"Αποτέλεσμα":"Διαθέσιμο ως πλαίσιο","Πηγή":ACTIVE_NAME},
-                    {"Ενότητα":"Προσαρμοστική Εξάσκηση","Συμβατότητα":service_σύνολο δεδομένων_compatibility("S26", ACTIVE_DF),"Αποτέλεσμα":f"{health26:.1f}/100" if "custom_s26" in st.session_state else "Αναμονή αντιστοίχισης ανά εκπαιδευόμενο","Πηγή":ACTIVE_NAME},
-                    {"Ενότητα":"Υποστήριξη Διδάσκοντα","Συμβατότητα":service_σύνολο δεδομένων_compatibility("S28", ACTIVE_DF),"Αποτέλεσμα":"Διαθέσιμο ως πλαίσιο","Πηγή":ACTIVE_NAME},
-                    {"Ενότητα":"Μαθησιακές Ενδείξεις","Συμβατότητα":service_σύνολο δεδομένων_compatibility("S31", ACTIVE_DF),"Αποτέλεσμα":f"{len(service31_integrated)} ενδείξεις" if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "Αναμονή πραγματικών ενδείξεων","Πηγή":ACTIVE_NAME},
+                    {"Ενότητα":"Έγκαιρη Υποστήριξη","Συμβατότητα":service_dataset_compatibility("S16", ACTIVE_DF),"Αποτέλεσμα":"Έτοιμο για ανάλυση","Πηγή":ACTIVE_NAME},
+                    {"Ενότητα":"Ποιότητα Quiz","Συμβατότητα":service_dataset_compatibility("S21", ACTIVE_DF),"Αποτέλεσμα":f"{health21:.1f}/100" if "custom_s21" in st.session_state else "Αναμονή δεδομένων ανά ερώτηση","Πηγή":ACTIVE_NAME},
+                    {"Ενότητα":"Δημιουργία Αξιολόγησης","Συμβατότητα":service_dataset_compatibility("S25", ACTIVE_DF),"Αποτέλεσμα":"Διαθέσιμο ως πλαίσιο","Πηγή":ACTIVE_NAME},
+                    {"Ενότητα":"Προσαρμοστική Εξάσκηση","Συμβατότητα":service_dataset_compatibility("S26", ACTIVE_DF),"Αποτέλεσμα":f"{health26:.1f}/100" if "custom_s26" in st.session_state else "Αναμονή αντιστοίχισης ανά εκπαιδευόμενο","Πηγή":ACTIVE_NAME},
+                    {"Ενότητα":"Υποστήριξη Διδάσκοντα","Συμβατότητα":service_dataset_compatibility("S28", ACTIVE_DF),"Αποτέλεσμα":"Διαθέσιμο ως πλαίσιο","Πηγή":ACTIVE_NAME},
+                    {"Ενότητα":"Μαθησιακές Ενδείξεις","Συμβατότητα":service_dataset_compatibility("S31", ACTIVE_DF),"Αποτέλεσμα":f"{len(service31_integrated)} ενδείξεις" if (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "Αναμονή πραγματικών ενδείξεων","Πηγή":ACTIVE_NAME},
                 ])
                 st.dataframe(comparison, use_container_width=True, hide_index=True)
 
@@ -1711,7 +1711,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
 elif section == "Ποιότητα Αξιολόγησης":
     if ACTIVE_DF is None:
         render_module_header("Ποιότητα Αξιολόγησης", "", "s21")
-        show_active_σύνολο δεδομένων_context("S21")
+        show_active_dataset_context("S21")
         c1,c2,c3,c4,c5 = st.columns(5)
         c1.metric("Ερωτήσεις","—")
         c2.metric("Μέσος δείκτης ευκολίας","—")
@@ -1721,7 +1721,7 @@ elif section == "Ποιότητα Αξιολόγησης":
         st.stop()
     if "custom_s21" not in st.session_state:
         render_module_header("Ποιότητα Αξιολόγησης", "", "s21")
-        show_active_σύνολο δεδομένων_context("S21")
+        show_active_dataset_context("S21")
         c1,c2,c3,c4,c5 = st.columns(5)
         c1.metric("Ερωτήσεις","—")
         c2.metric("Μέσος δείκτης ευκολίας","—")
@@ -1731,7 +1731,7 @@ elif section == "Ποιότητα Αξιολόγησης":
         st.stop()
 
     render_module_header("Ποιότητα Αξιολόγησης", "", "s21")
-    show_active_σύνολο δεδομένων_context("S21")
+    show_active_dataset_context("S21")
     
 
     with st.expander("📘 Πώς πρέπει να είναι δομημένο το Quiz;", expanded=False):
@@ -2039,7 +2039,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                         else:
                             psych = scorm_question_statistics(interactions_df, min_discrimination_n=int(min_n))
                             st.session_state["scorm_live_psychometrics"] = psych
-                            unified_scorm, learner_scorm = build_scorm_unified_σύνολο δεδομένων(
+                            unified_scorm, learner_scorm = build_scorm_unified_dataset(
                                 interactions_df, attempts_df, psych,
                                 scorm_name=selected_scorm.get("name", f"SCORM {selected_scorm_id}"),
                                 scorm_id=selected_scorm_id,
@@ -2184,7 +2184,7 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
 elif section == "Προσαρμοστική Εξάσκηση":
     if ACTIVE_DF is None:
         render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
-        show_active_σύνολο δεδομένων_context("S26")
+        show_active_dataset_context("S26")
         c1,c2,c3,c4,c5 = st.columns(5)
         c1.metric("Τρέχουσα επίδοση","—")
         c2.metric("Κατάκτηση","—")
@@ -2194,7 +2194,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
         st.stop()
     if "custom_s26" not in st.session_state:
         render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
-        show_active_σύνολο δεδομένων_context("S26")
+        show_active_dataset_context("S26")
         st.warning(
             "Το ενεργή πηγή έχει φορτωθεί, αλλά δεν έχει γίνει ακόμη mapping για Προσαρμοστική Εξάσκηση. "
             "Χρειάζονται πραγματικά πεδία ανά εκπαιδευόμενο, π.χ. εκπαιδευόμενος/βαθμολογία και, όπου υπάρχουν, προσπάθεια/βεβαιότητα/κλίμακα αξιολόγησης."
@@ -2208,7 +2208,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
         st.stop()
 
     render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
-    show_active_σύνολο δεδομένων_context("S26")
+    show_active_dataset_context("S26")
     st.caption("Αναλύει την επίδοση ανά κριτήριο, την πρόοδο και τη βεβαιότητα και προτείνει το επόμενο εκπαιδευτικό βήμα.")
 
     with st.expander("📘 Τι είναι η Rubric και πώς περνά στο σύστημα;", expanded=False):
@@ -2356,12 +2356,12 @@ elif section == "Προσαρμοστική Εξάσκηση":
 elif section == "Δημιουργία Μαθήματος & Αξιολόγησης":
     if ACTIVE_DF is None:
         render_module_header("Δημιουργία Μαθήματος & Αξιολόγησης", "", "s25")
-        show_active_σύνολο δεδομένων_context("S25")
+        show_active_dataset_context("S25")
         st.metric("Κατάσταση","—")
         st.stop()
 
     render_module_header("Δημιουργία Μαθήματος & Αξιολόγησης", "", "s25")
-    show_active_σύνολο δεδομένων_context("S25")
+    show_active_dataset_context("S25")
 
     s25_tabs = st.tabs(["Δημιουργία", "Οδηγίες", "Προσχέδιο"])
 
@@ -2383,7 +2383,7 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
             with st.expander("Προβολή πλαισίου από το ενεργό αρχείο", expanded=False):
                 st.text_area(
                     "Πλαίσιο δεδομένων",
-                    value=σύνολο δεδομένων_context_summary(ACTIVE_DF),
+                    value=dataset_context_summary(ACTIVE_DF),
                     height=100,
                     disabled=True,
                     key="s25_csv_context_preview"
@@ -2533,12 +2533,12 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
 elif section == "Υποστήριξη Διδάσκοντα":
     if ACTIVE_DF is None:
         render_module_header("Υποστήριξη Διδάσκοντα", "", "s28")
-        show_active_σύνολο δεδομένων_context("S28")
+        show_active_dataset_context("S28")
         st.metric("Κατάσταση","—")
         st.stop()
 
     render_module_header("Υποστήριξη Διδάσκοντα", "", "s28")
-    show_active_σύνολο δεδομένων_context("S28")
+    show_active_dataset_context("S28")
 
     s28_tabs = st.tabs(["Δημιουργία", "Προσχέδιο", "Αποθηκευμένα", "Moodle"])
 
@@ -2576,7 +2576,7 @@ elif section == "Υποστήριξη Διδάσκοντα":
             with st.expander("Προβολή πλαισίου από το ενεργό αρχείο", expanded=False):
                 st.text_area(
                     "Πλαίσιο CSV",
-                    value=σύνολο δεδομένων_context_summary(ACTIVE_DF),
+                    value=dataset_context_summary(ACTIVE_DF),
                     height=90,
                     disabled=True,
                     key="s28_csv_context_preview"
@@ -2713,7 +2713,7 @@ elif section == "Υποστήριξη Διδάσκοντα":
 elif section == "Ενοποιημένες Μαθησιακές Ενδείξεις":
     if ACTIVE_DF is None:
         render_module_header("Ενοποιημένες Μαθησιακές Ενδείξεις", "", "s31")
-        show_active_σύνολο δεδομένων_context("S31")
+        show_active_dataset_context("S31")
         c1,c2,c3,c4 = st.columns(4)
         c1.metric("Συνολικά ενδείξεις","—")
         c2.metric("Υψηλή προτεραιότητα","—")
@@ -2722,7 +2722,7 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
         st.stop()
     if ("custom_s21" not in st.session_state) and ("custom_s26" not in st.session_state):
         render_module_header("Ενοποιημένες Μαθησιακές Ενδείξεις", "", "s31")
-        show_active_σύνολο δεδομένων_context("S31")
+        show_active_dataset_context("S31")
         st.warning(
             "Υπάρχει ενεργή πηγή, αλλά δεν υπάρχουν ακόμη πραγματικά αντιστοιχισμένες ενδείξεις από Ποιότητα Αξιολόγησης ή Προσαρμοστική Εξάσκηση. "
             "Η ενότητα Ενοποιημένων Μαθησιακών Ενδείξεων δεν δημιουργεί τεχνητές ενδείξεις."
@@ -2735,7 +2735,7 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
         st.stop()
 
     render_module_header("Ενοποιημένες Μαθησιακές Ενδείξεις", "", "s31")
-    show_active_σύνολο δεδομένων_context("S31")
+    show_active_dataset_context("S31")
     
 
     c1,c2,c3,c4 = st.columns(4)
@@ -2786,7 +2786,7 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
 # ==========================================================
 elif section == "Ενιαία Ροή Ενεργειών":
     render_module_header("Ενιαία Ροή Ενεργειών", "", "flow")
-    show_active_σύνολο δεδομένων_context("S31")
+    show_active_dataset_context("S31")
 
     actions=[]
     if "custom_s21" in st.session_state:
@@ -2857,7 +2857,7 @@ elif section == "Ενιαία Ροή Ενεργειών":
 # ==========================================================
 elif section == "Κύκλος Ζωής Ενεργειών":
     render_module_header("Κύκλος Ζωής Ενεργειών", "", "lifecycle")
-    show_active_σύνολο δεδομένων_context("S31")
+    show_active_dataset_context("S31")
 
     actions=[]
     if "custom_s21" in st.session_state:
@@ -3020,8 +3020,8 @@ elif section == "Μεθοδολογία & Προέλευση":
 
         c1,c2,c3 = st.columns(3)
         c1.metric("Ενεργή πηγή", ACTIVE_NAME if ACTIVE_DF is not None else "—")
-        c2.metric("Ποιότητα Αξιολόγησης", service_σύνολο δεδομένων_compatibility("S21", ACTIVE_DF) if ACTIVE_DF is not None else "—")
-        c3.metric("Προσαρμοστική Εξάσκηση", service_σύνολο δεδομένων_compatibility("S26", ACTIVE_DF) if ACTIVE_DF is not None else "—")
+        c2.metric("Ποιότητα Αξιολόγησης", service_dataset_compatibility("S21", ACTIVE_DF) if ACTIVE_DF is not None else "—")
+        c3.metric("Προσαρμοστική Εξάσκηση", service_dataset_compatibility("S26", ACTIVE_DF) if ACTIVE_DF is not None else "—")
 
         with st.expander("📌 Πώς διαβάζω τον πίνακα προέλευσης;"):
             st.markdown(
@@ -3142,7 +3142,7 @@ elif section == "Μεθοδολογία & Προέλευση":
 # ==========================================================
 elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
     render_module_header("Εργαστήριο Ανάλυσης Δεδομένων", "", "analytics_lab")
-    show_active_σύνολο δεδομένων_context("ANALYTICS")
+    show_active_dataset_context("ANALYTICS")
 
     source_options = ["Χρήση τελευταίου αρχείου από το Κέντρο Δεδομένων"]
     if "inelso_uploaded_original" not in st.session_state:
@@ -3593,7 +3593,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 # ==========================================================
 elif section == "Προσομοίωση Σεναρίων":
     render_module_header("Προσομοίωση Σεναρίων", "", "whatif")
-    show_active_σύνολο δεδομένων_context("S26")
+    show_active_dataset_context("S26")
 
     st.subheader("Προσαρμοστική Εξάσκηση — δοκιμή κατωφλίων")
 
@@ -3677,7 +3677,7 @@ elif section == "Ζωντανή Σύνδεση Moodle":
         "",
         "moodle_live"
     )
-    show_active_σύνολο δεδομένων_context("REPORT")
+    show_active_dataset_context("REPORT")
 
     def moodle_rest_call(base_url, ws_token, function_name, params=None, timeout=20):
         if params is None:
@@ -4587,7 +4587,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
         "",
         "s16"
     )
-    show_active_σύνολο δεδομένων_context("S16")
+    show_active_dataset_context("S16")
 
     if ACTIVE_DF is None:
         no_data_tabs = st.tabs(["Τι κάνει", "Τι χρειάζεται"])
@@ -4749,8 +4749,8 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
     s16_tabs = st.tabs(["Επισκόπηση", "Ρύθμιση δείκτη", "Αποτελέσματα", "Παρέμβαση & Moodle"])
 
     with s16_tabs[0]:
-        compat = service_σύνολο δεδομένων_compatibility("S16", ACTIVE_DF)
-        p = σύνολο δεδομένων_profile(ACTIVE_DF)
+        compat = service_dataset_compatibility("S16", ACTIVE_DF)
+        p = dataset_profile(ACTIVE_DF)
         r1,r2,r3,r4 = st.columns(4)
         r1.metric("Εγγραφές", p["rows"])
         r2.metric("Πεδία", p["cols"])
@@ -4982,7 +4982,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             with st.expander("Τεχνική σύνδεση / provenance Moodle", expanded=False):
                 render_moodle_rest_service_panel(
                     "Μαθησιακή Ανάλυση",
-                    summary=f"Ανάλυση έγκαιρης υποστήριξης · συμβατότητα {service_σύνολο δεδομένων_compatibility('S16', ACTIVE_DF)}",
+                    summary=f"Ανάλυση έγκαιρης υποστήριξης · συμβατότητα {service_dataset_compatibility('S16', ACTIVE_DF)}",
                     score=None,
                     status="Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος",
                     entity=ACTIVE_NAME,
@@ -4996,7 +4996,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
 # ==========================================================
 elif section == "Μητρώο Ενεργειών":
     render_module_header("Μητρώο Ενεργειών", "", "registry")
-    show_active_σύνολο δεδομένων_context("REPORT")
+    show_active_dataset_context("REPORT")
 
     base_columns = [
         "Ημερομηνία",
@@ -5115,7 +5115,7 @@ else:
         "",
         "report"
     )
-    show_active_σύνολο δεδομένων_context("REPORT", compact=False)
+    show_active_dataset_context("REPORT", compact=False)
 
     if "central_report_show_uploader" not in st.session_state:
         st.session_state["central_report_show_uploader"] = False
