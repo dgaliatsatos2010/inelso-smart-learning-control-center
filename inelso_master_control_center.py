@@ -508,7 +508,8 @@ def render_module_header(title, subtitle, help_key=None, badge=None):
             unsafe_allow_html=True
         )
     with right:
-        pass
+        if help_key == "s21":
+            render_info_button(help_key)
     if badge:
         st.caption(badge)
 
@@ -1599,10 +1600,6 @@ elif section == "Ποιότητα Αξιολόγησης":
     if "custom_s21" not in st.session_state:
         render_module_header("Ποιότητα Αξιολόγησης", "", "s21")
         show_active_dataset_context("S21")
-        st.warning(
-            "Το ενεργή πηγή έχει φορτωθεί, αλλά δεν έχει δημιουργηθεί συμβατό σύνολο δεδομένων ανά ερώτηση για το Ποιότητα Αξιολόγησης. "
-            "Χρησιμοποίησε την Αυτόματη αναγνώριση ή την Αντιστοίχιση στηλών στο Κέντρο Δεδομένων."
-        )
         c1,c2,c3,c4,c5 = st.columns(5)
         c1.metric("Ερωτήσεις","—")
         c2.metric("Μέσος δείκτης ευκολίας","—")
