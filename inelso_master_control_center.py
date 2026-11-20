@@ -508,7 +508,7 @@ def render_module_header(title, subtitle, help_key=None, badge=None):
             unsafe_allow_html=True
         )
     with right:
-        if help_key in {"s16", "s21", "s25", "s26", "s28", "scorm_analysis"}:
+        if help_key in {"s16", "s21", "s25", "s26", "s28", "flow", "scorm_analysis"}:
             render_info_button(help_key)
     if badge:
         st.caption(badge)
@@ -2815,23 +2815,30 @@ elif section == "Ενιαία Ροή Ενεργειών":
     action_df = pd.DataFrame(actions)
     if not action_df.empty:
         action_df = action_df.sort_values(["Προτεραιότητα","Ενότητα","Οντότητα"])
-    st.dataframe(action_df,use_container_width=True,hide_index=True)
 
-    st.subheader("Αναλυτικός έλεγχος ενέργειας")
-    if not action_df.empty:
-        labels=[
-            f"{r['Ενότητα']} — {r['Οντότητα']} — {r['Ένδειξη']}"
-            for _,r in action_df.iterrows()
-        ]
-        selected=st.selectbox("Επιλέξτε ενέργεια",labels)
-        idx=labels.index(selected)
-        rr=action_df.iloc[idx]
-        a,b,c=st.columns(3)
-        a.metric("Ενότητα",rr["Ενότητα"])
-        b.metric("Προτεραιότητα",rr["Προτεραιότητα"])
-        c.metric("Ένδειξη",rr["Ένδειξη"])
-        st.write("**Οντότητα:**",rr["Οντότητα"])
-        st.write("**Προτεινόμενη ενέργεια:**",rr["Ενέργεια"])
+    with st.expander("📋 Προβολή αποτελεσμάτων", expanded=False):
+        if action_df.empty:
+            st.info("Δεν υπάρχουν διαθέσιμα αποτελέσματα.")
+        else:
+            st.dataframe(action_df,use_container_width=True,hide_index=True)
+
+    with st.expander("🔎 Αναλυτικός έλεγχος ενέργειας", expanded=False):
+        if action_df.empty:
+            st.info("Δεν υπάρχουν διαθέσιμες ενέργειες για αναλυτικό έλεγχο.")
+        else:
+            labels=[
+                f"{r['Ενότητα']} — {r['Οντότητα']} — {r['Ένδειξη']}"
+                for _,r in action_df.iterrows()
+            ]
+            selected=st.selectbox("Επιλέξτε ενέργεια",labels,key="flow_selected_action")
+            idx=labels.index(selected)
+            rr=action_df.iloc[idx]
+            a,b,c=st.columns(3)
+            a.metric("Ενότητα",rr["Ενότητα"])
+            b.metric("Προτεραιότητα",rr["Προτεραιότητα"])
+            c.metric("Ένδειξη",rr["Ένδειξη"])
+            st.write("**Οντότητα:**",rr["Οντότητα"])
+            st.write("**Προτεινόμενη ενέργεια:**",rr["Ενέργεια"])
         
 
 
