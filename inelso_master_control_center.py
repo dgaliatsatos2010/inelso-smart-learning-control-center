@@ -946,6 +946,123 @@ def detect_column(df, terms):
     return None
 
 
+def auto_map_unified_services(df, source_name="Ανεβασμένο αρχείο"):
+    """
+    Αυτόματη αντιστοίχιση ενός ενιαίου CSV/Excel στα βασικά services.
+    Δεν επινοεί δεδομένα: χρησιμοποιεί μόνο στήλες που υπάρχουν πραγματικά.
+    """
+    if not isinstance(df, pd.DataFrame) or df.empty:
+        return {"s21": False, "s26": False}
+
+    mapped = {"s21": False, "s26": False}
+
+    # -----------------------------
+    # Ποιότητα Αξιολόγησης (S21)
+    # -----------------------------
+    q_col = detect_column(df, ["ερώτηση", "question_id", "question", "question name"])
+    f_col = detect_column(df, ["facility", "facility_pct", "facility index"])
+    d_col = detect_column(df, ["διάκριση", "discrimination_pct", "discrimination", "discrimination index"])
+    e_col = detect_column(df, ["αποτελεσματικότητα", "discriminative_efficiency_pct", "efficiency"])
+
+    if q_col is not None and f_col is not None and d_col is not None:
+        cols = [q_col, f_col, d_col] + ([e_col] if e_col is not None else [])
+        s21 = df[cols].copy()
+        rename_map = {q_col: "ερώτηση", f_col: "facility", d_col: "διάκριση"}
+        if e_col is not None:
+            rename_map[e_col] = "αποτελεσματικότητα"
+        s21 = s21.rename(columns=rename_map)
+
+        if "αποτελεσματικότητα" not in s21.columns:
+            s21["αποτελεσματικότητα"] = np.nan
+
+        s21["facility"] = pd.to_numeric(s21["facility"], errors="coerce")
+        s21["διάκριση"] = pd.to_numeric(s21["διάκριση"], errors="coerce")
+        s21["αποτελεσματικότητα"] = pd.to_numeric(s21["αποτελεσματικότητα"], errors="coerce")
+        s21 = (
+            s21.dropna(subset=["ερώτηση"])
+               .drop_duplicates(subset=["ερώτηση"], keep="first")
+               .reset_index(drop=True)
+        )
+
+        if not s21.empty:
+            st.session_state["custom_s21"] = s21
+            st.session_state["custom_s21_source"] = f"Αυτόματη αντιστοίχιση — {source_name}"
+            mapped["s21"] = True
+        else:
+            st.session_state.pop("custom_s21", None)
+            st.session_state.pop("custom_s21_source", None)
+    else:
+        st.session_state.pop("custom_s21", None)
+        st.session_state.pop("custom_s21_source", None)
+
+    # --------------------------------
+    # Προσαρμοστική Εξάσκηση (S26)
+    # --------------------------------
+    learner_col = detect_column(df, ["μαθητής", "learner", "learner_id", "user_id"])
+    score_col = detect_column(df, ["score", "final_score", "grade", "final score"])
+    conf_col = detect_column(df, ["βεβαιότητα", "confidence"])
+    attempt_col = detect_column(df, ["προσπάθεια", "attempt"])
+
+    rc_cols = {}
+    for rc in ["RC-01","RC-02","RC-03","RC-04","RC-05"]:
+        found = detect_column(df, [rc])
+        if found is not None:
+            rc_cols[rc] = found
+
+    if learner_col is not None and score_col is not None and conf_col is not None:
+        use_cols = [learner_col, score_col, conf_col]
+        if attempt_col is not None:
+            use_cols.append(attempt_col)
+        use_cols += list(rc_cols.values())
+
+        s26 = df[use_cols].copy()
+        rename_map = {
+            learner_col: "μαθητής",
+            score_col: "score",
+            conf_col: "βεβαιότητα",
+        }
+        if attempt_col is not None:
+            rename_map[attempt_col] = "προσπάθεια"
+        for rc, original in rc_cols.items():
+            rename_map[original] = rc
+
+        s26 = s26.rename(columns=rename_map)
+        s26["score"] = pd.to_numeric(s26["score"], errors="coerce")
+        s26["βεβαιότητα"] = pd.to_numeric(s26["βεβαιότητα"], errors="coerce")
+
+        if "προσπάθεια" in s26.columns:
+            s26["προσπάθεια"] = pd.to_numeric(s26["προσπάθεια"], errors="coerce")
+        else:
+            s26["προσπάθεια"] = 1
+
+        for rc in ["RC-01","RC-02","RC-03","RC-04","RC-05"]:
+            if rc not in s26.columns:
+                s26[rc] = 2
+            s26[rc] = pd.to_numeric(s26[rc], errors="coerce").fillna(2)
+
+        # Το unified CSV είναι long-format (μία γραμμή ανά learner × question).
+        # Για S26 κρατάμε μία γραμμή ανά learner/attempt.
+        s26 = (
+            s26.dropna(subset=["μαθητής", "score", "βεβαιότητα"])
+               .sort_values(["μαθητής", "προσπάθεια"])
+               .drop_duplicates(subset=["μαθητής", "προσπάθεια"], keep="last")
+               .reset_index(drop=True)
+        )
+
+        if not s26.empty:
+            st.session_state["custom_s26"] = s26
+            st.session_state["custom_s26_source"] = f"Αυτόματη αντιστοίχιση — {source_name}"
+            mapped["s26"] = True
+        else:
+            st.session_state.pop("custom_s26", None)
+            st.session_state.pop("custom_s26_source", None)
+    else:
+        st.session_state.pop("custom_s26", None)
+        st.session_state.pop("custom_s26_source", None)
+
+    return mapped
+
+
 def active_dataset_kind(df):
     if not isinstance(df, pd.DataFrame):
         return "ΚΑΝΕΝΑ"
@@ -1041,6 +1158,11 @@ def csv_context_as_text(df, max_rows=5):
 ACTIVE_DF = get_active_dataset()
 ACTIVE_NAME = active_dataset_name()
 ACTIVE_KIND = active_dataset_kind(ACTIVE_DF)
+
+if isinstance(ACTIVE_DF, pd.DataFrame) and (
+    "custom_s21" not in st.session_state or "custom_s26" not in st.session_state
+):
+    auto_map_unified_services(ACTIVE_DF, ACTIVE_NAME)
 
 # ==========================================================
 # ΠΡΑΓΜΑΤΙΚΑ / ΕΛΕΓΧΟΜΕΝΑ SIGNALS SERVICE 21
@@ -4932,6 +5054,7 @@ else:
                         st.session_state["inelso_uploaded_original"] = uploaded_df.copy()
                         st.session_state["inelso_uploaded_clean"] = uploaded_df.copy()
                         st.session_state["inelso_uploaded_name"] = file_name
+                        auto_map_unified_services(uploaded_df, file_name)
                         st.session_state["central_report_show_uploader"] = False
                         st.success(
                             f"Το αρχείο «{file_name}» φορτώθηκε επιτυχώς "
