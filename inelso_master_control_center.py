@@ -4648,6 +4648,88 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
         st.session_state.get("inelso_uploaded_original", ACTIVE_DF)
     ).copy()
 
+    # Αυτόματος αρχικός υπολογισμός για unified datasets.
+    # Χρησιμοποιεί μόνο πραγματικά διαθέσιμα πεδία και μία εγγραφή ανά εκπαιδευόμενο.
+    _auto_source = ACTIVE_NAME
+    if st.session_state.get("early_warning_auto_source") != _auto_source:
+        _learner_col = detect_column(ew_df, ["learner_id", "μαθητής", "learner", "user_id"])
+        _grade_col = detect_column(ew_df, ["score", "final_score", "grade", "final score"])
+        _inactivity_col = detect_column(ew_df, ["inactivity_days", "ημέρες αδράνειας", "inactivity"])
+        _attempts_col = detect_column(ew_df, ["submissions", "attempt", "προσπάθεια"])
+        _engagement_col = detect_column(ew_df, ["engagement_score", "engagement", "activity score"])
+
+        _available = [
+            x for x in [_grade_col, _inactivity_col, _attempts_col, _engagement_col]
+            if x is not None
+        ]
+
+        if _learner_col is not None and _available:
+            _auto_df = ew_df.copy()
+
+            # Long-format unified CSV: μία γραμμή ανά learner για να μην μετριέται
+            # ο ίδιος εκπαιδευόμενος πολλές φορές λόγω ερωτήσεων.
+            if _learner_col in _auto_df.columns:
+                _auto_df = _auto_df.drop_duplicates(subset=[_learner_col], keep="last").copy()
+
+            def _norm_low(series):
+                s = pd.to_numeric(series, errors="coerce")
+                if s.notna().sum() == 0:
+                    return pd.Series(0.0, index=series.index)
+                lo, hi = s.min(), s.max()
+                if hi == lo:
+                    return pd.Series(0.0, index=series.index)
+                return 100 * (hi - s) / (hi - lo)
+
+            def _norm_high(series):
+                s = pd.to_numeric(series, errors="coerce")
+                if s.notna().sum() == 0:
+                    return pd.Series(0.0, index=series.index)
+                lo, hi = s.min(), s.max()
+                if hi == lo:
+                    return pd.Series(0.0, index=series.index)
+                return 100 * (s - lo) / (hi - lo)
+
+            _components = []
+            _weights = []
+            _signals = []
+
+            if _grade_col is not None:
+                _components.append(_norm_low(_auto_df[_grade_col])); _weights.append(35); _signals.append("επίδοση")
+            if _inactivity_col is not None:
+                _components.append(_norm_high(_auto_df[_inactivity_col])); _weights.append(30); _signals.append("αδράνεια")
+            if _attempts_col is not None:
+                _components.append(_norm_high(_auto_df[_attempts_col])); _weights.append(15); _signals.append("προσπάθειες")
+            if _engagement_col is not None:
+                _components.append(_norm_low(_auto_df[_engagement_col])); _weights.append(20); _signals.append("συμμετοχή")
+
+            if _components:
+                _total_w = max(1, sum(_weights))
+                _risk = sum(comp*w for comp, w in zip(_components, _weights)) / _total_w
+                _auto_df["Δείκτης κινδύνου"] = _risk.round(1)
+                _auto_df["Κατηγορία κινδύνου"] = _auto_df["Δείκτης κινδύνου"].apply(
+                    lambda x: "ΥΨΗΛΟΣ" if x >= 70 else ("ΜΕΣΑΙΟΣ" if x >= 45 else "ΧΑΜΗΛΟΣ")
+                )
+                _auto_df["Μαθητής"] = _auto_df[_learner_col].astype(str)
+                _auto_df["Προτεινόμενη ενέργεια"] = _auto_df["Κατηγορία κινδύνου"].map({
+                    "ΥΨΗΛΟΣ": "Άμεσος ανθρώπινος έλεγχος",
+                    "ΜΕΣΑΙΟΣ": "Στοχευμένη επικοινωνία / παρακολούθηση",
+                    "ΧΑΜΗΛΟΣ": "Κανονική παρακολούθηση"
+                })
+                _auto_df["Εξήγηση"] = "Αυτόματος αρχικός δείκτης από: " + ", ".join(_signals) + "."
+                st.session_state["early_warning_results"] = _auto_df
+                st.session_state["early_warning_config"] = {
+                    "signals": _signals,
+                    "high_thr": 70,
+                    "med_thr": 45,
+                    "weights": dict(zip(_signals, _weights)),
+                    "automatic": True
+                }
+                st.session_state["early_warning_auto_source"] = _auto_source
+        else:
+            st.session_state.pop("early_warning_results", None)
+            st.session_state.pop("early_warning_config", None)
+            st.session_state["early_warning_auto_source"] = _auto_source
+
     s16_tabs = st.tabs(["Επισκόπηση", "Ρύθμιση δείκτη", "Αποτελέσματα", "Παρέμβαση & Moodle"])
 
     with s16_tabs[0]:
