@@ -2229,6 +2229,21 @@ elif section == "Προσαρμοστική Εξάσκηση":
         """)
 
     mapped26_view = st.session_state["custom_s26"].copy()
+    if "κατάκτηση" not in mapped26_view.columns:
+        mapped26_view["κατάκτηση"] = np.where(
+            pd.to_numeric(mapped26_view["score"], errors="coerce") >= 70,
+            "Επαρκής",
+            "Αναπτυσσόμενο"
+        )
+    if "κατάσταση" not in mapped26_view.columns:
+        mapped26_view["κατάσταση"] = mapped26_view.apply(
+            lambda r: κατάσταση_26(
+                float(r.get("score", 0)) if pd.notna(r.get("score", np.nan)) else 0,
+                float(r.get("βεβαιότητα", 0)) if pd.notna(r.get("βεβαιότητα", np.nan)) else 0,
+                float(r.get("RC-01", 2)) if pd.notna(r.get("RC-01", np.nan)) else 2
+            ),
+            axis=1
+        )
     mapped26_view["μαθητής"] = mapped26_view["μαθητής"].astype(str)
     learner_options = sorted(mapped26_view["μαθητής"].dropna().unique().tolist())
     selected_learner = st.selectbox(
@@ -2808,7 +2823,7 @@ elif section == "Ενιαία Ροή Ενεργειών":
     st.subheader("Αναλυτικός έλεγχος ενέργειας")
     if not action_df.empty:
         labels=[
-            f"{r['Υπηρεσία']} — {r['Οντότητα']} — {r['Ένδειξη']}"
+            f"{r['Ενότητα']} — {r['Οντότητα']} — {r['Ένδειξη']}"
             for _,r in action_df.iterrows()
         ]
         selected=st.selectbox("Επιλέξτε ενέργεια",labels)
