@@ -1774,16 +1774,16 @@ elif section == "Ποιότητα Αξιολόγησης":
 
 
     tabs = st.tabs(["Συνοπτική εικόνα","Τεχνική ανάλυση","Ουρά προτεραιότητας","Έλεγχος ερώτησης"])
-    with diag_box:
+    with tabs[0]:
         counts = service21["κατάσταση"].value_counts().rename_axis("Κατηγορία").reset_index(name="Πλήθος")
         st.dataframe(counts,use_container_width=True,hide_index=True)
         st.bar_chart(
             service21.dropna(subset=["διάκριση"]).sort_values("διάκριση",ascending=False)
             .set_index("ερώτηση")[["διάκριση"]]
         )
-    with corr_box:
+    with tabs[1]:
         st.dataframe(service21,use_container_width=True,hide_index=True)
-    with class_box:
+    with tabs[2]:
         q = service21[
             (service21["κατάσταση"]=="ΚΡΙΣΙΜΗ") |
             (service21["κατάσταση"]=="ΕΛΕΓΧΟΣ") |
@@ -1795,7 +1795,7 @@ elif section == "Ποιότητα Αξιολόγησης":
             "ΕΛΕΓΧΟΣ":3
         })
         st.dataframe(q.sort_values("προτεραιότητα"),use_container_width=True,hide_index=True)
-    with reg_box:
+    with tabs[3]:
         choice = st.selectbox("Επιλέξτε ερώτηση", service21["ερώτηση"].tolist())
         r = service21.loc[service21["ερώτηση"]==choice].iloc[0]
         a,b,c,d = st.columns(4)
@@ -2291,7 +2291,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
     view = st.radio("Προβολή",["Μαθητής","Εκπαιδευτής"],horizontal=True)
     if view == "Μαθητής":
         tabs = st.tabs(["Προσαρμοστικό προφίλ","Κενά κριτηρίων","Πορεία προόδου","Πώς λαμβάνεται η απόφαση"])
-        with diag_box:
+        with tabs[0]:
             _status26 = str(latest["κατάσταση"])
             if _status26 == "ΕΤΟΙΜΟ":
                 st.success("ΕΤΟΙΜΟ — η βεβαιότητα είναι επαρκής και δεν ενεργοποιείται κρίσιμος κανόνας.")
@@ -2302,7 +2302,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
             else:
                 st.info("ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ — το αποτέλεσμα ανά φοιτητή υποδεικνύει στοχευμένη νέα προσπάθεια.")
                 st.write("**Προτεινόμενο επόμενο βήμα:** νέα προσπάθεια / στοχευμένη εξάσκηση.")
-        with corr_box:
+        with tabs[1]:
             rows=[]
             plot_first, plot_latest, plot_index = [], [], []
             for _,rr in rubric.iterrows():
@@ -2327,10 +2327,10 @@ elif section == "Προσαρμοστική Εξάσκηση":
                     "1η προσπάθεια":plot_first,
                     "Τελευταία προσπάθεια":plot_latest
                 }, index=plot_index))
-        with class_box:
+        with tabs[2]:
             st.line_chart(service26_current.set_index("προσπάθεια")[["score","βεβαιότητα"]])
             st.dataframe(service26_current,use_container_width=True,hide_index=True)
-        with reg_box:
+        with tabs[3]:
             st.markdown("""
 - Βεβαιότητα < 0,70 → **ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ**
 - RC-01 επίπεδο 0–1 → **ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ**
@@ -2756,9 +2756,9 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
 
 
     tabs = st.tabs(["Ενιαίες ενδείξεις","Προτεραιότητες","Προέλευση","Αλυσίδα παρέμβασης"])
-    with diag_box:
+    with tabs[0]:
         st.dataframe(service31_integrated,use_container_width=True,hide_index=True)
-    with corr_box:
+    with tabs[1]:
         st.dataframe(
             service31_integrated.sort_values(
                 ["προτεραιότητα","ισχύς_σήματος"],
@@ -2767,10 +2767,10 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
             use_container_width=True,hide_index=True
         )
         st.warning("Υψηλή προτεραιότητα σημαίνει ότι το ένδειξη απαιτεί ανθρώπινο έλεγχο πριν από οποιαδήποτε εκπαιδευτική παρέμβαση.")
-    with class_box:
+    with tabs[2]:
         prov = service31_integrated[["οντότητα","πηγή","τύπος","προέλευση"]].copy()
         st.dataframe(prov,use_container_width=True,hide_index=True)
-    with reg_box:
+    with tabs[3]:
         st.markdown("""
 1. Εντοπισμός ένδειξη στο Ποιότητα Αξιολόγησης ή Προσαρμοστική Εξάσκηση  
 2. Διατήρηση της πραγματικής προέλευσης και του τύπου ένδειξη  
