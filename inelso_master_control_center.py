@@ -508,7 +508,7 @@ def render_module_header(title, subtitle, help_key=None, badge=None):
             unsafe_allow_html=True
         )
     with right:
-        if help_key in {"s16", "s21", "s25", "scorm_analysis"}:
+        if help_key in {"s16", "s21", "s25", "s26", "s28", "scorm_analysis"}:
             render_info_button(help_key)
     if badge:
         st.caption(badge)
@@ -2537,169 +2537,164 @@ elif section == "Υποστήριξη Διδάσκοντα":
 
     render_module_header("Υποστήριξη Διδάσκοντα", "", "s28")
     show_active_dataset_context("S28")
-    st.caption(
-        "Χώρος υποστήριξης διδάσκοντα για συνήθεις ερωτήσεις φοιτητών, διευκρινίσεις κλίμακας αξιολόγησης και προσχέδια ανατροφοδότησης, "
-        "με τελικό έλεγχο από τον διδάσκοντα."
-    )
 
-    st.info(
-        "Η ενότητα Υποστήριξης Διδάσκοντα δεν απαντά αυτόματα στους φοιτητές. Παράγει draft για έλεγχο και έγκριση διδάσκοντα."
-    )
+    s28_tabs = st.tabs(["Δημιουργία", "Προσχέδιο", "Αποθηκευμένα", "Moodle"])
 
-
-    s28_scorm_ready = bool(st.session_state.get("s28_library"))
-    render_moodle_rest_service_panel(
-        "Υποστήριξη Διδάσκοντα",
-        summary=(
-            "Faculty-approved support draft"
-            if s28_scorm_ready else
-            "Αναμένεται έλεγχος διδάσκοντα"
-        ),
-        score=None,
-        status="completed" if s28_scorm_ready else "incomplete",
-        entity="Υποστήριξη Διδάσκοντα",
-        enabled=True,
-        intervention_type="Υποστήριξη Διδάσκοντα — Εγκεκριμένη ανατροφοδότηση",
-        note="Καταγράφεται η προέλευση της ροής εργασίας του διδάσκοντα χωρίς τεχνητό βαθμό εκπαιδευόμενου.",
-    )
-
-
-    s28_mode = st.radio(
-        "Λειτουργία",
-        ["Προσχέδιο απάντησης σε συχνή ερώτηση", "Διευκρίνιση κλίμακας αξιολόγησης", "Προσχέδιο ανατροφοδότησης"],
-        horizontal=True,
-        key="s28_mode"
-    )
-
-    source_context = st.text_area(
-        "Εγκεκριμένο πλαίσιο μαθήματος / πολιτική / κλίμακα αξιολόγησης",
-        height=180,
-        placeholder="Επικόλλησε μόνο το εγκεκριμένο υλικό στο οποίο πρέπει να βασιστεί η απάντηση.",
-        key="s28_context"
-    )
-
-    use_csv_s28 = st.checkbox(
-        "Συμπερίληψη ενεργού CSV ως τεκμηριωμένου context",
-        value=ACTIVE_DF is not None,
-        key="s28_use_active_csv"
-    )
-    if use_csv_s28 and ACTIVE_DF is not None:
-        st.text_area(
-            "CSV context",
-            value=dataset_context_summary(ACTIVE_DF),
-            height=110,
-            disabled=True,
-            key="s28_csv_context_preview"
+    with s28_tabs[0]:
+        s28_mode = st.radio(
+            "Λειτουργία",
+            ["Προσχέδιο απάντησης σε συχνή ερώτηση", "Διευκρίνιση κλίμακας αξιολόγησης", "Προσχέδιο ανατροφοδότησης"],
+            horizontal=True,
+            key="s28_mode"
         )
 
-    student_input = st.text_area(
-        "Ερώτηση φοιτητή / περίπτωση",
-        height=120,
-        placeholder="π.χ. Τι ακριβώς ζητά το κριτήριο τεκμηρίωσης;",
-        key="s28_question"
-    )
+        source_context = st.text_area(
+            "Εγκεκριμένο πλαίσιο μαθήματος / πολιτική / κλίμακα αξιολόγησης",
+            height=140,
+            placeholder="Επικόλλησε μόνο το εγκεκριμένο υλικό στο οποίο πρέπει να βασιστεί η απάντηση.",
+            key="s28_context"
+        )
 
-    if st.button("Δημιουργία faculty-assist draft", key="s28_generate"):
-        combined_context = source_context.strip()
+        use_csv_s28 = st.checkbox(
+            "Συμπερίληψη ενεργού CSV ως τεκμηριωμένου πλαισίου",
+            value=ACTIVE_DF is not None,
+            key="s28_use_active_csv"
+        )
         if use_csv_s28 and ACTIVE_DF is not None:
-            combined_context = (
-                combined_context + "\n\n" + csv_context_as_text(ACTIVE_DF, max_rows=3)
-            ).strip()
-
-        if not combined_context or not student_input.strip():
-            st.error("Χρειάζονται context (κείμενο ή ενεργή πηγή) και ερώτηση/περίπτωση.")
-        else:
-            chunks = [
-                s.strip()
-                for s in re.split(r"(?<=[.!?;])\s+", " ".join(combined_context.split()))
-                if s.strip()
-            ]
-            q_terms = set(re.findall(r"\w{4,}", student_input.lower(), flags=re.UNICODE))
-
-            def score_chunk(s):
-                terms = set(re.findall(r"\w{4,}", s.lower(), flags=re.UNICODE))
-                return len(q_terms.intersection(terms))
-
-            ranked_chunks = sorted(chunks, key=score_chunk, reverse=True)
-            evidence = ranked_chunks[:3] if ranked_chunks else [source_context.strip()]
-            evidence_text = "\n".join(f"• {x}" for x in evidence)
-
-            if s28_mode == "Προσχέδιο απάντησης σε συχνή ερώτηση":
-                draft = (
-                    "Προτεινόμενο draft απάντησης προς έλεγχο διδάσκοντα:\n\n"
-                    f"Με βάση το εγκεκριμένο υλικό, τα πιο σχετικά σημεία είναι:\n{evidence_text}\n\n"
-                    "Προτεινόμενη απάντηση: Παρακαλώ ακολούθησε τα παραπάνω σημεία του μαθήματος. "
-                    "Αν υπάρχει ασάφεια που δεν καλύπτεται από το εγκεκριμένο υλικό, "
-                    "χρειάζεται απάντηση από τον διδάσκοντα."
-                )
-            elif s28_mode == "Διευκρίνιση κλίμακας αξιολόγησης":
-                draft = (
-                    "Προσχέδιο διευκρίνισης κλίμακας αξιολόγησης προς έλεγχο διδάσκοντα:\n\n"
-                    f"Σχετικά αποσπάσματα:\n{evidence_text}\n\n"
-                    "Διευκρίνιση: Το κριτήριο πρέπει να ερμηνευτεί μόνο σύμφωνα με την εγκεκριμένη κλίμακα αξιολόγησης. "
-                    "Δεν προστίθενται νέα κριτήρια ή απαιτήσεις χωρίς έγκριση του διδάσκοντα."
-                )
-            else:
-                draft = (
-                    "Προσχέδιο ανατροφοδότησης προς έλεγχο διδάσκοντα:\n\n"
-                    f"Σχετικά σημεία του course context:\n{evidence_text}\n\n"
-                    "Feedback scaffold: Αναγνώρισε τι έγινε σωστά, σύνδεσε τη βελτίωση με το αντίστοιχο κριτήριο, "
-                    "δώσε μία συγκεκριμένη επόμενη ενέργεια και απόφυγε αλλαγή επίσημου βαθμού."
+            with st.expander("Προβολή πλαισίου από το ενεργό αρχείο", expanded=False):
+                st.text_area(
+                    "Πλαίσιο CSV",
+                    value=dataset_context_summary(ACTIVE_DF),
+                    height=90,
+                    disabled=True,
+                    key="s28_csv_context_preview"
                 )
 
-            st.session_state["s28_draft"] = draft
-
-    if "s28_draft" in st.session_state:
-        s28_edited = st.text_area(
-            "Faculty-assist draft",
-            value=st.session_state["s28_draft"],
-            height=260,
-            key="s28_edited"
+        student_input = st.text_area(
+            "Ερώτηση φοιτητή / περίπτωση",
+            height=100,
+            placeholder="π.χ. Τι ακριβώς ζητά το κριτήριο τεκμηρίωσης;",
+            key="s28_question"
         )
 
-        c1, c2 = st.columns(2)
-        with c1:
+        if st.button("Δημιουργία προσχεδίου", type="primary", key="s28_generate"):
+            combined_context = source_context.strip()
+            if use_csv_s28 and ACTIVE_DF is not None:
+                combined_context = (
+                    combined_context + "\n\n" + csv_context_as_text(ACTIVE_DF, max_rows=3)
+                ).strip()
+
+            if not combined_context or not student_input.strip():
+                st.error("Χρειάζονται πλαίσιο και ερώτηση/περίπτωση.")
+            else:
+                chunks = [
+                    s.strip()
+                    for s in re.split(r"(?<=[.!?;])\s+", " ".join(combined_context.split()))
+                    if s.strip()
+                ]
+                q_terms = set(re.findall(r"\w{4,}", student_input.lower(), flags=re.UNICODE))
+
+                def score_chunk(s):
+                    terms = set(re.findall(r"\w{4,}", s.lower(), flags=re.UNICODE))
+                    return len(q_terms.intersection(terms))
+
+                ranked_chunks = sorted(chunks, key=score_chunk, reverse=True)
+                evidence = ranked_chunks[:3] if ranked_chunks else [source_context.strip()]
+                evidence_text = "\n".join(f"• {x}" for x in evidence)
+
+                if s28_mode == "Προσχέδιο απάντησης σε συχνή ερώτηση":
+                    draft = (
+                        "Προτεινόμενο προσχέδιο απάντησης προς έλεγχο διδάσκοντα:\n\n"
+                        f"Με βάση το εγκεκριμένο υλικό, τα πιο σχετικά σημεία είναι:\n{evidence_text}\n\n"
+                        "Προτεινόμενη απάντηση: Παρακαλώ ακολούθησε τα παραπάνω σημεία του μαθήματος."
+                    )
+                elif s28_mode == "Διευκρίνιση κλίμακας αξιολόγησης":
+                    draft = (
+                        "Προσχέδιο διευκρίνισης κλίμακας αξιολόγησης προς έλεγχο διδάσκοντα:\n\n"
+                        f"Σχετικά αποσπάσματα:\n{evidence_text}\n\n"
+                        "Το κριτήριο πρέπει να ερμηνευτεί σύμφωνα με την εγκεκριμένη κλίμακα αξιολόγησης."
+                    )
+                else:
+                    draft = (
+                        "Προσχέδιο ανατροφοδότησης προς έλεγχο διδάσκοντα:\n\n"
+                        f"Σχετικά σημεία του πλαισίου μαθήματος:\n{evidence_text}\n\n"
+                        "Αναγνώρισε τι έγινε σωστά, σύνδεσε τη βελτίωση με το αντίστοιχο κριτήριο "
+                        "και δώσε μία συγκεκριμένη επόμενη ενέργεια."
+                    )
+
+                st.session_state["s28_draft"] = draft
+                st.success("Το προσχέδιο δημιουργήθηκε. Δείτε το tab «Προσχέδιο».")
+
+    with s28_tabs[1]:
+        if "s28_draft" not in st.session_state:
+            st.info("Δεν έχει δημιουργηθεί ακόμη προσχέδιο.")
+        else:
+            s28_edited = st.text_area(
+                "Προσχέδιο",
+                value=st.session_state["s28_draft"],
+                height=220,
+                key="s28_edited"
+            )
+
             s28_approve = st.checkbox(
-                "Faculty review ολοκληρώθηκε.",
+                "Ο έλεγχος του διδάσκοντα ολοκληρώθηκε.",
                 key="s28_approve"
             )
-        with c2:
-            st.metric("Αυτόματη αποστολή", "ΟΧΙ")
 
-        if st.button(
-            "Αποθήκευση ως εγκεκριμένο προσχέδιο συχνών ερωτήσεων / ανατροφοδότησης",
-            disabled=not s28_approve,
-            key="s28_save"
-        ):
-            if "s28_library" not in st.session_state:
-                st.session_state["s28_library"] = []
-            st.session_state["s28_library"].append({
-                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "mode": s28_mode,
-                "question": student_input,
-                "draft": s28_edited,
-                "status": "FACULTY APPROVED"
-            })
-            st.success("Το draft αποθηκεύτηκε στη session faculty library.")
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button(
+                    "Αποθήκευση εγκεκριμένου προσχεδίου",
+                    disabled=not s28_approve,
+                    use_container_width=True,
+                    key="s28_save"
+                ):
+                    if "s28_library" not in st.session_state:
+                        st.session_state["s28_library"] = []
+                    st.session_state["s28_library"].append({
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "mode": st.session_state.get("s28_mode",""),
+                        "question": st.session_state.get("s28_question",""),
+                        "draft": s28_edited,
+                        "status": "ΕΓΚΕΚΡΙΜΕΝΟ"
+                    })
+                    st.success("Το προσχέδιο αποθηκεύτηκε.")
 
-        if st.button("Προώθηση ως draft παρέμβασης για Moodle note", key="s28_stage"):
-            st.session_state["pending_moodle_note_text"] = s28_edited
-            st.session_state["pending_moodle_intervention_type"] = "Υποστήριξη Διδάσκοντα — Εγκεκριμένη ανατροφοδότηση"
-            st.success(
-                "Το draft προωθήθηκε στην Ελεγχόμενη Εγγραφή Moodle. "
-                "Δεν έχει γίνει καταγραφή — απαιτείται επιλογή εκπαιδευόμενου/μαθήματος και διπλή επιβεβαίωση."
+            with c2:
+                if st.button(
+                    "Προετοιμασία για Moodle",
+                    use_container_width=True,
+                    key="s28_stage"
+                ):
+                    st.session_state["pending_moodle_note_text"] = s28_edited
+                    st.session_state["pending_moodle_intervention_type"] = "Υποστήριξη Διδάσκοντα — Εγκεκριμένη ανατροφοδότηση"
+                    st.success("Το προσχέδιο είναι έτοιμο για ελεγχόμενη καταγραφή στο Moodle.")
+
+    with s28_tabs[2]:
+        if st.session_state.get("s28_library"):
+            lib_df = pd.DataFrame(st.session_state["s28_library"])
+            st.dataframe(lib_df, use_container_width=True, hide_index=True)
+            st.download_button(
+                "Λήψη προσχεδίων CSV",
+                lib_df.to_csv(index=False).encode("utf-8-sig"),
+                "INELSO_Academia_Εγκεκριμένα_Προσχέδια.csv",
+                "text/csv",
+                key="s28_download"
             )
+        else:
+            st.info("Δεν υπάρχουν ακόμη αποθηκευμένα προσχέδια.")
 
-    if st.session_state.get("s28_library"):
-        st.subheader("Faculty-approved drafts της συνεδρίας")
-        lib_df = pd.DataFrame(st.session_state["s28_library"])
-        st.dataframe(lib_df, use_container_width=True, hide_index=True)
-        st.download_button(
-            "Λήψη faculty draft library CSV",
-            lib_df.to_csv(index=False).encode("utf-8-sig"),
-            "INELSO Academia_Λειτουργία28_Faculty_Drafts.csv",
-            "text/csv",
-            key="s28_download"
+    with s28_tabs[3]:
+        s28_scorm_ready = bool(st.session_state.get("s28_library"))
+        render_moodle_rest_service_panel(
+            "Υποστήριξη Διδάσκοντα",
+            summary=("Εγκεκριμένο προσχέδιο" if s28_scorm_ready else "Αναμένεται έλεγχος διδάσκοντα"),
+            score=None,
+            status="completed" if s28_scorm_ready else "incomplete",
+            entity="Υποστήριξη Διδάσκοντα",
+            enabled=True,
+            intervention_type="Υποστήριξη Διδάσκοντα — Εγκεκριμένη ανατροφοδότηση",
+            note="",
         )
 
 
