@@ -5081,17 +5081,17 @@ else:
 
     c1,c2,c3,c4=st.columns(4)
     c1.metric("Συνολικός δείκτης υγείας", f"{overall:.1f}" if ACTIVE_DF is not None else "—")
-    c2.metric("Ποιότητα Αξιολόγησης actions", open21 if ACTIVE_DF is not None and "custom_s21" in st.session_state else "—")
-    c3.metric("Προσαρμοστική Εξάσκηση actions", open26 if ACTIVE_DF is not None and "custom_s26" in st.session_state else "—")
-    c4.metric("Ενοποιημένες Μαθησιακές Ενδείξεις actions", open31 if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—")
+    c2.metric("Ενέργειες Ποιότητας Αξιολόγησης", open21 if ACTIVE_DF is not None and "custom_s21" in st.session_state else "—")
+    c3.metric("Ενέργειες Προσαρμοστικής Εξάσκησης", open26 if ACTIVE_DF is not None and "custom_s26" in st.session_state else "—")
+    c4.metric("Ενέργειες Μαθησιακών Ενδείξεων", open31 if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—")
 
     report=pd.DataFrame([
-        {"Ενότητα":"Μαθησιακή Ανάλυση","Ρόλος":"Έγκαιρη υποστήριξη","Δείκτης υγείας":"—","Ανοικτές ενέργειες":"—","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None else "Μη διαθέσιμο"},
-        {"Ενότητα":"Ποιότητα Αξιολόγησης","Ρόλος":"Ποιότητα αξιολόγησης","Δείκτης υγείας":round(health21,1) if ACTIVE_DF is not None and "custom_s21" in st.session_state else "—","Ανοικτές ενέργειες":open21 if ACTIVE_DF is not None and "custom_s21" in st.session_state else "—","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None and "custom_s21" in st.session_state else "Μη διαθέσιμο"},
-        {"Ενότητα":"Δημιουργία Μαθήματος & Αξιολόγησης","Ρόλος":"Υποβοηθούμενη δημιουργία περιεχομένου","Δείκτης υγείας":"—","Ανοικτές ενέργειες":"έλεγχο διδάσκοντα","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None else "Χειροκίνητο πλαίσιο"},
-        {"Ενότητα":"Προσαρμοστική Εξάσκηση","Ρόλος":"Προσαρμοστική εξάσκηση","Δείκτης υγείας":round(health26,1) if ACTIVE_DF is not None and "custom_s26" in st.session_state else "—","Ανοικτές ενέργειες":open26 if ACTIVE_DF is not None and "custom_s26" in st.session_state else "—","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None and "custom_s26" in st.session_state else "Μη διαθέσιμο"},
-        {"Ενότητα":"Υποστήριξη Διδάσκοντα","Ρόλος":"Υποστήριξη διδάσκοντα","Δείκτης υγείας":"—","Ανοικτές ενέργειες":"έλεγχο διδάσκοντα","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None else "Χειροκίνητο πλαίσιο"},
-        {"Ενότητα":"Ενοποιημένες Μαθησιακές Ενδείξεις","Ρόλος":"Σύνθεση μαθησιακών ενδείξεων","Δείκτης υγείας":round(health31,1) if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—","Ανοικτές ενέργειες":open31 if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—","Προέλευση":f"Ενοποιημένη πηγή — {ACTIVE_NAME}" if ACTIVE_DF is not None else "Μη διαθέσιμο"},
+        {"Ενότητα":"Μαθησιακή Ανάλυση","Ρόλος":"Έγκαιρη υποστήριξη","Κατάσταση / δείκτης":"Διαθέσιμη" if ACTIVE_DF is not None else "Μη διαθέσιμη","Ανοικτές ενέργειες":"Ρύθμιση δείκτη" if ACTIVE_DF is not None else "Μη διαθέσιμο","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None else "Μη διαθέσιμο"},
+        {"Ενότητα":"Ποιότητα Αξιολόγησης","Ρόλος":"Ποιότητα αξιολόγησης","Κατάσταση / δείκτης":round(health21,1) if ACTIVE_DF is not None and "custom_s21" in st.session_state else "Μη διαθέσιμο","Ανοικτές ενέργειες":open21 if ACTIVE_DF is not None and "custom_s21" in st.session_state else "Μη διαθέσιμο","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None and "custom_s21" in st.session_state else "Μη διαθέσιμο"},
+        {"Ενότητα":"Δημιουργία Μαθήματος & Αξιολόγησης","Ρόλος":"Υποβοηθούμενη δημιουργία περιεχομένου","Κατάσταση / δείκτης":"Διαθέσιμη" if ACTIVE_DF is not None else "Μη διαθέσιμη","Ανοικτές ενέργειες":"Έλεγχος διδάσκοντα","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None else "Χειροκίνητο πλαίσιο"},
+        {"Ενότητα":"Προσαρμοστική Εξάσκηση","Ρόλος":"Προσαρμοστική εξάσκηση","Κατάσταση / δείκτης":round(health26,1) if ACTIVE_DF is not None and "custom_s26" in st.session_state else "Μη διαθέσιμο","Ανοικτές ενέργειες":open26 if ACTIVE_DF is not None and "custom_s26" in st.session_state else "Μη διαθέσιμο","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None and "custom_s26" in st.session_state else "Μη διαθέσιμο"},
+        {"Ενότητα":"Υποστήριξη Διδάσκοντα","Ρόλος":"Υποστήριξη διδάσκοντα","Κατάσταση / δείκτης":"Διαθέσιμη" if ACTIVE_DF is not None else "Μη διαθέσιμη","Ανοικτές ενέργειες":"Έλεγχος διδάσκοντα","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None else "Χειροκίνητο πλαίσιο"},
+        {"Ενότητα":"Ενοποιημένες Μαθησιακές Ενδείξεις","Ρόλος":"Σύνθεση μαθησιακών ενδείξεων","Κατάσταση / δείκτης":round(health31,1) if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "Μη διαθέσιμο","Ανοικτές ενέργειες":open31 if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "Μη διαθέσιμο","Προέλευση":f"Ενοποιημένη πηγή — {ACTIVE_NAME}" if ACTIVE_DF is not None else "Μη διαθέσιμο"},
     ])
     st.markdown("#### Τι χρειάζεται προσοχή")
     _attention = []
