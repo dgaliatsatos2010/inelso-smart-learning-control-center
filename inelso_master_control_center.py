@@ -4507,37 +4507,37 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
         st.subheader("Ενημέρωση βαθμού — διαχειριστική λειτουργία")
         st.error(
             "Η αλλαγή επίσημου βαθμού είναι υψηλής επίδρασης ενέργεια. "
-            "Χρησιμοποίησέ την μόνο σε test course μέχρι να επαληθευτούν πλήρως "
-            "τα IDs, το component και το grade item του συγκεκριμένου Moodle."
+            "Χρησιμοποιήστε την μόνο σε δοκιμαστικό μάθημα μέχρι να επαληθευτούν πλήρως "
+            "τα αναγνωριστικά, το στοιχείο και η καταχώριση βαθμού του συγκεκριμένου Moodle."
         )
 
         course_id = st.number_input("ID Μαθήματος",min_value=1,step=1,value=1)
         component = st.text_input(
-            "Component",
+            "Στοιχείο Moodle",
             value="mod_assign",
-            help="π.χ. mod_assign. Πρέπει να αντιστοιχεί στο grade item που ενημερώνεται."
+            help="π.χ. mod_assign. Πρέπει να αντιστοιχεί στην καταχώριση βαθμού που ενημερώνεται."
         )
-        activity_id = st.number_input("Activity ID",min_value=1,step=1,value=1)
-        item_number = st.number_input("Item number",min_value=0,step=1,value=0)
-        student_id = st.number_input("Student User ID",min_value=1,step=1,value=1)
+        activity_id = st.number_input("ID Δραστηριότητας",min_value=1,step=1,value=1)
+        item_number = st.number_input("Αριθμός στοιχείου",min_value=0,step=1,value=0)
+        student_id = st.number_input("ID Εκπαιδευόμενου",min_value=1,step=1,value=1)
         grade_value = st.number_input("Νέος βαθμός",value=0.0,step=0.5)
         feedback = st.text_area(
             "Προαιρετική ανατροφοδότηση",
             height=100
         )
         source = st.text_input(
-            "Source",
+            "Προέλευση",
             value="inelso_control_center"
         )
 
         grade_preview = pd.DataFrame([{
             "ID Μαθήματος":int(course_id),
-            "Component":component,
-            "Activity ID":int(activity_id),
-            "Item number":int(item_number),
+            "Στοιχείο Moodle":component,
+            "ID Δραστηριότητας":int(activity_id),
+            "Αριθμός στοιχείου":int(item_number),
             "ID Εκπαιδευόμενου":int(student_id),
             "Νέος βαθμός":float(grade_value),
-            "Feedback":feedback,
+            "Ανατροφοδότηση":feedback,
             "Λειτουργία API":"core_grade_update_grades"
         }])
 
@@ -4549,7 +4549,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             key="grade_phrase"
         )
         grade_confirm = st.checkbox(
-            "Έλεγξα Course ID, Activity ID, Student ID, component και νέο βαθμό.",
+            "Έλεγξα το ID Μαθήματος, το ID Δραστηριότητας, το ID Εκπαιδευόμενου, το στοιχείο Moodle και τον νέο βαθμό.",
             key="grade_confirm"
         )
         grade_final = st.checkbox(
@@ -4605,9 +4605,9 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                     )
                 except Exception as e:
                     st.error(
-                        "Η ενημέρωση απέτυχε. Αυτό μπορεί να σημαίνει ότι η function "
-                        "δεν έχει δοθεί στο service/token, ότι τα IDs/component δεν αντιστοιχούν "
-                        f"στο grade item ή ότι το Moodle απαιτεί διαφορετική δομή παραμέτρων. Λεπτομέρεια: {e}"
+                        "Η ενημέρωση απέτυχε. Αυτό μπορεί να σημαίνει ότι η λειτουργία "
+                        "δεν έχει δοθεί στην υπηρεσία ή στο διακριτικό πρόσβασης, ότι τα αναγνωριστικά ή το στοιχείο δεν αντιστοιχούν "
+                        f"στην καταχώριση βαθμού ή ότι το Moodle απαιτεί διαφορετική δομή παραμέτρων. Λεπτομέρεια: {e}"
                     )
                     add_write_audit(
                         "Ενημέρωση βαθμού",
