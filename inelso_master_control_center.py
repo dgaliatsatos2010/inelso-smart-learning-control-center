@@ -4700,6 +4700,10 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                 if not moodle_url or not token:
                     st.error("Δεν υπάρχει ενεργή σύνδεση Moodle.")
                 else:
+                    assignments = []
+                    primary_error = None
+
+                    # 1) Προτιμώμενη μέθοδος: ειδική λειτουργία Assignments.
                     try:
                         assign_result = moodle_write_call(
                             moodle_url,
@@ -4707,21 +4711,62 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                             "mod_assign_get_assignments",
                             {"courseids[0]": int(course_id)}
                         )
-                        assignments = []
                         if isinstance(assign_result, dict):
                             for course_obj in assign_result.get("courses", []) or []:
                                 assignments.extend(course_obj.get("assignments", []) or [])
-                        if assignments:
-                            st.session_state["grade_assignments"] = assignments
-                            st.success(f"Φορτώθηκαν {len(assignments)} εργασίες.")
-                        else:
-                            st.session_state.pop("grade_assignments", None)
-                            st.warning("Δεν βρέθηκαν εργασίες τύπου Assignment στο επιλεγμένο μάθημα.")
                     except Exception as e:
-                        st.error(
-                            "Δεν ήταν δυνατή η φόρτωση των εργασιών. "
-                            f"Ελέγξτε αν η λειτουργία mod_assign_get_assignments είναι διαθέσιμη στο token. Λεπτομέρεια: {e}"
-                        )
+                        primary_error = e
+
+                    # 2) Fallback: περιεχόμενα μαθήματος. Χρησιμοποιούμε το instance
+                    # της δραστηριότητας ως Assignment ID για το grade API.
+                    if not assignments:
+                        try:
+                            contents = moodle_write_call(
+                                moodle_url,
+                                token,
+                                "core_course_get_contents",
+                                {"courseid": int(course_id)}
+                            )
+                            if isinstance(contents, list):
+                                for section in contents:
+                                    if not isinstance(section, dict):
+                                        continue
+                                    for module in section.get("modules", []) or []:
+                                        if not isinstance(module, dict):
+                                            continue
+                                        if str(module.get("modname", "")).lower() == "assign":
+                                            instance_id = module.get("instance")
+                                            if instance_id is None:
+                                                continue
+                                            assignments.append({
+                                                "id": int(instance_id),
+                                                "cmid": module.get("id"),
+                                                "name": module.get("name", f"Εργασία {instance_id}")
+                                            })
+                        except Exception as fallback_error:
+                            detail = (
+                                f"mod_assign_get_assignments: {primary_error}; "
+                                f"core_course_get_contents: {fallback_error}"
+                            )
+                            st.error(
+                                "Δεν ήταν δυνατή η φόρτωση των εργασιών με καμία από τις διαθέσιμες μεθόδους. "
+                                f"Λεπτομέρεια: {detail}"
+                            )
+
+                    if assignments:
+                        # Αποφυγή διπλοεγγραφών αν η ίδια εργασία εμφανιστεί περισσότερες φορές.
+                        unique_assignments = {}
+                        for a in assignments:
+                            if isinstance(a, dict) and a.get("id") is not None:
+                                unique_assignments[int(a["id"])] = a
+                        assignments = list(unique_assignments.values())
+                        st.session_state["grade_assignments"] = assignments
+                        st.success(f"Φορτώθηκαν {len(assignments)} εργασίες.")
+                        if primary_error is not None:
+                            st.caption("Οι εργασίες φορτώθηκαν μέσω των περιεχομένων του μαθήματος.")
+                    elif primary_error is None:
+                        st.session_state.pop("grade_assignments", None)
+                        st.warning("Δεν βρέθηκαν εργασίες τύπου Assignment στο επιλεγμένο μάθημα.")
 
         with c_load2:
             if st.button(
