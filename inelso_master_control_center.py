@@ -3260,9 +3260,9 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
             diagnosis = pd.DataFrame([
                 {"Έλεγχος":"Κενές τιμές","Τιμή":f"{missing_rate*100:.2f}%","Ερμηνεία":"Χαμηλότερο είναι καλύτερο"},
                 {"Έλεγχος":"Διπλότυπες γραμμές","Τιμή":f"{duplicate_rate*100:.2f}%","Ερμηνεία":"Ελέγξτε αν είναι πραγματικές επαναλήψεις"},
-                {"Έλεγχος":"Αριθμητικές στήλες","Τιμή":len(numeric_cols),"Ερμηνεία":"Υποψήφιες για regression/correlation/clustering"},
-                {"Έλεγχος":"Μη αριθμητικές στήλες","Τιμή":len(categorical_cols),"Ερμηνεία":"Υποψήφιες κατηγορικές μεταβλητές"},
-                {"Έλεγχος":"Σταθερές στήλες","Τιμή":constant_cols,"Ερμηνεία":"Συνήθως δεν προσφέρουν πληροφορία στη μηχανική μάθηση"},
+                {"Έλεγχος":"Αριθμητικές στήλες","Τιμή":len(numeric_cols),"Ερμηνεία":"Κατάλληλες για παλινδρόμηση, συσχέτιση ή ομαδοποίηση"},
+                {"Έλεγχος":"Μη αριθμητικές στήλες","Τιμή":len(categorical_cols),"Ερμηνεία":"Κατάλληλες κατηγορικές μεταβλητές"},
+                {"Έλεγχος":"Σταθερές στήλες","Τιμή":constant_cols,"Ερμηνεία":"Συνήθως δεν προσφέρουν χρήσιμη πληροφορία για τη μηχανική μάθηση"},
             ])
             st.dataframe(diagnosis, use_container_width=True, hide_index=True)
 
@@ -3312,10 +3312,10 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         # ------------------------------------------------------
         with class_box:
             st.subheader("Κατηγοριοποίηση")
-            st.caption("Επιλέγεις κατηγορική μεταβλητή-στόχο και το σύστημα εκτελεί ελεγχόμενη διαδικασία εκπαίδευσης και ελέγχου χωρίς διαρροή δεδομένων.")
+            st.caption("Επιλέξτε μια κατηγορική μεταβλητή-στόχο. Το σύστημα εκπαιδεύει και αξιολογεί το μοντέλο με ελεγχόμενο διαχωρισμό των δεδομένων, ώστε να αποφεύγεται η διαρροή πληροφοριών.")
 
             target = st.selectbox(
-                "Target μεταβλητή για classification",
+                "Μεταβλητή-στόχος για κατηγοριοποίηση",
                 ["— επιλέξτε —"] + list(lab_df.columns),
                 key="class_target"
             )
@@ -3331,7 +3331,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                 else:
                     available = [c for c in lab_df.columns if c != target]
                     predictors = st.multiselect(
-                        "Predictors",
+                        "Προβλεπτικές μεταβλητές",
                         available,
                         default=available[:min(8,len(available))],
                         key="class_predictors"
@@ -3339,11 +3339,11 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 
                     model_name = st.radio(
                         "Μοντέλο",
-                        ["Logistic Παλινδρόμηση","Random Forest"],
+                        ["Λογιστική παλινδρόμηση","Τυχαίο δάσος"],
                         horizontal=True
                     )
 
-                    test_size = st.slider("Ποσοστό test set", 20, 40, 30, 5) / 100
+                    test_size = st.slider("Ποσοστό συνόλου ελέγχου", 20, 40, 30, 5) / 100
 
                     if st.button("Εκτέλεση Κατηγοριοποίηση", key="run_class"):
                         if len(predictors) == 0:
@@ -3381,7 +3381,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 
                                 prep = ColumnTransformer(transformers)
 
-                                if model_name == "Logistic Παλινδρόμηση":
+                                if model_name == "Λογιστική παλινδρόμηση":
                                     model = LogisticΠαλινδρόμηση(max_iter=2000)
                                 else:
                                     model = RandomForestClassifier(
@@ -3415,7 +3415,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                                     })
                                     st.dataframe(results.head(50),use_container_width=True,hide_index=True)
 
-                                    if model_name == "Random Forest":
+                                    if model_name == "Τυχαίο δάσος":
                                         fitted_prep = pipe.named_steps["prep"]
                                         feature_names = fitted_prep.get_feature_names_out()
                                         imp = pipe.named_steps["model"].feature_importances_
@@ -3435,7 +3435,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
             st.subheader("Παλινδρόμηση")
             numeric_targets = lab_df.select_dtypes(include=np.number).columns.tolist()
             target_reg = st.selectbox(
-                "Αριθμητική μεταβλητή-στόχος για παλινδρόμηση",
+                "Αριθμητική μεταβλητή-στόχος",
                 ["— επιλέξτε —"] + numeric_targets,
                 key="reg_target"
             )
@@ -3443,15 +3443,15 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
             if target_reg != "— επιλέξτε —":
                 available = [c for c in lab_df.columns if c != target_reg]
                 predictors = st.multiselect(
-                    "Predictors",
+                    "Προβλεπτικές μεταβλητές",
                     available,
                     default=available[:min(8,len(available))],
                     key="reg_predictors"
                 )
 
                 model_name = st.radio(
-                    "Μοντέλο regression",
-                    ["Linear Παλινδρόμηση","Random Forest Παλινδρόμηση"],
+                    "Μοντέλο παλινδρόμησης",
+                    ["Γραμμική παλινδρόμηση","Παλινδρόμηση με τυχαίο δάσος"],
                     horizontal=True
                 )
 
@@ -3492,7 +3492,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                         prep = ColumnTransformer(transformers)
                         model = (
                             LinearΠαλινδρόμηση()
-                            if model_name == "Linear Παλινδρόμηση"
+                            if model_name == "Γραμμική παλινδρόμηση"
                             else RandomForestRegressor(n_estimators=250,random_state=42)
                         )
                         pipe = Pipeline([("prep",prep),("model",model)])
@@ -3521,7 +3521,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                             })
                             st.dataframe(result.head(50),use_container_width=True,hide_index=True)
 
-                            if model_name == "Random Forest Παλινδρόμηση":
+                            if model_name == "Παλινδρόμηση με τυχαίο δάσος":
                                 feature_names = pipe.named_steps["prep"].get_feature_names_out()
                                 imp = pipe.named_steps["model"].feature_importances_
                                 fi = pd.DataFrame({
@@ -3541,12 +3541,12 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
             numeric_cols = lab_df.select_dtypes(include=np.number).columns.tolist()
 
             selected = st.multiselect(
-                "Αριθμητικές μεταβλητές για clustering",
+                "Αριθμητικές μεταβλητές για ομαδοποίηση",
                 numeric_cols,
                 default=numeric_cols[:min(5,len(numeric_cols))],
                 key="cluster_vars"
             )
-            k = st.slider("Αριθμός clusters",2,8,3)
+            k = st.slider("Αριθμός ομάδων",2,8,3)
 
             if st.button("Εκτέλεση K-means", key="run_cluster"):
                 if len(selected) < 2:
@@ -3625,9 +3625,9 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
             numeric_cols = lab_df.select_dtypes(include=np.number).columns.tolist()
             categorical_cols = [c for c in lab_df.columns if c not in numeric_cols]
 
-            report_text = f"""INELSO Academia ANALYTICS LAB — ΑΥΤΟΜΑΤΗ ΑΝΑΦΟΡΑ
+            report_text = f"""INELSO Academia — ΑΥΤΟΜΑΤΗ ΑΝΑΦΟΡΑ
 
-Dataset: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρχείο')}
+Σύνολο δεδομένων: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρχείο')}
 Γραμμές: {len(lab_df)}
 Στήλες: {len(lab_df.columns)}
 Δείκτης ποιότητας: {quality_score:.1f}/100
@@ -3638,8 +3638,8 @@ Dataset: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρ
 Σταθερές στήλες: {constant_cols}
 
 Ερμηνεία:
-- Ο δείκτης ποιότητας είναι ένας λειτουργικός δείκτης ελέγχου και όχι στατιστικά επικυρωμένο metric.
-- Οι predictive αναλύσεις χρησιμοποιούν train/test split και preprocessing μέσα στο pipeline.
+- Ο δείκτης ποιότητας αποτελεί λειτουργικό δείκτη ελέγχου και όχι στατιστικά επικυρωμένη μετρική.
+- Οι προβλεπτικές αναλύσεις χρησιμοποιούν διαχωρισμό δεδομένων εκπαίδευσης και ελέγχου, καθώς και κατάλληλη προεπεξεργασία.
 - Τα αποτελέσματα πρέπει να ερμηνεύονται με βάση το ερευνητικό ερώτημα και τη δομή του συνόλου δεδομένων.
 """
             st.text_area("Προεπισκόπηση αναφοράς",report_text,height=320)
