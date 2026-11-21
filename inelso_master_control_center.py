@@ -4435,67 +4435,110 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
     # ------------------------------------------------------
     elif action == "Μήνυμα":
         st.subheader("Αποστολή προσωπικού μηνύματος")
+        st.caption(
+            "Επιλέξτε πρώτα μάθημα και πραγματικό εγγεγραμμένο χρήστη. "
+            "Η αποστολή πραγματοποιείται μόνο μετά από ρητή επιβεβαίωση."
+        )
 
-        live_users = st.session_state.get("moodle_enrolled_users")
+        message_course_id = st.number_input(
+            "ID Μαθήματος",
+            min_value=1,
+            step=1,
+            value=int(st.session_state.get("moodle_selected_course_id", 6) or 6),
+            key="message_course_id"
+        )
 
+        if st.button(
+            "Φόρτωση εγγεγραμμένων χρηστών",
+            use_container_width=True,
+            key="message_load_course_users"
+        ):
+            if not moodle_url or not token:
+                st.error(
+                    "Δεν υπάρχει ενεργή σύνδεση Moodle. Ανοίξτε τις «Ρυθμίσεις σύνδεσης Moodle» "
+                    "και εκτελέστε «Έλεγχος σύνδεσης»."
+                )
+            else:
+                try:
+                    users_result = moodle_write_call(
+                        moodle_url,
+                        token,
+                        "core_enrol_get_enrolled_users",
+                        {"courseid": int(message_course_id)}
+                    )
+                    if isinstance(users_result, list) and users_result:
+                        st.session_state["message_course_users"] = pd.DataFrame(users_result)
+                        st.success(f"Φορτώθηκαν {len(users_result)} εγγεγραμμένοι χρήστες.")
+                    else:
+                        st.session_state.pop("message_course_users", None)
+                        st.warning("Δεν επιστράφηκαν εγγεγραμμένοι χρήστες για το επιλεγμένο μάθημα.")
+                except Exception as e:
+                    st.error(f"Δεν ήταν δυνατή η φόρτωση χρηστών: {e}")
+
+        live_users = st.session_state.get("message_course_users")
+        if not isinstance(live_users, pd.DataFrame) or live_users.empty:
+            fallback_users = st.session_state.get("moodle_enrolled_users")
+            if isinstance(fallback_users, pd.DataFrame) and not fallback_users.empty:
+                live_users = fallback_users
+
+        selected_label = None
         if isinstance(live_users, pd.DataFrame) and len(live_users) > 0 and "id" in live_users.columns:
             user_labels = {}
             for _, ur in live_users.iterrows():
                 uid = int(ur["id"])
-                fullname = str(ur.get("fullname", f"User {uid}"))
-                email = str(ur.get("email", ""))
+                fullname = str(ur.get("fullname", f"Χρήστης {uid}"))
+                email = str(ur.get("email", "") or "")
                 label = f"{fullname} — ID {uid}"
-                if email and email != "nan":
+                if email and email.lower() != "nan":
                     label += f" — {email}"
                 user_labels[label] = uid
 
-            recipient_mode = st.radio(
-                "Επιλογή παραλήπτη",
-                ["Από τους live εγγεγραμμένους χρήστες", "Χειροκίνητο User ID"],
-                horizontal=True
+            selected_label = st.selectbox(
+                "Παραλήπτης",
+                list(user_labels.keys()),
+                key="message_recipient_select"
             )
-
-            if recipient_mode == "Από τους live εγγεγραμμένους χρήστες":
-                selected_label = st.selectbox(
-                    "Παραλήπτης",
-                    list(user_labels.keys())
-                )
-                user_id = user_labels[selected_label]
-            else:
-                user_id = st.number_input(
-                    "ID παραλήπτη",
-                    min_value=1,
-                    step=1,
-                    value=1
-                )
+            user_id = user_labels[selected_label]
         else:
+            st.info(
+                "Πατήστε «Φόρτωση εγγεγραμμένων χρηστών» για ασφαλή επιλογή παραλήπτη. "
+                "Η χειροκίνητη εισαγωγή ID παραμένει διαθέσιμη μόνο ως εναλλακτική."
+            )
             user_id = st.number_input(
                 "ID παραλήπτη",
                 min_value=1,
                 step=1,
-                value=1
+                value=1,
+                key="message_manual_user_id"
             )
 
         message_text = st.text_area(
             "Μήνυμα",
             height=160,
-            placeholder="Γράψε την ανατροφοδότηση ή την ειδοποίηση που θα σταλεί."
+            placeholder="Γράψτε την ανατροφοδότηση ή την ειδοποίηση που θα σταλεί.",
+            key="controlled_message_text"
+        )
+
+        retry_as_contact = st.checkbox(
+            "Αν το Moodle μπλοκάρει την αποστολή επειδή ο παραλήπτης δεν είναι επαφή, "
+            "προσπάθησε να τον προσθέσεις στις επαφές και να επαναλάβεις μία φορά.",
+            value=False,
+            key="message_retry_contact"
+        )
+        st.caption(
+            "Η επιλογή αυτή δεν παρακάμπτει αποκλεισμό ή ρυθμίσεις απορρήτου του παραλήπτη. "
+            "Η τελική απόφαση παραμένει στο Moodle."
         )
 
         preview = pd.DataFrame([{
             "Ενέργεια":"Αποστολή προσωπικού μηνύματος",
-            "ID παραλήπτη":int(user_id),
+            "Μάθημα":int(message_course_id),
+            "Παραλήπτης":selected_label if selected_label else f"ID {int(user_id)}",
             "Κείμενο":message_text,
             "Λειτουργία Moodle":"core_message_send_instant_messages"
         }])
         st.subheader("Προεπισκόπηση")
         st.dataframe(preview,use_container_width=True,hide_index=True)
-
-        if int(user_id) == 7:
-            st.warning(
-                "Ο User ID 7 έχει ήδη επιστρέψει περιορισμό από τις προσωπικές ρυθμίσεις μηνυμάτων. "
-                "Για end-to-end test προτίμησε έναν Demo Student από τη live λίστα, π.χ. Demo Student 0201 (ID 208)."
-            )
 
         confirm1 = st.checkbox(
             "Έλεγξα τον παραλήπτη και το κείμενο του μηνύματος.",
@@ -4512,71 +4555,117 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             type="primary"
         ):
             if not moodle_url or not token:
-                st.error("Δεν υπάρχει ενεργή σύνδεση Moodle. Ανοίξτε τις «Ρυθμίσεις σύνδεσης Moodle» παραπάνω και εκτελέστε «Έλεγχος σύνδεσης».")
+                st.error(
+                    "Δεν υπάρχει ενεργή σύνδεση Moodle. Ανοίξτε τις «Ρυθμίσεις σύνδεσης Moodle» "
+                    "και εκτελέστε «Έλεγχος σύνδεσης»."
+                )
             elif not message_text.strip():
                 st.error("Το μήνυμα είναι κενό.")
             else:
                 function_name = "core_message_send_instant_messages"
-                params = {
-                    "messages[0][touserid]": int(user_id),
-                    "messages[0][text]": message_text,
-                    "messages[0][textformat]": 1
-                }
-                try:
-                    result = moodle_write_call(
-                        moodle_url, token, function_name, params
+
+                def _send_message_once():
+                    return moodle_write_call(
+                        moodle_url,
+                        token,
+                        function_name,
+                        {
+                            "messages[0][touserid]": int(user_id),
+                            "messages[0][text]": message_text,
+                            "messages[0][textformat]": 1
+                        }
                     )
 
-                    # Το Moodle μπορεί να επιστρέψει HTTP 200 αλλά αποτυχία ανά μήνυμα,
-                    # π.χ. msgid = -1 και errormessage λόγω προτιμήσεων του παραλήπτη.
-                    delivery_ok = False
-                    delivery_error = ""
-
-                    if isinstance(result, list) and len(result) > 0:
-                        first = result[0] if isinstance(result[0], dict) else {}
+                def _parse_delivery(result_obj):
+                    ok = False
+                    msgid = None
+                    error_text = ""
+                    first = None
+                    if isinstance(result_obj, list) and result_obj:
+                        first = result_obj[0] if isinstance(result_obj[0], dict) else {}
+                    elif isinstance(result_obj, dict):
+                        first = result_obj
+                    if isinstance(first, dict):
                         msgid = first.get("msgid")
-                        errormessage = str(first.get("errormessage", "") or "").strip()
-
+                        error_text = str(first.get("errormessage", "") or "").strip()
                         try:
-                            delivery_ok = int(msgid) > 0
+                            ok = int(msgid) > 0 and not error_text
                         except Exception:
-                            delivery_ok = False
+                            ok = False
+                    return ok, msgid, error_text
 
-                        if errormessage:
-                            delivery_error = errormessage
-                            delivery_ok = False
+                try:
+                    result = _send_message_once()
+                    delivery_ok, msgid, delivery_error = _parse_delivery(result)
+                    contact_attempted = False
+                    contact_result = None
 
-                    elif isinstance(result, dict):
-                        msgid = result.get("msgid")
-                        errormessage = str(result.get("errormessage", "") or "").strip()
+                    contact_block = (
+                        (not delivery_ok)
+                        and delivery_error
+                        and (
+                            "contact" in delivery_error.lower()
+                            or "επαφ" in delivery_error.lower()
+                        )
+                    )
 
+                    if contact_block and retry_as_contact:
+                        contact_attempted = True
                         try:
-                            delivery_ok = int(msgid) > 0
-                        except Exception:
-                            delivery_ok = False
-
-                        if errormessage:
-                            delivery_error = errormessage
-                            delivery_ok = False
+                            contact_result = moodle_write_call(
+                                moodle_url,
+                                token,
+                                "core_message_create_contacts",
+                                {"userids[0]": int(user_id)}
+                            )
+                            result = _send_message_once()
+                            delivery_ok, msgid, delivery_error = _parse_delivery(result)
+                        except Exception as contact_exc:
+                            delivery_error = (
+                                f"{delivery_error} Η προσπάθεια προσθήκης στις επαφές δεν ολοκληρώθηκε: "
+                                f"{contact_exc}"
+                            )
 
                     if delivery_ok:
-                        st.success("Το μήνυμα παραδόθηκε επιτυχώς στο Moodle.")
+                        st.markdown(
+                            "<div class='inelso-action-banner' style='border-left:5px solid #2e9d78'>"
+                            "<strong>Το μήνυμα στάλθηκε επιτυχώς στο Moodle.</strong>"
+                            f"<div style='margin-top:.35rem;color:#52606d'>Message ID: "
+                            f"<strong>{msgid}</strong></div></div>",
+                            unsafe_allow_html=True
+                        )
+                        if contact_attempted:
+                            st.caption("Πριν από την επιτυχή αποστολή έγινε ελεγχόμενη προσπάθεια προσθήκης του παραλήπτη στις επαφές.")
                         audit_status = "ΕΠΙΤΥΧΙΑ"
                     else:
                         if not delivery_error:
                             delivery_error = (
-                                "Το Moodle δεν επέστρεψε θετικό msgid. "
-                                "Το αίτημα έφτασε στο Moodle, αλλά δεν επιβεβαιώθηκε παράδοση."
+                                "Το Moodle δεν επέστρεψε θετικό αναγνωριστικό μηνύματος."
                             )
-                        st.error(f"Το μήνυμα δεν παραδόθηκε: {delivery_error}")
+                        st.error("Το μήνυμα δεν στάλθηκε.")
+                        st.info(delivery_error)
+                        if contact_block and not retry_as_contact:
+                            st.info(
+                                "Το Moodle ζητά σχέση επαφής για τον συγκεκριμένο παραλήπτη. "
+                                "Μπορείτε να ενεργοποιήσετε την επιλογή προσθήκης επαφής και να ξαναδοκιμάσετε."
+                            )
+                        elif contact_attempted:
+                            st.warning(
+                                "Έγινε προσπάθεια προσθήκης στις επαφές, αλλά το Moodle εξακολουθεί να μην επιτρέπει την αποστολή. "
+                                "Δεν παρακάμπτονται οι ρυθμίσεις απορρήτου του παραλήπτη."
+                            )
                         audit_status = "ΑΠΟΤΥΧΙΑ"
 
-                    st.json(result)
+                    with st.expander("Τεχνικές λεπτομέρειες απόκρισης Moodle", expanded=False):
+                        st.json(result)
+                        if contact_result is not None:
+                            st.write("Απόκριση προσθήκης επαφής:")
+                            st.json(contact_result)
 
                     add_write_audit(
                         "Αποστολή προσωπικού μηνύματος",
                         function_name,
-                        f"User ID {int(user_id)}",
+                        f"Course {int(message_course_id)} / User ID {int(user_id)}",
                         message_text,
                         json.dumps(result, ensure_ascii=False),
                         audit_status
@@ -4587,7 +4676,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                     add_write_audit(
                         "Αποστολή προσωπικού μηνύματος",
                         function_name,
-                        f"User ID {int(user_id)}",
+                        f"Course {int(message_course_id)} / User ID {int(user_id)}",
                         message_text,
                         str(e),
                         "ΑΠΟΤΥΧΙΑ"
