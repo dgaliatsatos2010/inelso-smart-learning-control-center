@@ -4940,7 +4940,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                     "grade": float(grade_value),
                     "attemptnumber": -1,
                     "addattempt": 0,
-                    "workflowstate": "graded",
+                    "workflowstate": "",
                     "applytoall": 0
                 }
                 if feedback.strip():
