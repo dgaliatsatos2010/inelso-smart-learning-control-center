@@ -4895,6 +4895,13 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
         if st.button("Υπολογισμός προτεραιότητας", type="primary", use_container_width=True, key="s16_compute"):
             out_df = ew_df.copy()
 
+            # Σε long-format σύνολα δεδομένων ο ίδιος εκπαιδευόμενος μπορεί να
+            # εμφανίζεται πολλές φορές (π.χ. ανά ερώτηση ή δραστηριότητα).
+            # Για την Έγκαιρη Υποστήριξη κρατάμε μία εγγραφή ανά εκπαιδευόμενο,
+            # όπως και στον αυτόματο αρχικό υπολογισμό.
+            if learner_col != "— καμία —" and learner_col in out_df.columns:
+                out_df = out_df.drop_duplicates(subset=[learner_col], keep="last").copy()
+
             def norm_low(series):
                 s = pd.to_numeric(series,errors="coerce")
                 if s.notna().sum()==0:
@@ -5019,7 +5026,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             st.markdown("### Παρέμβαση με ανθρώπινο έλεγχο")
             selected_risk_learner = st.selectbox(
                 "Εκπαιδευόμενος",
-                ranked["Μαθητής"].astype(str).tolist(),
+                ranked["Μαθητής"].astype(str).drop_duplicates().tolist(),
                 key="s16_intervention_learner"
             )
             selected_row = ranked[
@@ -5029,7 +5036,14 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             p1,p2,p3 = st.columns(3)
             p1.metric("Δείκτης", f"{selected_row['Δείκτης κινδύνου']}/100")
             p2.metric("Προτεραιότητα", selected_row["Κατηγορία κινδύνου"])
-            p3.metric("Επόμενο βήμα", selected_row["Προτεινόμενη ενέργεια"])
+            with p3:
+                st.markdown(
+                    "<div class='inelso-feature-card' style='min-height:auto;padding:.75rem .9rem'>"
+                    "<div class='kicker'>Επόμενο βήμα</div>"
+                    f"<div style='font-size:1.02rem;font-weight:700;color:#173b5e;line-height:1.3;white-space:normal'>"
+                    f"{selected_row['Προτεινόμενη ενέργεια']}</div></div>",
+                    unsafe_allow_html=True
+                )
 
             default_s16_note = (
                 f"Μαθησιακή Ανάλυση early-warning review για learner {selected_risk_learner}. "
