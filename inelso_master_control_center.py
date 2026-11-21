@@ -2349,9 +2349,6 @@ elif section == "Προσαρμοστική Εξάσκηση":
 - Επίδοση ≥ 70 με επαρκή βεβαιότητα → **ΕΤΟΙΜΟ**
 """)
     else:
-        with st.expander("👥 Προβολή ομάδας εκπαιδευομένων", expanded=False):
-            st.dataframe(cohort26,use_container_width=True,hide_index=True)
-
         with st.expander("📋 Προβολή ουράς ενεργειών εκπαιδευτή", expanded=False):
             q = cohort26[cohort26["κατάσταση"]!="ΕΤΟΙΜΟ"].copy()
             q["προτεραιότητα"] = q["κατάσταση"].map({"ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ":1,"ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ":2})
