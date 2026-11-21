@@ -1621,7 +1621,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
                 )
                 st.button("Άνοιγμα Μαθησιακών Ενδείξεων", use_container_width=True, on_click=_home_nav, args=("Μαθησιακές Ενδείξεις",), key="home_open_s31")
 
-            b1,b2,b3 = st.columns(3)
+            b1,b2 = st.columns(2)
             with b1:
                 st.markdown(
                     "<div class='inelso-feature-card'><h3>Έγκαιρη Υποστήριξη</h3>"
@@ -1630,13 +1630,6 @@ if section == "Κεντρική Εικόνα Ελέγχου":
                 )
                 st.button("Άνοιγμα Έγκαιρης Υποστήριξης", use_container_width=True, on_click=_home_nav, args=("Έγκαιρη Υποστήριξη",), key="home_open_s16")
             with b2:
-                st.markdown(
-                    "<div class='inelso-feature-card'><h3>Ανάλυση SCORM</h3>"
-                    "<p>Προσπάθειες, βαθμολογία, χρόνος και πραγματικές αλληλεπιδράσεις ανά ερώτηση.</p></div>",
-                    unsafe_allow_html=True
-                )
-                st.button("Άνοιγμα Ανάλυσης SCORM", use_container_width=True, on_click=_home_nav, args=("Ανάλυση SCORM",), key="home_open_scorm")
-            with b3:
                 st.markdown(
                     "<div class='inelso-feature-card'><h3>Δημιουργία Αξιολόγησης</h3>"
                     "<p>Τράπεζα ερωτήσεων, κουίζ, κλίμακα αξιολόγησης και ασκήσεις με έλεγχο διδάσκοντα.</p></div>",
