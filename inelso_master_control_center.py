@@ -4039,6 +4039,67 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
     moodle_url = st.session_state.get("moodle_base_url", "")
     token = st.session_state.get("moodle_shared_token", "")
 
+    st.markdown("### Σύνδεση Moodle")
+    connection_ready = bool(moodle_url and token)
+
+    if connection_ready:
+        st.success("Υπάρχουν διαθέσιμα στοιχεία σύνδεσης Moodle για την τρέχουσα συνεδρία.")
+    else:
+        st.warning(
+            "Δεν υπάρχουν ακόμη ενεργά στοιχεία σύνδεσης Moodle. "
+            "Συμπληρώστε τα παρακάτω πριν από καταγραφή ή ανάκτηση δεδομένων."
+        )
+
+    with st.expander("Ρυθμίσεις σύνδεσης Moodle", expanded=not connection_ready):
+        write_url = st.text_input(
+            "Βασικό URL Moodle",
+            value=moodle_url or "https://contentsolutions.eu",
+            key="controlled_moodle_url"
+        ).rstrip("/")
+
+        write_token = st.text_input(
+            "Κλειδί πρόσβασης Moodle",
+            value=token,
+            type="password",
+            key="controlled_moodle_token",
+            help="Χρησιμοποιείται μόνο στην τρέχουσα συνεδρία."
+        )
+
+        c_conn1, c_conn2 = st.columns([1, 2])
+        with c_conn1:
+            if st.button("Έλεγχος σύνδεσης", type="primary", key="controlled_check_connection"):
+                if not write_url or not write_token:
+                    st.error("Συμπληρώστε URL και κλειδί πρόσβασης.")
+                else:
+                    try:
+                        info = moodle_rest_call(
+                            write_url,
+                            write_token,
+                            "core_webservice_get_site_info"
+                        )
+                        st.session_state["moodle_base_url"] = write_url
+                        st.session_state["moodle_shared_token"] = write_token
+                        st.session_state["moodle_connection_verified"] = True
+                        moodle_url = write_url
+                        token = write_token
+                        st.success(
+                            f"Η σύνδεση με το Moodle επιβεβαιώθηκε"
+                            + (f": {info.get('sitename')}" if isinstance(info, dict) and info.get("sitename") else ".")
+                        )
+                    except Exception as e:
+                        st.session_state["moodle_connection_verified"] = False
+                        st.error(f"Η σύνδεση με το Moodle απέτυχε: {e}")
+
+        with c_conn2:
+            st.caption(
+                "Μετά τον επιτυχή έλεγχο, τα ίδια στοιχεία χρησιμοποιούνται για "
+                "καταγραφή παρέμβασης και ανάκτηση σημειώσεων."
+            )
+
+    # Επαναφόρτωση μετά από πιθανή επιτυχή σύνδεση.
+    moodle_url = st.session_state.get("moodle_base_url", moodle_url)
+    token = st.session_state.get("moodle_shared_token", token)
+
     if "moodle_write_audit" not in st.session_state:
         st.session_state["moodle_write_audit"] = pd.DataFrame(columns=[
             "Ημερομηνία","Ενέργεια","Λειτουργία API","Στόχος",
@@ -4210,7 +4271,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             type="primary"
         ):
             if not moodle_url or not token:
-                st.error("Συμπλήρωσε Moodle URL και token.")
+                st.error("Δεν υπάρχει ενεργή σύνδεση Moodle. Ανοίξτε τις «Ρυθμίσεις σύνδεσης Moodle» παραπάνω και εκτελέστε «Έλεγχος σύνδεσης».")
             elif not note_text.strip():
                 st.error("Το κείμενο της παρέμβασης είναι κενό.")
             else:
@@ -4281,7 +4342,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
 
         if st.button("Ανάκτηση σημειώσεων", key="load_notes"):
             if not moodle_url or not token:
-                st.error("Συμπλήρωσε Moodle URL και token.")
+                st.error("Δεν υπάρχει ενεργή σύνδεση Moodle. Ανοίξτε τις «Ρυθμίσεις σύνδεσης Moodle» παραπάνω και εκτελέστε «Έλεγχος σύνδεσης».")
             else:
                 try:
                     result = moodle_write_call(
@@ -4426,7 +4487,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             type="primary"
         ):
             if not moodle_url or not token:
-                st.error("Συμπλήρωσε Moodle URL και token.")
+                st.error("Δεν υπάρχει ενεργή σύνδεση Moodle. Ανοίξτε τις «Ρυθμίσεις σύνδεσης Moodle» παραπάνω και εκτελέστε «Έλεγχος σύνδεσης».")
             elif not message_text.strip():
                 st.error("Το μήνυμα είναι κενό.")
             else:
@@ -4576,7 +4637,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             type="primary"
         ):
             if not moodle_url or not token:
-                st.error("Συμπλήρωσε Moodle URL και token.")
+                st.error("Δεν υπάρχει ενεργή σύνδεση Moodle. Ανοίξτε τις «Ρυθμίσεις σύνδεσης Moodle» παραπάνω και εκτελέστε «Έλεγχος σύνδεσης».")
             else:
                 function_name = "core_grade_update_grades"
                 params = {
