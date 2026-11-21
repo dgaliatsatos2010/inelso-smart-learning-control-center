@@ -4931,19 +4931,21 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             if not moodle_url or not token:
                 st.error("Δεν υπάρχει ενεργή σύνδεση Moodle.")
             else:
-                function_name = "core_grade_update_grades"
+                # Για Moodle Assignment χρησιμοποιούμε πρώτα το ειδικό API βαθμολόγησης.
+                # Αυτό δουλεύει με Assignment ID (instance id), όχι με Course Module ID.
+                function_name = "mod_assign_save_grade"
                 params = {
-                    "source":source,
-                    "courseid":int(course_id),
-                    "component":component,
-                    "activityid":int(activity_id),
-                    "itemnumber":int(item_number),
-                    "grades[0][studentid]":int(student_id),
-                    "grades[0][grade]":float(grade_value)
+                    "assignmentid": int(assignment_instance_id) if selected_assignment_label else int(activity_id),
+                    "userid": int(student_id),
+                    "grade": float(grade_value),
+                    "attemptnumber": -1,
+                    "addattempt": 0,
+                    "workflowstate": "graded",
+                    "applytoall": 0
                 }
                 if feedback.strip():
-                    params["grades[0][str_feedback]"] = feedback
-                    params["grades[0][feedbackformat]"] = 1
+                    params["plugindata[assignfeedbackcomments_editor][text]"] = feedback
+                    params["plugindata[assignfeedbackcomments_editor][format]"] = 1
 
                 preview_text = json.dumps(params, ensure_ascii=False)
 
@@ -4961,26 +4963,59 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                     add_write_audit(
                         "Ενημέρωση βαθμού",
                         function_name,
-                        f"Course {course_id} / Activity {activity_id} / Student {student_id}",
+                        f"Course {course_id} / Assignment {params['assignmentid']} / Student {student_id}",
                         preview_text,
                         json.dumps(result, ensure_ascii=False),
                         "ΕΠΙΤΥΧΙΑ"
                     )
-                except Exception as e:
-                    st.error(
-                        "Η ενημέρωση βαθμού απέτυχε. Ελέγξτε ότι η επιλεγμένη εργασία "
-                        "αντιστοιχεί σε πραγματική καταχώριση βαθμού και ότι η λειτουργία "
-                        "core_grade_update_grades είναι διαθέσιμη στο token. "
-                        f"Λεπτομέρεια: {e}"
-                    )
-                    add_write_audit(
-                        "Ενημέρωση βαθμού",
-                        function_name,
-                        f"Course {course_id} / Activity {activity_id} / Student {student_id}",
-                        preview_text,
-                        str(e),
-                        "ΑΠΟΤΥΧΙΑ"
-                    )
+                except Exception as primary_error:
+                    # Fallback στο γενικό grade API μόνο αν το ειδικό API δεν είναι διαθέσιμο.
+                    fallback_name = "core_grade_update_grades"
+                    fallback_params = {
+                        "source":source,
+                        "courseid":int(course_id),
+                        "component":component,
+                        "activityid":int(activity_id),
+                        "itemnumber":int(item_number),
+                        "grades[0][studentid]":int(student_id),
+                        "grades[0][grade]":float(grade_value)
+                    }
+                    if feedback.strip():
+                        fallback_params["grades[0][str_feedback]"] = feedback
+
+                    try:
+                        result = moodle_write_call(
+                            moodle_url, token, fallback_name, fallback_params
+                        )
+                        st.markdown(
+                            "<div class='inelso-action-banner' style='border-left:5px solid #2e9d78'>"
+                            "<strong>Η ενημέρωση βαθμού ολοκληρώθηκε μέσω της εναλλακτικής λειτουργίας Moodle.</strong>"
+                            "<div style='margin-top:.35rem;color:#52606d'>Ελέγξτε το Βαθμολόγιο του μαθήματος για επιβεβαίωση.</div>"
+                            "</div>",
+                            unsafe_allow_html=True
+                        )
+                        add_write_audit(
+                            "Ενημέρωση βαθμού",
+                            fallback_name,
+                            f"Course {course_id} / Activity {activity_id} / Student {student_id}",
+                            json.dumps(fallback_params, ensure_ascii=False),
+                            json.dumps(result, ensure_ascii=False),
+                            "ΕΠΙΤΥΧΙΑ"
+                        )
+                    except Exception as fallback_error:
+                        st.error(
+                            "Η ενημέρωση βαθμού απέτυχε και με τις δύο διαθέσιμες μεθόδους. "
+                            f"mod_assign_save_grade: {primary_error} · "
+                            f"core_grade_update_grades: {fallback_error}"
+                        )
+                        add_write_audit(
+                            "Ενημέρωση βαθμού",
+                            function_name,
+                            f"Course {course_id} / Assignment {params['assignmentid']} / Student {student_id}",
+                            preview_text,
+                            f"Primary: {primary_error}; Fallback: {fallback_error}",
+                            "ΑΠΟΤΥΧΙΑ"
+                        )
 
     # ------------------------------------------------------
     # AUDIT LOG
