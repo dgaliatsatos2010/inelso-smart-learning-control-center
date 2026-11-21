@@ -2209,85 +2209,35 @@ elif section == "Προσαρμοστική Εξάσκηση":
     st.caption("Αναλύει την επίδοση ανά κριτήριο, την πρόοδο και τη βεβαιότητα και προτείνει το επόμενο εκπαιδευτικό βήμα.")
 
     with st.expander("📘 Τι είναι η Rubric και πώς περνά στο σύστημα;", expanded=False):
-        st.markdown("""
-<style>
-.rubric-box {
-    font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
-    color: #25364d;
-    font-size: 1.02rem;
-    line-height: 1.68;
-}
-.rubric-box .rubric-lead {
-    font-size: 1.08rem;
-    margin: 0 0 0.55rem 0;
-}
-.rubric-box .rubric-sub {
-    margin: 0 0 1rem 0;
-    color: #53657b;
-}
-.rubric-box table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    margin: 0.9rem 0 1.1rem 0;
-    border: 1px solid #e1e8f0;
-    border-radius: 12px;
-    overflow: hidden;
-    font-size: 0.98rem;
-}
-.rubric-box th {
-    background: #f6f8fb;
-    color: #21344f;
-    font-weight: 700;
-    text-align: left;
-    padding: 0.72rem 0.85rem;
-    border-bottom: 1px solid #e1e8f0;
-}
-.rubric-box td {
-    padding: 0.7rem 0.85rem;
-    border-bottom: 1px solid #edf1f5;
-}
-.rubric-box tr:last-child td {
-    border-bottom: none;
-}
-.rubric-box td:last-child,
-.rubric-box th:last-child {
-    text-align: right;
-    white-space: nowrap;
-}
-.rubric-box .rubric-note {
-    margin-top: 0.55rem;
-    color: #43556c;
-}
-.rubric-box code {
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-    background: #f3f5f8;
-    padding: 0.08rem 0.28rem;
-    border-radius: 5px;
-    color: #26394f;
-}
-</style>
-<div class="rubric-box">
-    <p class="rubric-lead">Η <strong>κλίμακα αξιολόγησης</strong> είναι ο πίνακας κριτηρίων με τον οποίο αξιολογείται η απάντηση.</p>
-    <p class="rubric-sub">Στην προτεινόμενη δομή χρησιμοποιούνται πέντε κριτήρια:</p>
-
-    <table>
-        <thead>
-            <tr><th>Κωδικός</th><th>Τι αξιολογεί</th><th>Βάρος</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>RC-01</td><td>Εννοιολογική ακρίβεια</td><td>30%</td></tr>
-            <tr><td>RC-02</td><td>Μέθοδος / συλλογισμός</td><td>25%</td></tr>
-            <tr><td>RC-03</td><td>Τεκμηρίωση</td><td>15%</td></tr>
-            <tr><td>RC-04</td><td>Πληρότητα</td><td>15%</td></tr>
-            <tr><td>RC-05</td><td>Σαφήνεια επικοινωνίας</td><td>15%</td></tr>
-        </tbody>
-    </table>
-
-    <p class="rubric-note">Στο CSV κάθε προσπάθεια είναι <strong>ξεχωριστή γραμμή</strong>. Παράδειγμα: ο ίδιος εκπαιδευόμενος εμφανίζεται με προσπάθεια 1, προσπάθεια 2 κ.ο.κ.</p>
-    <p class="rubric-note">Οι στήλες <code>RC-01…RC-05</code> παίρνουν επίπεδο 0–4. Η βαθμολογία είναι 0–100 και η βεβαιότητα 0–1.</p>
-</div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            "<div style='font-family:Segoe UI,Arial,sans-serif;font-size:1.06rem;line-height:1.65;color:#26374d;'>"
+            "Η <strong>κλίμακα αξιολόγησης</strong> είναι ο πίνακας κριτηρίων με τον οποίο αξιολογείται η απάντηση."
+            "</div>",
+            unsafe_allow_html=True
+        )
+        st.caption("Στην προτεινόμενη δομή χρησιμοποιούνται πέντε κριτήρια:")
+        rubric_df = pd.DataFrame([
+            {"Κωδικός": "RC-01", "Τι αξιολογεί": "Εννοιολογική ακρίβεια", "Βάρος": "30%"},
+            {"Κωδικός": "RC-02", "Τι αξιολογεί": "Μέθοδος / συλλογισμός", "Βάρος": "25%"},
+            {"Κωδικός": "RC-03", "Τι αξιολογεί": "Τεκμηρίωση", "Βάρος": "15%"},
+            {"Κωδικός": "RC-04", "Τι αξιολογεί": "Πληρότητα", "Βάρος": "15%"},
+            {"Κωδικός": "RC-05", "Τι αξιολογεί": "Σαφήνεια επικοινωνίας", "Βάρος": "15%"},
+        ])
+        st.dataframe(
+            rubric_df,
+            use_container_width=True,
+            hide_index=True,
+            height=245
+        )
+        st.markdown(
+            "<div style='font-family:Segoe UI,Arial,sans-serif;font-size:1rem;line-height:1.6;color:#41536b;'>"
+            "Στο CSV κάθε προσπάθεια είναι <strong>ξεχωριστή γραμμή</strong>. "
+            "Παράδειγμα: ο ίδιος εκπαιδευόμενος εμφανίζεται με προσπάθεια 1, προσπάθεια 2 κ.ο.κ.<br>"
+            "Οι στήλες <code>RC-01…RC-05</code> παίρνουν επίπεδο 0–4. "
+            "Η βαθμολογία είναι 0–100 και η βεβαιότητα 0–1."
+            "</div>",
+            unsafe_allow_html=True
+        )
 
     mapped26_view = st.session_state["custom_s26"].copy()
     if "κατάκτηση" not in mapped26_view.columns:
