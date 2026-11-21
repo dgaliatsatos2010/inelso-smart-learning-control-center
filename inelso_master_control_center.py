@@ -2233,7 +2233,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
             "<div style='font-family:Segoe UI,Arial,sans-serif;font-size:1rem;line-height:1.6;color:#41536b;'>"
             "Στο CSV κάθε προσπάθεια είναι <strong>ξεχωριστή γραμμή</strong>. "
             "Παράδειγμα: ο ίδιος εκπαιδευόμενος εμφανίζεται με προσπάθεια 1, προσπάθεια 2 κ.ο.κ.<br>"
-            "Οι στήλες <code>RC-01…RC-05</code> παίρνουν επίπεδο 0–4. "
+            "Οι στήλες <strong>RC-01 έως RC-05</strong> παίρνουν επίπεδο 0–4. "
             "Η βαθμολογία είναι 0–100 και η βεβαιότητα 0–1."
             "</div>",
             unsafe_allow_html=True
