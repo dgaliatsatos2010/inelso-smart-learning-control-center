@@ -4861,10 +4861,10 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
         m1,m2 = st.columns(2)
         with m1:
             learner_col = st.selectbox("Αναγνωριστικό μαθητή", cols, key="ew_learner")
-            grade_col = st.selectbox("Βαθμός / score", cols, key="ew_grade")
+            grade_col = st.selectbox("Βαθμός / επίδοση", cols, key="ew_grade")
             inactivity_col = st.selectbox("Ημέρες αδράνειας", cols, key="ew_inactivity")
         with m2:
-            attempts_col = st.selectbox("Αριθμός προσπαθειών / submissions", cols, key="ew_attempts")
+            attempts_col = st.selectbox("Αριθμός προσπαθειών", cols, key="ew_attempts")
             engagement_col = st.selectbox("Δείκτης συμμετοχής / δραστηριότητας", cols, key="ew_engagement")
 
         st.markdown("### 2. Βάρη")
@@ -4876,15 +4876,20 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
         with w3:
             w_attempts = st.slider("Προσπάθειες",0,100,15,5,key="s16_w_attempts")
         with w4:
-            w_engagement = st.slider("Χαμηλό engagement",0,100,20,5,key="s16_w_engagement")
+            w_engagement = st.slider("Χαμηλή συμμετοχή",0,100,20,5,key="s16_w_engagement")
 
-        st.markdown("### 3. Κατώφλια προτεραιότητας")
-        t1,t2 = st.columns(2)
-        with t1:
-            high_thr = st.slider("Υψηλή προτεραιότητα από",50,90,70,5,key="s16_high_thr")
-        with t2:
-            med_thr = st.slider("Μεσαία προτεραιότητα από",20,70,45,5,key="s16_med_thr")
-
+        st.markdown("### 3. Όρια κατηγοριοποίησης προτεραιότητας")
+        med_thr, high_thr = st.slider(
+            "Όρια Μεσαίας και Υψηλής προτεραιότητας",
+            min_value=0,
+            max_value=100,
+            value=(45, 75),
+            step=5,
+            key="s16_priority_thresholds"
+        )
+        st.caption(
+            f"Χαμηλή: 0–{med_thr-1} · Μεσαία: {med_thr}–{high_thr-1} · Υψηλή: {high_thr}–100"
+        )
         st.caption("Τα βάρη κανονικοποιούνται μόνο στα πεδία που έχουν επιλεγεί.")
 
         if st.button("Υπολογισμός προτεραιότητας", type="primary", use_container_width=True, key="s16_compute"):
@@ -4919,7 +4924,7 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             if attempts_col != "— καμία —":
                 components.append(norm_high(out_df[attempts_col])); weights.append(w_attempts); active_signals.append("προσπάθειες")
             if engagement_col != "— καμία —":
-                components.append(norm_low(out_df[engagement_col])); weights.append(w_engagement); active_signals.append("engagement")
+                components.append(norm_low(out_df[engagement_col])); weights.append(w_engagement); active_signals.append("συμμετοχή")
 
             if not components:
                 st.error("Επίλεξε τουλάχιστον μία πραγματική ένδειξη.")
