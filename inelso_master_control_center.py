@@ -4816,10 +4816,19 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             )
             selected_assignment = assignment_map[selected_assignment_label]
             component = "mod_assign"
-            activity_id = int(selected_assignment.get("id"))
+            assignment_instance_id = int(selected_assignment.get("id"))
+            cmid_value = selected_assignment.get("cmid")
+            if cmid_value is None:
+                st.error(
+                    "Δεν βρέθηκε Course Module ID για την επιλεγμένη εργασία. "
+                    "Δεν είναι ασφαλές να εκτελεστεί αλλαγή βαθμού."
+                )
+                activity_id = 0
+            else:
+                activity_id = int(cmid_value)
             st.caption(
-                f"Θα χρησιμοποιηθεί η εργασία «{selected_assignment.get('name','')}» "
-                f"με Assignment ID {activity_id}."
+                f"Θα χρησιμοποιηθεί η εργασία «{selected_assignment.get('name','')}» · "
+                f"Assignment ID {assignment_instance_id} · Activity ID {activity_id}."
             )
         else:
             st.info(
@@ -4883,7 +4892,8 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
         grade_preview = pd.DataFrame([{
             "ID Μαθήματος":int(course_id),
             "Εργασία":selected_assignment_label if selected_assignment_label else component,
-            "Assignment ID":int(activity_id),
+            "Activity ID":int(activity_id),
+            "Assignment ID":int(assignment_instance_id) if selected_assignment_label else "—",
             "ID Εκπαιδευόμενου":int(student_id),
             "Νέος βαθμός":float(grade_value),
             "Ανατροφοδότηση":feedback
@@ -4910,6 +4920,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             and grade_confirm
             and grade_final
             and float(grade_value) >= 0
+            and int(activity_id) > 0
         )
 
         if st.button(
@@ -4950,7 +4961,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                     add_write_audit(
                         "Ενημέρωση βαθμού",
                         function_name,
-                        f"Course {course_id} / Assignment {activity_id} / Student {student_id}",
+                        f"Course {course_id} / Activity {activity_id} / Student {student_id}",
                         preview_text,
                         json.dumps(result, ensure_ascii=False),
                         "ΕΠΙΤΥΧΙΑ"
@@ -4965,7 +4976,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                     add_write_audit(
                         "Ενημέρωση βαθμού",
                         function_name,
-                        f"Course {course_id} / Assignment {activity_id} / Student {student_id}",
+                        f"Course {course_id} / Activity {activity_id} / Student {student_id}",
                         preview_text,
                         str(e),
                         "ΑΠΟΤΥΧΙΑ"
