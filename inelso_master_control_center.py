@@ -3208,7 +3208,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 
     source_options = ["Χρήση τελευταίου αρχείου από το Κέντρο Δεδομένων"]
     if "inelso_uploaded_original" not in st.session_state:
-        st.warning("Δεν υπάρχει ακόμη ανεβασμένο dataset. Πήγαινε πρώτα στο «Κέντρο Εισαγωγής & Επεξεργασίας Δεδομένων» και φόρτωσε ένα αρχείο.")
+        st.warning("Δεν υπάρχει ακόμη ανεβασμένο σύνολο δεδομένων. Πήγαινε πρώτα στο «Κέντρο Εισαγωγής & Επεξεργασίας Δεδομένων» και φόρτωσε ένα αρχείο.")
         lab_df = None
     else:
         source = st.radio("Πηγή δεδομένων", source_options, horizontal=True)
@@ -3218,7 +3218,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         ).copy()
 
     if lab_df is not None and len(lab_df) > 0:
-        st.success(f"Ενεργό dataset: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρχείο')}")
+        st.success(f"Ενεργό σύνολο δεδομένων: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρχείο')}")
 
         # ------------------------------------------------------
         # Automated data-quality score
@@ -3242,9 +3242,9 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 
         diag_box = st.expander("🩺 Αυτόματη διάγνωση", expanded=False)
         corr_box = st.expander("🔗 Συσχετίσεις & σχέσεις", expanded=False)
-        class_box = st.expander("🎯 Classification", expanded=False)
-        reg_box = st.expander("📈 Regression", expanded=False)
-        cluster_box = st.expander("🧩 Clustering", expanded=False)
+        class_box = st.expander("🎯 Κατηγοριοποίηση", expanded=False)
+        reg_box = st.expander("📈 Παλινδρόμηση", expanded=False)
+        cluster_box = st.expander("🧩 Ομαδοποίηση", expanded=False)
         group_box = st.expander("👥 Σύγκριση ομάδων", expanded=False)
         report_box = st.expander("📄 Αυτόματη αναφορά", expanded=False)
 
@@ -3252,7 +3252,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         # Automated diagnosis
         # ------------------------------------------------------
         with diag_box:
-            st.subheader("Αυτόματη διάγνωση dataset")
+            st.subheader("Αυτόματη διάγνωση συνόλου δεδομένων")
 
             numeric_cols = lab_df.select_dtypes(include=np.number).columns.tolist()
             categorical_cols = [c for c in lab_df.columns if c not in numeric_cols]
@@ -3262,17 +3262,17 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                 {"Έλεγχος":"Διπλότυπες γραμμές","Τιμή":f"{duplicate_rate*100:.2f}%","Ερμηνεία":"Ελέγξτε αν είναι πραγματικές επαναλήψεις"},
                 {"Έλεγχος":"Αριθμητικές στήλες","Τιμή":len(numeric_cols),"Ερμηνεία":"Υποψήφιες για regression/correlation/clustering"},
                 {"Έλεγχος":"Μη αριθμητικές στήλες","Τιμή":len(categorical_cols),"Ερμηνεία":"Υποψήφιες κατηγορικές μεταβλητές"},
-                {"Έλεγχος":"Σταθερές στήλες","Τιμή":constant_cols,"Ερμηνεία":"Συνήθως δεν προσφέρουν πληροφορία σε ML"},
+                {"Έλεγχος":"Σταθερές στήλες","Τιμή":constant_cols,"Ερμηνεία":"Συνήθως δεν προσφέρουν πληροφορία στη μηχανική μάθηση"},
             ])
             st.dataframe(diagnosis, use_container_width=True, hide_index=True)
 
             st.subheader("Προτεινόμενες αναλύσεις")
             suggestions = []
             if len(numeric_cols) >= 2:
-                suggestions.append("Συσχετίσεις και Regression")
-                suggestions.append("Clustering")
+                suggestions.append("Συσχετίσεις και παλινδρόμηση")
+                suggestions.append("Ομαδοποίηση")
             if categorical_cols:
-                suggestions.append("Classification, εφόσον επιλεγεί κατηγορικό target")
+                suggestions.append("Κατηγοριοποίηση, εφόσον επιλεγεί κατηγορική μεταβλητή-στόχος")
                 suggestions.append("Σύγκριση ομάδων")
             if missing_rate > .10:
                 suggestions.append("Έλεγχος στρατηγικής διαχείρισης ελλιπών τιμών")
@@ -3308,11 +3308,11 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                 st.info("Απαιτούνται τουλάχιστον δύο αριθμητικές μεταβλητές.")
 
         # ------------------------------------------------------
-        # Classification
+        # Κατηγοριοποίηση
         # ------------------------------------------------------
         with class_box:
-            st.subheader("Classification")
-            st.caption("Επιλέγεις κατηγορικό target και το σύστημα εκτελεί leakage-safe train/test pipeline.")
+            st.subheader("Κατηγοριοποίηση")
+            st.caption("Επιλέγεις κατηγορική μεταβλητή-στόχο και το σύστημα εκτελεί ελεγχόμενη διαδικασία εκπαίδευσης και ελέγχου χωρίς διαρροή δεδομένων.")
 
             target = st.selectbox(
                 "Target μεταβλητή για classification",
@@ -3325,9 +3325,9 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                 unique_y = y.dropna().nunique()
 
                 if unique_y < 2:
-                    st.error("Το target έχει λιγότερες από 2 κατηγορίες.")
+                    st.error("Η μεταβλητή-στόχος έχει λιγότερες από 2 κατηγορίες.")
                 elif unique_y > max(30, int(0.2*len(lab_df))):
-                    st.warning("Το target έχει πολλές μοναδικές τιμές. Ίσως δεν είναι κατάλληλο για classification.")
+                    st.warning("Η μεταβλητή-στόχος έχει πολλές μοναδικές τιμές. Ίσως δεν είναι κατάλληλη για κατηγοριοποίηση.")
                 else:
                     available = [c for c in lab_df.columns if c != target]
                     predictors = st.multiselect(
@@ -3339,13 +3339,13 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 
                     model_name = st.radio(
                         "Μοντέλο",
-                        ["Logistic Regression","Random Forest"],
+                        ["Logistic Παλινδρόμηση","Random Forest"],
                         horizontal=True
                     )
 
                     test_size = st.slider("Ποσοστό test set", 20, 40, 30, 5) / 100
 
-                    if st.button("Εκτέλεση Classification", key="run_class"):
+                    if st.button("Εκτέλεση Κατηγοριοποίηση", key="run_class"):
                         if len(predictors) == 0:
                             st.error("Επίλεξε τουλάχιστον έναν predictor.")
                         else:
@@ -3354,7 +3354,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                             y = data[target].astype(str)
 
                             if y.value_counts().min() < 2:
-                                st.error("Υπάρχει κατηγορία target με λιγότερες από 2 εγγραφές.")
+                                st.error("Υπάρχει κατηγορία της μεταβλητής-στόχου με λιγότερες από 2 εγγραφές.")
                             else:
                                 num = X.select_dtypes(include=np.number).columns.tolist()
                                 cat = [c for c in predictors if c not in num]
@@ -3381,8 +3381,8 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 
                                 prep = ColumnTransformer(transformers)
 
-                                if model_name == "Logistic Regression":
-                                    model = LogisticRegression(max_iter=2000)
+                                if model_name == "Logistic Παλινδρόμηση":
+                                    model = LogisticΠαλινδρόμηση(max_iter=2000)
                                 else:
                                     model = RandomForestClassifier(
                                         n_estimators=250,
@@ -3429,13 +3429,13 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                                     st.error(f"Δεν ήταν δυνατή η εκτέλεση του classification: {e}")
 
         # ------------------------------------------------------
-        # Regression
+        # Παλινδρόμηση
         # ------------------------------------------------------
         with reg_box:
-            st.subheader("Regression")
+            st.subheader("Παλινδρόμηση")
             numeric_targets = lab_df.select_dtypes(include=np.number).columns.tolist()
             target_reg = st.selectbox(
-                "Αριθμητικό target για regression",
+                "Αριθμητική μεταβλητή-στόχος για παλινδρόμηση",
                 ["— επιλέξτε —"] + numeric_targets,
                 key="reg_target"
             )
@@ -3451,11 +3451,11 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 
                 model_name = st.radio(
                     "Μοντέλο regression",
-                    ["Linear Regression","Random Forest Regression"],
+                    ["Linear Παλινδρόμηση","Random Forest Παλινδρόμηση"],
                     horizontal=True
                 )
 
-                if st.button("Εκτέλεση Regression", key="run_reg"):
+                if st.button("Εκτέλεση Παλινδρόμηση", key="run_reg"):
                     if not predictors:
                         st.error("Επίλεξε τουλάχιστον έναν predictor.")
                     else:
@@ -3491,8 +3491,8 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 
                         prep = ColumnTransformer(transformers)
                         model = (
-                            LinearRegression()
-                            if model_name == "Linear Regression"
+                            LinearΠαλινδρόμηση()
+                            if model_name == "Linear Παλινδρόμηση"
                             else RandomForestRegressor(n_estimators=250,random_state=42)
                         )
                         pipe = Pipeline([("prep",prep),("model",model)])
@@ -3521,7 +3521,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                             })
                             st.dataframe(result.head(50),use_container_width=True,hide_index=True)
 
-                            if model_name == "Random Forest Regression":
+                            if model_name == "Random Forest Παλινδρόμηση":
                                 feature_names = pipe.named_steps["prep"].get_feature_names_out()
                                 imp = pipe.named_steps["model"].feature_importances_
                                 fi = pd.DataFrame({
@@ -3534,10 +3534,10 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                             st.error(f"Δεν ήταν δυνατή η εκτέλεση του regression: {e}")
 
         # ------------------------------------------------------
-        # Clustering
+        # Ομαδοποίηση
         # ------------------------------------------------------
         with cluster_box:
-            st.subheader("Clustering")
+            st.subheader("Ομαδοποίηση")
             numeric_cols = lab_df.select_dtypes(include=np.number).columns.tolist()
 
             selected = st.multiselect(
@@ -3584,9 +3584,9 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                         st.dataframe(profile.round(3),use_container_width=True)
 
                         st.download_button(
-                            "Λήψη dataset με clusters",
+                            "Λήψη συνόλου δεδομένων με ομάδες",
                             clustered.to_csv(index=False).encode("utf-8-sig"),
-                            "INELSO Academia_dataset_with_clusters.csv",
+                            "INELSO_Academia_σύνολο_δεδομένων_με_ομάδες.csv",
                             "text/csv"
                         )
 
@@ -3640,7 +3640,7 @@ Dataset: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρ
 Ερμηνεία:
 - Ο δείκτης ποιότητας είναι ένας λειτουργικός δείκτης ελέγχου και όχι στατιστικά επικυρωμένο metric.
 - Οι predictive αναλύσεις χρησιμοποιούν train/test split και preprocessing μέσα στο pipeline.
-- Τα αποτελέσματα πρέπει να ερμηνεύονται με βάση το ερευνητικό ερώτημα και τη δομή του dataset.
+- Τα αποτελέσματα πρέπει να ερμηνεύονται με βάση το ερευνητικό ερώτημα και τη δομή του συνόλου δεδομένων.
 """
             st.text_area("Προεπισκόπηση αναφοράς",report_text,height=320)
             st.download_button(
