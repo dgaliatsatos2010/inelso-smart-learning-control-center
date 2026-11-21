@@ -3686,17 +3686,31 @@ elif section == "Προσομοίωση Σεναρίων":
 
     sim = st.session_state['custom_s26'].copy()
 
+    # Το custom_s26 αποθηκεύει τα βασικά mapped δεδομένα και μπορεί να μην
+    # περιλαμβάνει ακόμη την αρχική επιχειρησιακή κατάσταση. Τη δημιουργούμε
+    # με την ίδια λογική που χρησιμοποιείται στην Προσαρμοστική Εξάσκηση,
+    # ώστε η προσομοίωση να μπορεί να συγκρίνει παλιά και νέα κατάσταση.
+    if "κατάσταση" not in sim.columns:
+        sim["κατάσταση"] = sim.apply(
+            lambda r: κατάσταση_26(
+                float(r.get("score", 0)) if pd.notna(r.get("score", np.nan)) else 0,
+                float(r.get("βεβαιότητα", 0)) if pd.notna(r.get("βεβαιότητα", np.nan)) else 0,
+                float(r.get("RC-01", 2)) if pd.notna(r.get("RC-01", np.nan)) else 2
+            ),
+            axis=1
+        )
+
     def simulate_status(row):
-        # For cohort demo we do not have RC-01 per learner, so βεβαιότητα + score only.
+        # Η προσομοίωση μεταβάλλει μόνο τα επιλεγμένα κατώφλια βεβαιότητας και βαθμολογίας.
         if row["βεβαιότητα"] < confidence_threshold:
             return "ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ"
         if row["score"] < ready_score_threshold:
             return "ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ"
         return "ΕΤΟΙΜΟ"
 
-    sim["Νέα κατάσταση"] = sim.apply(simulate_status,axis=1)
+    sim["Νέα κατάσταση"] = sim.apply(simulate_status, axis=1)
 
-    old_counts = sim["κατάσταση"].value_counts() if "κατάσταση" in sim.columns else pd.Series(dtype=int)
+    old_counts = sim["κατάσταση"].value_counts()
     new_counts = sim["Νέα κατάσταση"].value_counts()
 
     a,b,c = st.columns(3)
@@ -3717,7 +3731,7 @@ elif section == "Προσομοίωση Σεναρίων":
     )
 
     changed = int((sim["κατάσταση"] != sim["Νέα κατάσταση"]).sum())
-    st.info(f"Με τα επιλεγμένα όρια αλλάζουν κατηγορία {changed} από {len(sim)} learners.")
+    st.info(f"Με τα επιλεγμένα όρια αλλάζουν κατηγορία {changed} από {len(sim)} εκπαιδευόμενους.")
 
     st.subheader("Σενάρια")
     scenarios = pd.DataFrame([
