@@ -4676,18 +4676,13 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
     # ------------------------------------------------------
     elif action == "Βαθμός":
         st.subheader("Ενημέρωση βαθμού — διαχειριστική λειτουργία")
-        st.error(
-            "Η αλλαγή επίσημου βαθμού είναι υψηλής επίδρασης ενέργεια. "
-            "Χρησιμοποιήστε την μόνο σε δοκιμαστικό μάθημα μέχρι να επαληθευτούν πλήρως "
-            "τα αναγνωριστικά, η δραστηριότητα και η καταχώριση βαθμού."
-        )
-
-        st.info(
-            "Βοήθεια: στην τρέχουσα υλοποίηση η ενημέρωση βαθμού λειτουργεί αξιόπιστα "
-            "όταν υπάρχει ήδη καταχώριση βαθμού ή βαθμολογήσιμη υποβολή για τον εκπαιδευόμενο "
-            "στη συγκεκριμένη εργασία. Αν δεν υπάρχει ακόμη σχετική εγγραφή στο Moodle, "
-            "η ενημέρωση μπορεί να αποτύχει."
-        )
+        with st.expander("ℹ️ Βοήθεια", expanded=False):
+            st.write(
+                "Στην τρέχουσα υλοποίηση η ενημέρωση βαθμού λειτουργεί αξιόπιστα "
+                "όταν υπάρχει ήδη καταχώριση βαθμού ή βαθμολογήσιμη υποβολή για τον εκπαιδευόμενο "
+                "στη συγκεκριμένη εργασία. Αν δεν υπάρχει ακόμη σχετική εγγραφή στο Moodle, "
+                "η ενημέρωση μπορεί να αποτύχει."
+            )
 
         course_id = st.number_input(
             "ID Μαθήματος",
@@ -5030,31 +5025,30 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
     st.markdown("---")
     audit = st.session_state["moodle_write_audit"]
 
-    if len(audit) > 0:
-        st.dataframe(audit,use_container_width=True,hide_index=True)
-        st.download_button(
-            "Λήψη audit log CSV",
-            audit.to_csv(index=False).encode("utf-8-sig"),
-            "INELSO Academia_Moodle_Write_Audit.csv",
-            "text/csv"
-        )
-    else:
-        note_result = st.session_state.get("moodle_notes_result")
-        has_verified_readback = False
-        if isinstance(note_result, dict):
-            for key in ["coursenotes", "notes", "sitenotes", "personalnotes"]:
-                value = note_result.get(key)
-                if isinstance(value, list) and len(value) > 0:
-                    has_verified_readback = True
-                    break
-
-        if has_verified_readback:
-            st.info(
-                "Υπάρχει επαληθευμένη Moodle εγγραφή από προηγούμενη ή τρέχουσα συνεδρία. "
-                "Το τοπικό session audit log δεν περιέχει νέα ενέργεια καταγραφής στην παρούσα συνεδρία."
+    with st.expander("📋 Ιστορικό ενεργειών Moodle", expanded=False):
+        if len(audit) > 0:
+            st.dataframe(audit,use_container_width=True,hide_index=True)
+            st.download_button(
+                "Λήψη audit log CSV",
+                audit.to_csv(index=False).encode("utf-8-sig"),
+                "INELSO Academia_Moodle_Write_Audit.csv",
+                "text/csv"
             )
         else:
-            pass
+            note_result = st.session_state.get("moodle_notes_result")
+            has_verified_readback = False
+            if isinstance(note_result, dict):
+                for key in ["coursenotes", "notes", "sitenotes", "personalnotes"]:
+                    value = note_result.get(key)
+                    if isinstance(value, list) and len(value) > 0:
+                        has_verified_readback = True
+                        break
+
+            if has_verified_readback:
+                st.info(
+                    "Υπάρχει επαληθευμένη Moodle εγγραφή από προηγούμενη ή τρέχουσα συνεδρία. "
+                    "Το τοπικό session audit log δεν περιέχει νέα ενέργεια καταγραφής στην παρούσα συνεδρία."
+                )
 
 # ==========================================================
 # EARLY WARNING ENGINE
