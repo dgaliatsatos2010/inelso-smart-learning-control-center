@@ -3345,9 +3345,9 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 
                     test_size = st.slider("Ποσοστό συνόλου ελέγχου", 20, 40, 30, 5) / 100
 
-                    if st.button("Εκτέλεση Κατηγοριοποίηση", key="run_class"):
+                    if st.button("Εκτέλεση κατηγοριοποίησης", key="run_class"):
                         if len(predictors) == 0:
-                            st.error("Επίλεξε τουλάχιστον έναν predictor.")
+                            st.error("Επιλέξτε τουλάχιστον μία προβλεπτική μεταβλητή.")
                         else:
                             data = lab_df[predictors+[target]].dropna(subset=[target]).copy()
                             X = data[predictors]
@@ -3426,7 +3426,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                                         st.subheader("Feature importance")
                                         st.dataframe(fi.head(25),use_container_width=True,hide_index=True)
                                 except Exception as e:
-                                    st.error(f"Δεν ήταν δυνατή η εκτέλεση του classification: {e}")
+                                    st.error(f"Δεν ήταν δυνατή η εκτέλεση της κατηγοριοποίησης: {e}")
 
         # ------------------------------------------------------
         # Παλινδρόμηση
@@ -3455,9 +3455,9 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                     horizontal=True
                 )
 
-                if st.button("Εκτέλεση Παλινδρόμηση", key="run_reg"):
+                if st.button("Εκτέλεση παλινδρόμησης", key="run_reg"):
                     if not predictors:
-                        st.error("Επίλεξε τουλάχιστον έναν predictor.")
+                        st.error("Επιλέξτε τουλάχιστον μία προβλεπτική μεταβλητή.")
                     else:
                         data = lab_df[predictors+[target_reg]].dropna(subset=[target_reg]).copy()
                         X = data[predictors]
@@ -3531,7 +3531,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                                 st.subheader("Feature importance")
                                 st.dataframe(fi.head(25),use_container_width=True,hide_index=True)
                         except Exception as e:
-                            st.error(f"Δεν ήταν δυνατή η εκτέλεση του regression: {e}")
+                            st.error(f"Δεν ήταν δυνατή η εκτέλεση της παλινδρόμησης: {e}")
 
         # ------------------------------------------------------
         # Ομαδοποίηση
@@ -3548,7 +3548,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
             )
             k = st.slider("Αριθμός ομάδων",2,8,3)
 
-            if st.button("Εκτέλεση K-means", key="run_cluster"):
+            if st.button("Εκτέλεση ομαδοποίησης K-means", key="run_cluster"):
                 if len(selected) < 2:
                     st.error("Επίλεξε τουλάχιστον δύο αριθμητικές μεταβλητές.")
                 else:
@@ -3561,7 +3561,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                     Xs = StandardScaler().fit_transform(X)
 
                     if len(X) <= k:
-                        st.error("Δεν υπάρχουν αρκετές εγγραφές για τον επιλεγμένο αριθμό clusters.")
+                        st.error("Δεν υπάρχουν αρκετές εγγραφές για τον επιλεγμένο αριθμό ομάδων.")
                     else:
                         km = KMeans(n_clusters=k,random_state=42,n_init=20)
                         labels = km.fit_predict(Xs)
@@ -3580,7 +3580,7 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                         st.dataframe(counts,use_container_width=True,hide_index=True)
 
                         profile = clustered.groupby("Cluster")[selected].mean(numeric_only=True)
-                        st.subheader("Μέσο προφίλ ανά cluster")
+                        st.subheader("Μέσο προφίλ ανά ομάδα")
                         st.dataframe(profile.round(3),use_container_width=True)
 
                         st.download_button(
