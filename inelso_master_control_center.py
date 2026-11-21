@@ -4155,11 +4155,18 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
         )
 
         pending_note = st.session_state.get("pending_moodle_note_text", "")
+        if "controlled_moodle_note_text" not in st.session_state:
+            st.session_state["controlled_moodle_note_text"] = pending_note
+        elif pending_note and st.session_state.get("controlled_moodle_note_text") != pending_note:
+            # Νέο draft από άλλη λειτουργία: το εμφανίζουμε αμέσως και δεν
+            # αφήνουμε παλιό περιεχόμενο του widget να το υπερκαλύψει.
+            st.session_state["controlled_moodle_note_text"] = pending_note
+
         note_text = st.text_area(
             "Κείμενο σημείωσης",
-            value=pending_note,
             height=120,
-            placeholder="Γράψτε τη σημείωση ή την ανατροφοδότηση."
+            placeholder="Γράψτε τη σημείωση ή την ανατροφοδότηση.",
+            key="controlled_moodle_note_text"
         )
 
         if pending_note:
@@ -5046,11 +5053,11 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
                 )
 
             default_s16_note = (
-                f"Μαθησιακή Ανάλυση early-warning review για learner {selected_risk_learner}. "
-                f"Δείκτης κινδύνου: {selected_row['Δείκτης κινδύνου']}/100 "
-                f"({selected_row['Κατηγορία κινδύνου']}). "
-                f"Προτεινόμενη ενέργεια: {selected_row['Προτεινόμενη ενέργεια']}. "
-                "Απαιτείται ανθρώπινος έλεγχος πριν από οποιαδήποτε παρέμβαση."
+                f"Ο εκπαιδευόμενος {selected_risk_learner} εμφανίζει "
+                f"{str(selected_row['Κατηγορία κινδύνου']).lower()} προτεραιότητα υποστήριξης "
+                f"με δείκτη {selected_row['Δείκτης κινδύνου']}/100. "
+                "Συνιστάται έλεγχος της πρόσφατης επίδοσης, της συμμετοχής και της δραστηριότητάς του "
+                "πριν αποφασιστεί οποιαδήποτε παρέμβαση."
             )
 
             with st.expander("Κείμενο παρέμβασης", expanded=True):
@@ -5061,7 +5068,12 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
                     # Κάθε εκπαιδευόμενος διατηρεί το δικό του προσχέδιο,
                     # αλλά η αρχική τιμή προέρχεται πάντα από τον τρέχοντα υπολογισμό.
                     existing_note = str(st.session_state.get(note_key, ""))
-                    if "Δείκτης κινδύνου:" not in existing_note:
+                    # Αν υπάρχει παλιό τεχνικό draft από προηγούμενη έκδοση,
+                    # αντικαθίσταται μία φορά με το νέο καθαρό ελληνικό πρότυπο.
+                    if (
+                        "early-warning review" in existing_note
+                        or "Δείκτης κινδύνου:" in existing_note
+                    ):
                         st.session_state[note_key] = default_s16_note
 
                 s16_note_text = st.text_area(
@@ -5072,8 +5084,14 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
 
             st.info("Το παρακάτω βήμα δημιουργεί μόνο draft. Δεν γράφει αυτόματα βαθμό ή παρέμβαση στο Moodle.")
             if st.button("Προώθηση draft στην Ελεγχόμενη Εγγραφή Moodle", use_container_width=True, key="s16_stage_note"):
-                st.session_state["pending_moodle_note_text"] = s16_note_text
+                # Μεταφέρουμε ακριβώς το τρέχον, ορατό κείμενο του editor.
+                st.session_state["pending_moodle_note_text"] = str(
+                    st.session_state.get(note_key, s16_note_text)
+                )
                 st.session_state["pending_moodle_intervention_type"] = "Μαθησιακή Ανάλυση — Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος"
+                # Καθαρίζουμε τυχόν παλιά widget state της φόρμας Moodle ώστε
+                # το νέο draft να εμφανιστεί ακριβώς όπως προωθήθηκε.
+                st.session_state.pop("controlled_moodle_note_text", None)
                 st.success("Το draft προωθήθηκε στην Ελεγχόμενη Εγγραφή Moodle. Απαιτείται ρητή ανθρώπινη επιβεβαίωση.")
 
 # ==========================================================
