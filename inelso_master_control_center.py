@@ -2378,12 +2378,21 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
 
         if use_csv_s25 and ACTIVE_DF is not None:
             with st.expander("Προβολή πλαισίου από το ενεργό αρχείο", expanded=False):
-                st.text_area(
-                    "Πλαίσιο δεδομένων",
-                    value=dataset_context_summary(ACTIVE_DF, max_cols=None),
-                    height=170,
-                    disabled=True,
-                    key="s25_csv_context_preview"
+                p = dataset_profile(ACTIVE_DF)
+                st.caption(
+                    f"Αρχείο: {active_dataset_name()} · "
+                    f"{p['rows']} γραμμές · {p['cols']} στήλες · "
+                    f"{p['missing']} κενές τιμές · {p['duplicates']} διπλότυπα"
+                )
+                st.markdown("**Μεταβλητές του ενεργού αρχείου**")
+                st.dataframe(
+                    pd.DataFrame({
+                        "Α/Α": range(1, len(ACTIVE_DF.columns) + 1),
+                        "Μεταβλητή": [str(col) for col in ACTIVE_DF.columns]
+                    }),
+                    use_container_width=True,
+                    hide_index=True,
+                    height=min(800, 38 * (len(ACTIVE_DF.columns) + 1))
                 )
 
         c1, c2, c3 = st.columns(3)
@@ -2475,7 +2484,7 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
 2. Κάθε ερώτηση να ελέγχει μία βασική γνώση ή δεξιότητα.
 3. Ορίστε σαφή σωστή απάντηση ή κανόνα βαθμολόγησης.
 4. Αποφύγετε αμφίσημες διατυπώσεις.
-5. Μετά από πραγματικές προσπάθειες, χρησιμοποιήστε την **Ποιότητα Αξιολόγησης**.
+5. Μετά από πραγματικές προσπάθειες, χρησιμοποιήστε την **Ποιότητα Quiz** από το αριστερό μενού.
 """)
 
         with st.expander("📋 Οδηγίες για Κλίμακα Αξιολόγησης", expanded=False):
@@ -2571,12 +2580,21 @@ elif section == "Υποστήριξη Διδάσκοντα":
         )
         if use_csv_s28 and ACTIVE_DF is not None:
             with st.expander("Προβολή πλαισίου από το ενεργό αρχείο", expanded=False):
-                st.text_area(
-                    "Πλαίσιο CSV",
-                    value=dataset_context_summary(ACTIVE_DF, max_cols=None),
-                    height=170,
-                    disabled=True,
-                    key="s28_csv_context_preview"
+                p = dataset_profile(ACTIVE_DF)
+                st.caption(
+                    f"Αρχείο: {active_dataset_name()} · "
+                    f"{p['rows']} γραμμές · {p['cols']} στήλες · "
+                    f"{p['missing']} κενές τιμές · {p['duplicates']} διπλότυπα"
+                )
+                st.markdown("**Μεταβλητές του ενεργού αρχείου**")
+                st.dataframe(
+                    pd.DataFrame({
+                        "Α/Α": range(1, len(ACTIVE_DF.columns) + 1),
+                        "Μεταβλητή": [str(col) for col in ACTIVE_DF.columns]
+                    }),
+                    use_container_width=True,
+                    hide_index=True,
+                    height=min(800, 38 * (len(ACTIVE_DF.columns) + 1))
                 )
 
         student_input = st.text_area(
