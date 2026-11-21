@@ -4974,18 +4974,6 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
                 st.session_state["pending_moodle_intervention_type"] = "Μαθησιακή Ανάλυση — Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος"
                 st.success("Το draft προωθήθηκε στην Ελεγχόμενη Εγγραφή Moodle. Απαιτείται ρητή ανθρώπινη επιβεβαίωση.")
 
-            with st.expander("Τεχνική σύνδεση / provenance Moodle", expanded=False):
-                render_moodle_rest_service_panel(
-                    "Μαθησιακή Ανάλυση",
-                    summary=f"Ανάλυση έγκαιρης υποστήριξης · συμβατότητα {service_dataset_compatibility('S16', ACTIVE_DF)}",
-                    score=None,
-                    status="Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος",
-                    entity=ACTIVE_NAME,
-                    enabled=True,
-                    intervention_type="Μαθησιακή Ανάλυση — Έγκαιρη υποστήριξη / Ανθρώπινος έλεγχος",
-                    note="Ο operational risk index δεν γράφεται ως επίσημος βαθμός.",
-                )
-
 # ==========================================================
 # ΜΗΤΡΩΟ ΕΝΕΡΓΕΙΩΝ
 # ==========================================================
