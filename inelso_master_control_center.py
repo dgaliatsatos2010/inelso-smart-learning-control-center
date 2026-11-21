@@ -4072,11 +4072,20 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                     st.error("Συμπληρώστε URL και κλειδί πρόσβασης.")
                 else:
                     try:
-                        info = moodle_rest_call(
-                            write_url,
-                            write_token,
-                            "core_webservice_get_site_info"
+                        endpoint = f"{write_url}/webservice/rest/server.php"
+                        response = requests.post(
+                            endpoint,
+                            data={
+                                "wstoken": write_token,
+                                "wsfunction": "core_webservice_get_site_info",
+                                "moodlewsrestformat": "json"
+                            },
+                            timeout=20
                         )
+                        response.raise_for_status()
+                        info = response.json()
+                        if isinstance(info, dict) and ("exception" in info or "errorcode" in info):
+                            raise RuntimeError(info.get("message", str(info)))
                         st.session_state["moodle_base_url"] = write_url
                         st.session_state["moodle_shared_token"] = write_token
                         st.session_state["moodle_connection_verified"] = True
