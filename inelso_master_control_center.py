@@ -4315,18 +4315,25 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                         note_ok = False
 
                     if note_ok:
-                        st.success(f"Η εκπαιδευτική παρέμβαση καταγράφηκε στο Moodle. Note ID: {note_id}")
+                        st.markdown(
+                            "<div class='inelso-action-banner' style='border-left:5px solid #2e9d78'>"
+                            "<strong>Η εκπαιδευτική παρέμβαση καταγράφηκε επιτυχώς στο Moodle.</strong>"
+                            f"<div style='margin-top:.35rem;color:#52606d'>Αναγνωριστικό σημείωσης: "
+                            f"<strong>{note_id}</strong></div></div>",
+                            unsafe_allow_html=True
+                        )
                         audit_status = "ΕΠΙΤΥΧΙΑ"
                         st.session_state.pop("pending_moodle_note_text", None)
                         st.session_state.pop("pending_moodle_intervention_type", None)
                     else:
                         st.warning(
-                            "Το Moodle απάντησε χωρίς σαφές θετικό Note ID. "
-                            "Έλεγξε το αποτέλεσμα και τη λίστα σημειώσεων πριν θεωρηθεί επιτυχής."
+                            "Το Moodle απάντησε χωρίς σαφές θετικό αναγνωριστικό σημείωσης. "
+                            "Ελέγξτε τη λίστα σημειώσεων πριν θεωρηθεί επιτυχής η καταγραφή."
                         )
                         audit_status = "ΠΡΟΣ ΕΛΕΓΧΟ"
 
-                    st.json(result)
+                    with st.expander("Τεχνικές λεπτομέρειες απόκρισης Moodle", expanded=False):
+                        st.json(result)
 
                     add_write_audit(
                         "Καταγραφή εκπαιδευτικής παρέμβασης",
@@ -4401,16 +4408,25 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                         except Exception:
                             pass
 
-                st.success("Η καταγραφή στο Moodle επαληθεύτηκε — η παρέμβαση ανακτήθηκε επιτυχώς από το Moodle.")
-                st.session_state.pop("pending_moodle_result_meta", None)
-                st.dataframe(clean_notes,use_container_width=True,hide_index=True)
-
                 latest=notes_list[-1]
+                st.markdown(
+                    "<div class='inelso-action-banner' style='border-left:5px solid #2e9d78'>"
+                    "<strong>Η καταγραφή επαληθεύτηκε από το Moodle.</strong>"
+                    "<div style='margin-top:.35rem;color:#52606d'>"
+                    "Η σημείωση ανακτήθηκε επιτυχώς για τον επιλεγμένο εκπαιδευόμενο και μάθημα."
+                    "</div></div>",
+                    unsafe_allow_html=True
+                )
+                st.session_state.pop("pending_moodle_result_meta", None)
+
                 c1,c2,c3,c4=st.columns(4)
                 c1.metric("Note ID",str(latest.get("id","—")))
                 c2.metric("ID Μαθήματος",str(latest.get("courseid","—")))
                 c3.metric("ID Χρήστη",str(latest.get("userid","—")))
-                c4.metric("Verification","ΕΠΑΛΗΘΕΥΜΕΝΟ")
+                c4.metric("Κατάσταση","ΕΠΑΛΗΘΕΥΜΕΝΟ")
+
+                with st.expander("Προβολή ανακτημένων σημειώσεων", expanded=True):
+                    st.dataframe(clean_notes,use_container_width=True,hide_index=True)
             else:
                 st.info("Δεν βρέθηκαν σημειώσεις για τον επιλεγμένο χρήστη/μάθημα.")
 
