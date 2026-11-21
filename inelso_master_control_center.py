@@ -2182,7 +2182,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
     if ACTIVE_DF is None:
         render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
         show_active_dataset_context("S26")
-        c1,c2,c3,c4,c5 = st.columns(5)
+        c1,c2,c3,c4,c5 = st.columns([1, 1.35, 1, 1, 1])
         c1.metric("Τρέχουσα επίδοση","—")
         c2.metric("Κατάκτηση","—")
         c3.metric("Βεβαιότητα","—")
@@ -2271,7 +2271,7 @@ elif section == "Προσαρμοστική Εξάσκηση":
     prev = service26_current.iloc[0]
     gain = float(latest["score"])-float(prev["score"])
 
-    c1,c2,c3,c4,c5 = st.columns(5)
+    c1,c2,c3,c4,c5 = st.columns([1, 1.35, 1, 1, 1])
     c1.metric("Τρέχουσα επίδοση",f"{latest['score']:.0f}/100")
     c2.metric("Κατάκτηση",latest["κατάκτηση"])
     c3.metric("Βεβαιότητα",f"{latest['βεβαιότητα']:.2f}")
