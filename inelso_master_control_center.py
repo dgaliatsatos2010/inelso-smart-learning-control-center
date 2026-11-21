@@ -3123,7 +3123,7 @@ elif section == "Μεθοδολογία & Προέλευση":
         a3.metric("Retry", "Score < 70")
         a4.metric("Ready", "Score ≥ 70")
 
-        with st.expander("🎯 Αναλυτικοί κανόνες adaptive decision", expanded=True):
+        with st.expander("🎯 Αναλυτικοί κανόνες προσαρμοστικής απόφασης", expanded=True):
             st.markdown("""
 - Βεβαιότητα < 0,70 → **ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ**
 - RC-01 επίπεδο 0–1 → **ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ**
