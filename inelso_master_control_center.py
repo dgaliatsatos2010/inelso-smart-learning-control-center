@@ -4876,12 +4876,84 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             )
 
         item_number = 0
-        grade_value = st.number_input(
-            "Νέος βαθμός",
-            value=0.0,
-            step=0.5,
-            key="grade_new_value"
-        )
+        assignment_max_grade = None
+        if selected_assignment_label:
+            raw_max_grade = selected_assignment.get("grade")
+            try:
+                if raw_max_grade is not None and float(raw_max_grade) > 0:
+                    assignment_max_grade = float(raw_max_grade)
+            except Exception:
+                assignment_max_grade = None
+
+        if assignment_max_grade is not None:
+            st.caption(f"Μέγιστος βαθμός εργασίας: {assignment_max_grade:g}")
+            grade_value = st.number_input(
+                "Νέος βαθμός",
+                min_value=0.0,
+                max_value=float(assignment_max_grade),
+                value=min(float(st.session_state.get("grade_new_value", 0.0) or 0.0), float(assignment_max_grade)),
+                step=0.5,
+                key="grade_new_value"
+            )
+        else:
+            grade_value = st.number_input(
+                "Νέος βαθμός",
+                min_value=0.0,
+                value=0.0,
+                step=0.5,
+                key="grade_new_value"
+            )
+
+        submission_ready = False
+        submission_attempt = -1
+        if selected_assignment_label:
+            if st.button(
+                "Έλεγχος κατάστασης υποβολής",
+                use_container_width=True,
+                key="grade_check_submission"
+            ):
+                if not moodle_url or not token:
+                    st.error("Δεν υπάρχει ενεργή σύνδεση Moodle.")
+                else:
+                    try:
+                        submission_status = moodle_write_call(
+                            moodle_url,
+                            token,
+                            "mod_assign_get_submission_status",
+                            {
+                                "assignid": int(assignment_instance_id),
+                                "userid": int(student_id)
+                            }
+                        )
+                        st.session_state["grade_submission_status"] = submission_status
+                    except Exception as e:
+                        st.session_state.pop("grade_submission_status", None)
+                        st.error(
+                            "Δεν ήταν δυνατός ο έλεγχος της υποβολής. "
+                            "Προσθέστε τη λειτουργία mod_assign_get_submission_status στο external service "
+                            f"και ξαναδοκιμάστε. Λεπτομέρεια: {e}"
+                        )
+
+            submission_status = st.session_state.get("grade_submission_status")
+            if isinstance(submission_status, dict):
+                lastattempt = submission_status.get("lastattempt") or {}
+                submission = lastattempt.get("submission") or {}
+                status_text = str(submission.get("status", "") or "")
+                try:
+                    submission_attempt = int(submission.get("attemptnumber", -1))
+                except Exception:
+                    submission_attempt = -1
+                if submission:
+                    submission_ready = True
+                    st.success(
+                        f"Βρέθηκε υποβολή για τον εκπαιδευόμενο. "
+                        f"Κατάσταση: {status_text or '—'} · Attempt: {submission_attempt}."
+                    )
+                else:
+                    st.warning(
+                        "Δεν βρέθηκε υπάρχουσα υποβολή/attempt για τον συγκεκριμένο εκπαιδευόμενο "
+                        "στην επιλεγμένη εργασία."
+                    )
         feedback = st.text_area(
             "Προαιρετική ανατροφοδότηση",
             height=100,
@@ -4921,6 +4993,14 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             and grade_final
             and float(grade_value) >= 0
             and int(activity_id) > 0
+            and (
+                (not selected_assignment_label)
+                or submission_ready
+            )
+            and (
+                assignment_max_grade is None
+                or float(grade_value) <= float(assignment_max_grade)
+            )
         )
 
         if st.button(
@@ -4938,7 +5018,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                     "assignmentid": int(assignment_instance_id) if selected_assignment_label else int(activity_id),
                     "userid": int(student_id),
                     "grade": float(grade_value),
-                    "attemptnumber": -1,
+                    "attemptnumber": int(submission_attempt) if submission_ready else -1,
                     "addattempt": 0,
                     "workflowstate": "",
                     "applytoall": 0
