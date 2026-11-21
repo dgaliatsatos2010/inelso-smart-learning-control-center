@@ -1088,8 +1088,12 @@ def dataset_context_summary(df, max_cols=12):
     if not isinstance(df, pd.DataFrame):
         return "Δεν υπάρχει ενεργό σύνολο δεδομένων."
     p = dataset_profile(df)
-    cols = [str(c) for c in df.columns[:max_cols]]
-    suffix = " ..." if len(df.columns) > max_cols else ""
+    if max_cols is None:
+        cols = [str(c) for c in df.columns]
+        suffix = ""
+    else:
+        cols = [str(c) for c in df.columns[:max_cols]]
+        suffix = " ..." if len(df.columns) > max_cols else ""
     return (
         f"Αρχείο: {active_dataset_name()}\n"
         f"Γραμμές: {p['rows']} | Στήλες: {p['cols']} | "
@@ -2376,8 +2380,8 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
             with st.expander("Προβολή πλαισίου από το ενεργό αρχείο", expanded=False):
                 st.text_area(
                     "Πλαίσιο δεδομένων",
-                    value=dataset_context_summary(ACTIVE_DF),
-                    height=100,
+                    value=dataset_context_summary(ACTIVE_DF, max_cols=None),
+                    height=170,
                     disabled=True,
                     key="s25_csv_context_preview"
                 )
@@ -2569,8 +2573,8 @@ elif section == "Υποστήριξη Διδάσκοντα":
             with st.expander("Προβολή πλαισίου από το ενεργό αρχείο", expanded=False):
                 st.text_area(
                     "Πλαίσιο CSV",
-                    value=dataset_context_summary(ACTIVE_DF),
-                    height=90,
+                    value=dataset_context_summary(ACTIVE_DF, max_cols=None),
+                    height=170,
                     disabled=True,
                     key="s28_csv_context_preview"
                 )
