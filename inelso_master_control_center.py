@@ -4679,48 +4679,180 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
         st.error(
             "Η αλλαγή επίσημου βαθμού είναι υψηλής επίδρασης ενέργεια. "
             "Χρησιμοποιήστε την μόνο σε δοκιμαστικό μάθημα μέχρι να επαληθευτούν πλήρως "
-            "τα αναγνωριστικά, το στοιχείο και η καταχώριση βαθμού του συγκεκριμένου Moodle."
+            "τα αναγνωριστικά, η δραστηριότητα και η καταχώριση βαθμού."
         )
 
-        course_id = st.number_input("ID Μαθήματος",min_value=1,step=1,value=1)
-        component = st.text_input(
-            "Στοιχείο Moodle",
-            value="mod_assign",
-            help="π.χ. mod_assign. Πρέπει να αντιστοιχεί στην καταχώριση βαθμού που ενημερώνεται."
+        course_id = st.number_input(
+            "ID Μαθήματος",
+            min_value=1,
+            step=1,
+            value=int(st.session_state.get("moodle_selected_course_id", 6) or 6),
+            key="grade_course_id"
         )
-        activity_id = st.number_input("ID Δραστηριότητας",min_value=1,step=1,value=1)
-        item_number = st.number_input("Αριθμός στοιχείου",min_value=0,step=1,value=0)
-        student_id = st.number_input("ID Εκπαιδευόμενου",min_value=1,step=1,value=1)
-        grade_value = st.number_input("Νέος βαθμός",value=0.0,step=0.5)
+
+        c_load1, c_load2 = st.columns(2)
+        with c_load1:
+            if st.button(
+                "Φόρτωση εργασιών μαθήματος",
+                use_container_width=True,
+                key="grade_load_assignments"
+            ):
+                if not moodle_url or not token:
+                    st.error("Δεν υπάρχει ενεργή σύνδεση Moodle.")
+                else:
+                    try:
+                        assign_result = moodle_write_call(
+                            moodle_url,
+                            token,
+                            "mod_assign_get_assignments",
+                            {"courseids[0]": int(course_id)}
+                        )
+                        assignments = []
+                        if isinstance(assign_result, dict):
+                            for course_obj in assign_result.get("courses", []) or []:
+                                assignments.extend(course_obj.get("assignments", []) or [])
+                        if assignments:
+                            st.session_state["grade_assignments"] = assignments
+                            st.success(f"Φορτώθηκαν {len(assignments)} εργασίες.")
+                        else:
+                            st.session_state.pop("grade_assignments", None)
+                            st.warning("Δεν βρέθηκαν εργασίες τύπου Assignment στο επιλεγμένο μάθημα.")
+                    except Exception as e:
+                        st.error(
+                            "Δεν ήταν δυνατή η φόρτωση των εργασιών. "
+                            f"Ελέγξτε αν η λειτουργία mod_assign_get_assignments είναι διαθέσιμη στο token. Λεπτομέρεια: {e}"
+                        )
+
+        with c_load2:
+            if st.button(
+                "Φόρτωση εκπαιδευομένων",
+                use_container_width=True,
+                key="grade_load_users"
+            ):
+                if not moodle_url or not token:
+                    st.error("Δεν υπάρχει ενεργή σύνδεση Moodle.")
+                else:
+                    try:
+                        users_result = moodle_write_call(
+                            moodle_url,
+                            token,
+                            "core_enrol_get_enrolled_users",
+                            {"courseid": int(course_id)}
+                        )
+                        if isinstance(users_result, list) and users_result:
+                            st.session_state["grade_course_users"] = pd.DataFrame(users_result)
+                            st.success(f"Φορτώθηκαν {len(users_result)} εγγεγραμμένοι χρήστες.")
+                        else:
+                            st.session_state.pop("grade_course_users", None)
+                            st.warning("Δεν βρέθηκαν εγγεγραμμένοι χρήστες.")
+                    except Exception as e:
+                        st.error(f"Δεν ήταν δυνατή η φόρτωση χρηστών: {e}")
+
+        assignments = st.session_state.get("grade_assignments", [])
+        selected_assignment_label = None
+        if isinstance(assignments, list) and assignments:
+            assignment_map = {}
+            for a in assignments:
+                if not isinstance(a, dict):
+                    continue
+                aid = a.get("id")
+                if aid is None:
+                    continue
+                name = str(a.get("name", f"Εργασία {aid}"))
+                cmid = a.get("cmid")
+                label = f"{name} — Assignment ID {aid}"
+                if cmid is not None:
+                    label += f" — Activity ID {cmid}"
+                assignment_map[label] = a
+            selected_assignment_label = st.selectbox(
+                "Εργασία Moodle",
+                list(assignment_map.keys()),
+                key="grade_assignment_select"
+            )
+            selected_assignment = assignment_map[selected_assignment_label]
+            component = "mod_assign"
+            activity_id = int(selected_assignment.get("id"))
+            st.caption(
+                f"Θα χρησιμοποιηθεί η εργασία «{selected_assignment.get('name','')}» "
+                f"με Assignment ID {activity_id}."
+            )
+        else:
+            st.info(
+                "Πατήστε «Φόρτωση εργασιών μαθήματος» για να επιλέξετε πραγματική εργασία. "
+                "Η χειροκίνητη εισαγωγή παραμένει διαθέσιμη μόνο ως εναλλακτική."
+            )
+            component = st.text_input(
+                "Στοιχείο Moodle",
+                value="mod_assign",
+                key="grade_component_manual"
+            )
+            activity_id = st.number_input(
+                "ID Δραστηριότητας",
+                min_value=1,
+                step=1,
+                value=1,
+                key="grade_activity_manual"
+            )
+
+        users_df = st.session_state.get("grade_course_users")
+        selected_user_label = None
+        if isinstance(users_df, pd.DataFrame) and not users_df.empty and "id" in users_df.columns:
+            user_map = {}
+            for _, ur in users_df.iterrows():
+                uid = int(ur["id"])
+                fullname = str(ur.get("fullname", f"Χρήστης {uid}"))
+                email = str(ur.get("email", "") or "")
+                label = f"{fullname} — ID {uid}"
+                if email and email.lower() != "nan":
+                    label += f" — {email}"
+                user_map[label] = uid
+            selected_user_label = st.selectbox(
+                "Εκπαιδευόμενος",
+                list(user_map.keys()),
+                key="grade_user_select"
+            )
+            student_id = user_map[selected_user_label]
+        else:
+            student_id = st.number_input(
+                "ID Εκπαιδευόμενου",
+                min_value=1,
+                step=1,
+                value=208,
+                key="grade_student_manual"
+            )
+
+        item_number = 0
+        grade_value = st.number_input(
+            "Νέος βαθμός",
+            value=0.0,
+            step=0.5,
+            key="grade_new_value"
+        )
         feedback = st.text_area(
             "Προαιρετική ανατροφοδότηση",
-            height=100
+            height=100,
+            key="grade_feedback"
         )
-        source = st.text_input(
-            "Προέλευση",
-            value="inelso_control_center"
-        )
+        source = "inelso_control_center"
 
         grade_preview = pd.DataFrame([{
             "ID Μαθήματος":int(course_id),
-            "Στοιχείο Moodle":component,
-            "ID Δραστηριότητας":int(activity_id),
-            "Αριθμός στοιχείου":int(item_number),
+            "Εργασία":selected_assignment_label if selected_assignment_label else component,
+            "Assignment ID":int(activity_id),
             "ID Εκπαιδευόμενου":int(student_id),
             "Νέος βαθμός":float(grade_value),
-            "Ανατροφοδότηση":feedback,
-            "Λειτουργία API":"core_grade_update_grades"
+            "Ανατροφοδότηση":feedback
         }])
 
         st.subheader("Προεπισκόπηση αλλαγής")
         st.dataframe(grade_preview,use_container_width=True,hide_index=True)
 
         typed_phrase = st.text_input(
-            "Για επιβεβαίωση πληκτρολόγησε ακριβώς: ΑΛΛΑΓΗ ΒΑΘΜΟΥ",
+            "Για επιβεβαίωση πληκτρολογήστε ακριβώς: ΑΛΛΑΓΗ ΒΑΘΜΟΥ",
             key="grade_phrase"
         )
         grade_confirm = st.checkbox(
-            "Έλεγξα το ID Μαθήματος, το ID Δραστηριότητας, το ID Εκπαιδευόμενου, το στοιχείο Moodle και τον νέο βαθμό.",
+            "Έλεγξα το μάθημα, την εργασία, τον εκπαιδευόμενο και τον νέο βαθμό.",
             key="grade_confirm"
         )
         grade_final = st.checkbox(
@@ -4732,6 +4864,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             typed_phrase == "ΑΛΛΑΓΗ ΒΑΘΜΟΥ"
             and grade_confirm
             and grade_final
+            and float(grade_value) >= 0
         )
 
         if st.button(
@@ -4740,7 +4873,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             type="primary"
         ):
             if not moodle_url or not token:
-                st.error("Δεν υπάρχει ενεργή σύνδεση Moodle. Ανοίξτε τις «Ρυθμίσεις σύνδεσης Moodle» παραπάνω και εκτελέστε «Έλεγχος σύνδεσης».")
+                st.error("Δεν υπάρχει ενεργή σύνδεση Moodle.")
             else:
                 function_name = "core_grade_update_grades"
                 params = {
@@ -4756,34 +4889,38 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                     params["grades[0][str_feedback]"] = feedback
                     params["grades[0][feedbackformat]"] = 1
 
-                preview_text = json.dumps({
-                    k:v for k,v in params.items()
-                }, ensure_ascii=False)
+                preview_text = json.dumps(params, ensure_ascii=False)
 
                 try:
                     result = moodle_write_call(
                         moodle_url, token, function_name, params
                     )
-                    st.success("Το Moodle επέστρεψε επιτυχώς αποτέλεσμα ενημέρωσης βαθμού.")
-                    st.json(result)
+                    st.markdown(
+                        "<div class='inelso-action-banner' style='border-left:5px solid #2e9d78'>"
+                        "<strong>Η ενημέρωση βαθμού ολοκληρώθηκε χωρίς σφάλμα από το Moodle.</strong>"
+                        "<div style='margin-top:.35rem;color:#52606d'>Ελέγξτε το Βαθμολόγιο του μαθήματος για επιβεβαίωση.</div>"
+                        "</div>",
+                        unsafe_allow_html=True
+                    )
                     add_write_audit(
                         "Ενημέρωση βαθμού",
                         function_name,
-                        f"Course {course_id} / Activity {activity_id} / Student {student_id}",
+                        f"Course {course_id} / Assignment {activity_id} / Student {student_id}",
                         preview_text,
                         json.dumps(result, ensure_ascii=False),
                         "ΕΠΙΤΥΧΙΑ"
                     )
                 except Exception as e:
                     st.error(
-                        "Η ενημέρωση απέτυχε. Αυτό μπορεί να σημαίνει ότι η λειτουργία "
-                        "δεν έχει δοθεί στην υπηρεσία ή στο διακριτικό πρόσβασης, ότι τα αναγνωριστικά ή το στοιχείο δεν αντιστοιχούν "
-                        f"στην καταχώριση βαθμού ή ότι το Moodle απαιτεί διαφορετική δομή παραμέτρων. Λεπτομέρεια: {e}"
+                        "Η ενημέρωση βαθμού απέτυχε. Ελέγξτε ότι η επιλεγμένη εργασία "
+                        "αντιστοιχεί σε πραγματική καταχώριση βαθμού και ότι η λειτουργία "
+                        "core_grade_update_grades είναι διαθέσιμη στο token. "
+                        f"Λεπτομέρεια: {e}"
                     )
                     add_write_audit(
                         "Ενημέρωση βαθμού",
                         function_name,
-                        f"Course {course_id} / Activity {activity_id} / Student {student_id}",
+                        f"Course {course_id} / Assignment {activity_id} / Student {student_id}",
                         preview_text,
                         str(e),
                         "ΑΠΟΤΥΧΙΑ"
