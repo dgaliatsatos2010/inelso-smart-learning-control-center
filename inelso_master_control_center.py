@@ -4525,11 +4525,6 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
             value=False,
             key="message_retry_contact"
         )
-        st.caption(
-            "Η επιλογή αυτή δεν παρακάμπτει αποκλεισμό ή ρυθμίσεις απορρήτου του παραλήπτη. "
-            "Η τελική απόφαση παραμένει στο Moodle."
-        )
-
         preview = pd.DataFrame([{
             "Ενέργεια":"Αποστολή προσωπικού μηνύματος",
             "Μάθημα":int(message_course_id),
@@ -4655,12 +4650,6 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                                 "Δεν παρακάμπτονται οι ρυθμίσεις απορρήτου του παραλήπτη."
                             )
                         audit_status = "ΑΠΟΤΥΧΙΑ"
-
-                    with st.expander("Τεχνικές λεπτομέρειες απόκρισης Moodle", expanded=False):
-                        st.json(result)
-                        if contact_result is not None:
-                            st.write("Απόκριση προσθήκης επαφής:")
-                            st.json(contact_result)
 
                     add_write_audit(
                         "Αποστολή προσωπικού μηνύματος",
