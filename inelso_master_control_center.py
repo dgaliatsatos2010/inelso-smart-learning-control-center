@@ -4910,13 +4910,6 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             view_cols = ["Μαθητής","Δείκτης κινδύνου","Κατηγορία κινδύνου","Προτεινόμενη ενέργεια"]
             st.dataframe(ranked[view_cols], use_container_width=True, hide_index=True)
 
-            with st.expander("Αναλυτική εξήγηση ανά εγγραφή", expanded=False):
-                st.dataframe(
-                    ranked[["Μαθητής","Δείκτης κινδύνου","Κατηγορία κινδύνου","Προτεινόμενη ενέργεια","Εξήγηση"]],
-                    use_container_width=True,
-                    hide_index=True
-                )
-
             st.download_button(
                 "Λήψη αποτελεσμάτων CSV",
                 out_df.to_csv(index=False).encode("utf-8-sig"),
