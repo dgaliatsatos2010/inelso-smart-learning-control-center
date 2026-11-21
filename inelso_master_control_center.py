@@ -4841,13 +4841,13 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
         st.markdown("#### Τι χρησιμοποιεί η λειτουργία")
         u1,u2,u3,u4 = st.columns(4)
         with u1:
-            st.markdown("<div class='inelso-feature-card'><h3>Επίδοση</h3><p>Χαμηλότερη επίδοση μπορεί να αυξήσει την προτεραιότητα.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><h3>Επίδοση</h3><p>Η χαμηλότερη επίδοση μπορεί να αυξήσει την προτεραιότητα, ιδιαίτερα όταν συνδυάζεται με άλλες ενδείξεις μαθησιακής δυσκολίας.</p></div>", unsafe_allow_html=True)
         with u2:
-            st.markdown("<div class='inelso-feature-card'><h3>Αδράνεια</h3><p>Περισσότερες ημέρες αδράνειας μπορούν να αυξήσουν την ένδειξη.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><h3>Αδράνεια</h3><p>Οι περισσότερες ημέρες αδράνειας μπορεί να υποδηλώνουν μειωμένη εμπλοκή και να αυξάνουν την προτεραιότητα για έγκαιρο έλεγχο.</p></div>", unsafe_allow_html=True)
         with u3:
-            st.markdown("<div class='inelso-feature-card'><h3>Προσπάθειες</h3><p>Μπορούν να χρησιμοποιηθούν ως λειτουργική ένδειξη, ανάλογα με το σύνολο δεδομένων.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><h3>Προσπάθειες</h3><p>Ο αριθμός προσπαθειών μπορεί να χρησιμοποιηθεί ως συμπληρωματική ένδειξη, ανάλογα με τη δομή και το περιεχόμενο του συνόλου δεδομένων.</p></div>", unsafe_allow_html=True)
         with u4:
-            st.markdown("<div class='inelso-feature-card'><h3>Συμμετοχή</h3><p>Χαμηλή συμμετοχή μπορεί να λειτουργήσει ως πρόσθετη ένδειξη.</p></div>", unsafe_allow_html=True)
+            st.markdown("<div class='inelso-feature-card'><h3>Συμμετοχή</h3><p>Η χαμηλή συμμετοχή μπορεί να λειτουργήσει ως πρόσθετη ένδειξη περιορισμένης εμπλοκής και να ενισχύσει τη συνολική προτεραιότητα.</p></div>", unsafe_allow_html=True)
 
         with st.expander("Μεθοδολογική σημείωση", expanded=False):
             st.write(
