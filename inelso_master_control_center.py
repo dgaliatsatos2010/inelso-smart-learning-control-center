@@ -6019,20 +6019,6 @@ elif section == "Μητρώο Ενεργειών":
                 height=min(420, 82 + 36 * len(compact_view))
             )
 
-            with st.expander("🔎 Πλήρεις λεπτομέρειες καταχωρίσεων", expanded=False):
-                detailed_view = registry_view.rename(columns={
-                    "Ημερομηνία":"Καταχώριση",
-                    "Οντότητα":"Αντικείμενο",
-                    "Απόφαση":"Ενέργεια",
-                    "Ένδειξη":"Ένδειξη / αιτία",
-                })
-                st.dataframe(
-                    detailed_view,
-                    use_container_width=True,
-                    hide_index=True,
-                    height=min(420, 82 + 36 * len(detailed_view))
-                )
-
             st.download_button(
                 "⬇️ Λήψη μητρώου CSV",
                 logdf.to_csv(index=False).encode("utf-8-sig"),
