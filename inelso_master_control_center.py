@@ -4110,6 +4110,7 @@ elif section == "Ζωντανή Σύνδεση Moodle":
                             {"courseid": int(selected_course_id)}
                         )
                         st.session_state["moodle_enrolled_users"] = pd.DataFrame(users)
+                        st.session_state["moodle_course_data_view"] = "users"
                     except Exception as e:
                         st.error(f"Αποτυχία: {e}")
 
@@ -4123,6 +4124,7 @@ elif section == "Ζωντανή Σύνδεση Moodle":
                         )
                         qlist = quizzes.get("quizzes", quizzes) if isinstance(quizzes, dict) else quizzes
                         st.session_state["moodle_quizzes"] = pd.DataFrame(qlist)
+                        st.session_state["moodle_course_data_view"] = "quiz"
                     except Exception as e:
                         st.error(f"Αποτυχία: {e}")
 
@@ -4135,12 +4137,13 @@ elif section == "Ζωντανή Σύνδεση Moodle":
                             {"courseid": int(selected_course_id)}
                         )
                         st.session_state["moodle_course_contents"] = contents
+                        st.session_state["moodle_course_data_view"] = "structure"
                     except Exception as e:
                         st.error(f"Αποτυχία: {e}")
 
-            data_tab1, data_tab2, data_tab3 = st.tabs(["Χρήστες", "Quiz", "Δομή"])
+            active_view = st.session_state.get("moodle_course_data_view")
 
-            with data_tab1:
+            if active_view == "users":
                 if "moodle_enrolled_users" in st.session_state:
                     users = st.session_state["moodle_enrolled_users"]
                     safe_cols = [x for x in ["id","fullname","email","lastaccess"] if x in users.columns]
@@ -4154,7 +4157,7 @@ elif section == "Ζωντανή Σύνδεση Moodle":
                 else:
                     st.caption("Δεν έχουν ανακτηθεί ακόμη χρήστες.")
 
-            with data_tab2:
+            elif active_view == "quiz":
                 if "moodle_quizzes" in st.session_state:
                     qdf = st.session_state["moodle_quizzes"]
                     show_cols = [x for x in ["id","name","course","grade","sumgrades","timeopen","timeclose"] if x in qdf.columns]
@@ -4162,7 +4165,7 @@ elif section == "Ζωντανή Σύνδεση Moodle":
                 else:
                     st.caption("Δεν έχουν ανακτηθεί ακόμη quiz.")
 
-            with data_tab3:
+            elif active_view == "structure":
                 if "moodle_course_contents" in st.session_state:
                     sections = st.session_state["moodle_course_contents"]
                     flat = []
