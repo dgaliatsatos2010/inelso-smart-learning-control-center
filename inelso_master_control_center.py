@@ -3364,7 +3364,8 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                 )
 
                 st.markdown("**Πίνακας συσχετίσεων**")
-                st.dataframe(corr.round(3), use_container_width=True)
+                corr_display = corr.round(3).astype(object).where(corr.notna(), "-")
+                st.dataframe(corr_display, use_container_width=True)
 
                 flat = corr.where(
                     np.triu(np.ones(corr.shape), k=1).astype(bool)
@@ -3401,25 +3402,18 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                     return f"{strength} {direction.lower()} συσχέτιση"
 
                 flat["Κατεύθυνση"] = flat["Συσχέτιση"].apply(_corr_direction)
-                flat["Ένταση"] = flat["Συσχέτιση"].apply(_corr_strength)
                 flat["Ερμηνεία"] = flat["Συσχέτιση"].apply(_corr_interpretation)
                 flat = flat.sort_values("Απόλυτη συσχέτιση", ascending=False)
 
                 st.subheader("Ισχυρότερες σχέσεις")
                 st.dataframe(
                     flat.head(15)[
-                        ["Μεταβλητή 1", "Μεταβλητή 2", "Συσχέτιση", "Κατεύθυνση", "Ένταση", "Ερμηνεία"]
+                        ["Μεταβλητή 1", "Μεταβλητή 2", "Συσχέτιση", "Κατεύθυνση", "Ερμηνεία"]
                     ].round({"Συσχέτιση": 3}),
                     use_container_width=True,
                     hide_index=True,
                 )
 
-                if not flat.empty:
-                    top = flat.iloc[0]
-                    st.info(
-                        f"Ισχυρότερη σχέση: **{top['Μεταβλητή 1']} ↔ {top['Μεταβλητή 2']}** "
-                        f"με r = **{top['Συσχέτιση']:.3f}** — **{top['Ερμηνεία']}**."
-                    )
             else:
                 st.info("Απαιτούνται τουλάχιστον δύο αριθμητικές μεταβλητές.")
 
