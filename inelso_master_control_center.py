@@ -2771,31 +2771,6 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
     )
 
 
-    if "s31_view" not in st.session_state:
-        st.session_state["s31_view"] = None
-
-    b1, b2, b3, b4 = st.columns(4)
-    if b1.button("Ενιαίες ενδείξεις", use_container_width=True, key="s31_btn_signals"):
-        st.session_state["s31_view"] = (
-            None if st.session_state.get("s31_view") == "Ενιαίες ενδείξεις"
-            else "Ενιαίες ενδείξεις"
-        )
-    if b2.button("Προτεραιότητες", use_container_width=True, key="s31_btn_priorities"):
-        st.session_state["s31_view"] = (
-            None if st.session_state.get("s31_view") == "Προτεραιότητες"
-            else "Προτεραιότητες"
-        )
-    if b3.button("Προέλευση", use_container_width=True, key="s31_btn_provenance"):
-        st.session_state["s31_view"] = (
-            None if st.session_state.get("s31_view") == "Προέλευση"
-            else "Προέλευση"
-        )
-    if b4.button("Αλυσίδα παρέμβασης", use_container_width=True, key="s31_btn_chain"):
-        st.session_state["s31_view"] = (
-            None if st.session_state.get("s31_view") == "Αλυσίδα παρέμβασης"
-            else "Αλυσίδα παρέμβασης"
-        )
-
     display31 = service31_integrated.rename(columns={
         "οντότητα":"Οντότητα",
         "επίπεδο_ένδειξης":"Επίπεδο ένδειξης",
@@ -2808,14 +2783,12 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
         "προτεραιότητα":"Προτεραιότητα"
     })
 
-    current_s31_view = st.session_state["s31_view"]
+    s31_tabs = st.tabs(["Ενιαίες ενδείξεις", "Προτεραιότητες", "Προέλευση", "Αλυσίδα παρέμβασης"])
 
-    if current_s31_view is None:
-        st.caption("Επιλέξτε μία από τις παραπάνω ενότητες για να εμφανιστούν τα αντίστοιχα αποτελέσματα.")
-    elif current_s31_view == "Ενιαίες ενδείξεις":
+    with s31_tabs[0]:
         st.dataframe(display31,use_container_width=True,hide_index=True)
 
-    elif current_s31_view == "Προτεραιότητες":
+    with s31_tabs[1]:
         sorted31 = service31_integrated.sort_values(
             ["προτεραιότητα","ισχύς_σήματος"],
             ascending=[True,False]
@@ -2833,12 +2806,12 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
         st.dataframe(sorted31,use_container_width=True,hide_index=True)
         st.warning("Υψηλή προτεραιότητα σημαίνει ότι η ένδειξη απαιτεί ανθρώπινο έλεγχο πριν από οποιαδήποτε εκπαιδευτική παρέμβαση.")
 
-    elif current_s31_view == "Προέλευση":
+    with s31_tabs[2]:
         prov = service31_integrated[["οντότητα","επίπεδο_ένδειξης","πηγή","τύπος","προέλευση"]].copy()
         prov.columns = ["Οντότητα","Επίπεδο ένδειξης","Πηγή","Τύπος ένδειξης","Προέλευση"]
         st.dataframe(prov,use_container_width=True,hide_index=True)
 
-    elif current_s31_view == "Αλυσίδα παρέμβασης":
+    with s31_tabs[3]:
         st.markdown("""
 1. Εντοπισμός ένδειξης στην Ποιότητα Quiz ή στην Προσαρμοστική Εξάσκηση  
 2. Διατήρηση της πραγματικής προέλευσης και του τύπου της ένδειξης  
