@@ -4234,7 +4234,6 @@ elif section == "Ζωντανή Σύνδεση Moodle":
                             )
 
                         with st.expander("🛠️ Τεχνικές λεπτομέρειες", expanded=False):
-                            st.caption("Αναγνωριστικά και αρχικοί τύποι που επιστρέφονται από το Moodle.")
                             st.dataframe(
                                 structure_df[["Ενότητα","Όνομα","Τύπος","ID","URL"]],
                                 use_container_width=True,
