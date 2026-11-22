@@ -5925,24 +5925,6 @@ elif section == "Μητρώο Ενεργειών":
             st.success("Η καταχώριση προστέθηκε.")
 
     with st.expander("📋 Καταχωρίσεις", expanded=False):
-        with st.expander("📥 Εισαγωγή υπάρχοντος μητρώου", expanded=False):
-            imported_log = st.file_uploader(
-                "Αρχείο CSV μητρώου",
-                type=["csv"],
-                key="action_log_import"
-            )
-            if imported_log is not None:
-                try:
-                    imported_df = pd.read_csv(imported_log)
-                    missing = [c for c in base_columns if c not in imported_df.columns]
-                    if missing:
-                        for c in missing:
-                            imported_df[c] = ""
-                    st.session_state["action_log"] = imported_df[base_columns]
-                    st.success("Το μητρώο εισήχθη επιτυχώς.")
-                except Exception as e:
-                    st.error(f"Αποτυχία εισαγωγής: {e}")
-
         logdf = st.session_state["action_log"]
 
         if len(logdf) > 0:
