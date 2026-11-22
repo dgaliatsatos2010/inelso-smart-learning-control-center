@@ -2091,6 +2091,8 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                 psych_view = psych_view.rename(columns={
                     "facility": "Δείκτης ευκολίας"
                 })
+                psych_view = psych_view.replace([np.inf, -np.inf], np.nan)
+                psych_view = psych_view.where(pd.notna(psych_view), "-")
                 st.dataframe(psych_view, use_container_width=True, hide_index=True)
 
                 n_learners = interactions_df["user_id"].nunique() if isinstance(interactions_df, pd.DataFrame) else 0
