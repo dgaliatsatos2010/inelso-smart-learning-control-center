@@ -1758,8 +1758,10 @@ elif section == "Ποιότητα Αξιολόγησης":
 
     c1,c2,c3,c4,c5 = st.columns(5)
     c1.metric("Ερωτήσεις",len(service21))
-    c2.metric("Μέσος δείκτης ευκολίας",f"{service21['facility'].mean():.1f}%")
-    c3.metric("Μέσος δείκτης διάκρισης",f"{valid_disc.mean():.1f}%")
+    _facility_mean = service21["facility"].mean()
+    _disc_mean = valid_disc.mean()
+    c2.metric("Μέσος δείκτης ευκολίας", f"{_facility_mean:.1f}%" if pd.notna(_facility_mean) else "-")
+    c3.metric("Μέσος δείκτης διάκρισης", f"{_disc_mean:.1f}%" if pd.notna(_disc_mean) else "-")
     c4.metric("Δείκτης υγείας",f"{health21:.1f}/100")
     c5.metric("Ανοικτές ενέργειες",open21)
     render_moodle_rest_service_panel(
