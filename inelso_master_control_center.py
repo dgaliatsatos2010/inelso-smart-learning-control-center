@@ -1112,11 +1112,25 @@ def service_dataset_compatibility(service_key, df):
             "ΜΕΡΙΚΗ" if kind in {"MOODLE_RESPONSES","GENERIC"} else "ΜΗ ΣΥΜΒΑΤΗ"
         )
     if service_key == "S26":
-        if st.session_state.get("custom_s26") is not None:
+        learner = detect_column(
+            df,
+            ["μαθητής", "learner", "learner_id", "user_id", "student", "student_id", "student id"]
+        )
+        score = detect_column(
+            df,
+            ["score", "grade", "final_score", "final score", "score_pct", "percentage", "percent"]
+        )
+        confidence = detect_column(df, ["βεβαιότητα", "confidence"])
+        rc_present = sum(
+            detect_column(df, [rc]) is not None
+            for rc in ["RC-01", "RC-02", "RC-03", "RC-04", "RC-05"]
+        )
+
+        if learner is not None and score is not None and confidence is not None and rc_present == 5:
             return "ΠΛΗΡΗΣ"
-        score = detect_column(df, ["score","grade","final score"])
-        attempt = detect_column(df, ["attempt","προσπάθεια"])
-        return "ΜΕΡΙΚΗ" if score is not None or attempt is not None else "ΜΗ ΣΥΜΒΑΤΗ"
+        if learner is not None and score is not None:
+            return "ΜΕΡΙΚΗ"
+        return "ΜΗ ΣΥΜΒΑΤΗ"
     if service_key == "S16":
         numeric = df.select_dtypes(include=np.number).shape[1]
         return "ΠΛΗΡΗΣ" if numeric >= 1 else "ΜΕΡΙΚΗ"
@@ -2197,9 +2211,15 @@ elif section == "Προσαρμοστική Εξάσκηση":
         render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
         show_active_dataset_context("S26")
 
-        _learner_col = detect_column(ACTIVE_DF, ["learner_id", "user_id", "learner", "μαθητής", "student_id"])
-        _score_col = detect_column(ACTIVE_DF, ["score", "grade", "final_score", "final score"])
-        _attempt_col = detect_column(ACTIVE_DF, ["attempt", "προσπάθεια"])
+        _learner_col = detect_column(
+            ACTIVE_DF,
+            ["μαθητής", "learner", "learner_id", "user_id", "student", "student_id", "student id"]
+        )
+        _score_col = detect_column(
+            ACTIVE_DF,
+            ["score", "grade", "final_score", "final score", "score_pct", "percentage", "percent"]
+        )
+        _attempt_col = detect_column(ACTIVE_DF, ["attempt", "προσπάθεια", "attempt_no", "attempt number"])
 
         if _learner_col is not None and _score_col is not None:
             _partial = ACTIVE_DF[[
@@ -2232,9 +2252,9 @@ elif section == "Προσαρμοστική Εξάσκηση":
                 _mastery = "Επαρκής" if _latest_score >= 70 else "Αναπτυσσόμενη"
 
                 st.info(
-                    "Η ενεργή πηγή παρέχει πραγματική επίδοση και προσπάθειες, αλλά δεν περιέχει "
-                    "βεβαιότητα ή κλίμακα αξιολόγησης. Εμφανίζονται μόνο οι δείκτες που μπορούν να "
-                    "υπολογιστούν αξιόπιστα από τα διαθέσιμα δεδομένα."
+                    "Η ενεργή πηγή είναι μερικώς συμβατή με την Προσαρμοστική Εξάσκηση. "
+                    "Η πλατφόρμα υπολογίζει μόνο τους δείκτες που υποστηρίζονται από τα διαθέσιμα πεδία. "
+                    "Δείκτες που απαιτούν βεβαιότητα ή πλήρη κλίμακα αξιολόγησης εμφανίζονται ως «-»."
                 )
 
                 c1,c2,c3,c4,c5 = st.columns([1, 1.35, 1, 1, 1])
