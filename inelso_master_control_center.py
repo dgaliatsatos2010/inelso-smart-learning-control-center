@@ -3013,12 +3013,15 @@ elif section == "Παρακολούθηση Παρεμβάσεων":
             st.session_state["κατάσταση_ενεργειών"][action_code] = new_state
 
             if new_state == "ΟΛΟΚΛΗΡΩΜΕΝΗ":
-                marker = f"[ΠΑΡΕΜΒΑΣΗ:{action_code}]"
+                internal_id = f"ΠΑΡΕΜΒΑΣΗ:{action_code}"
                 action_log = st.session_state.get("action_log", pd.DataFrame(columns=registry_columns))
+                if "_internal_action_id" not in action_log.columns:
+                    action_log["_internal_action_id"] = ""
+
                 already_logged = False
-                if len(action_log) and "Σημειώσεις" in action_log.columns:
-                    already_logged = action_log["Σημειώσεις"].astype(str).str.contains(
-                        marker, regex=False, na=False
+                if len(action_log):
+                    already_logged = (
+                        action_log["_internal_action_id"].astype(str) == internal_id
                     ).any()
 
                 if not already_logged:
@@ -3031,8 +3034,9 @@ elif section == "Παρακολούθηση Παρεμβάσεων":
                         "Απόφαση":action_row["Προτεινόμενη ενέργεια"],
                         "Υπεύθυνος":"",
                         "Κατάσταση":"ΟΛΟΚΛΗΡΩΘΗΚΕ",
-                        "Σημειώσεις":f"{marker} Αυτόματη καταγραφή από την Παρακολούθηση Παρεμβάσεων.",
-                        "Πηγή δεδομένων":ACTIVE_NAME
+                        "Σημειώσεις":"Αυτόματη καταγραφή από την Παρακολούθηση Παρεμβάσεων.",
+                        "Πηγή δεδομένων":ACTIVE_NAME,
+                        "_internal_action_id":internal_id
                     }])
                     st.session_state["action_log"] = pd.concat(
                         [action_log, completed_row],
