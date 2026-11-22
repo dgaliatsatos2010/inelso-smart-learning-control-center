@@ -4277,14 +4277,93 @@ elif section == "Ζωντανή Σύνδεση Moodle":
                         result = moodle_rest_call(moodle_url, token, custom_function, params)
                         st.session_state["moodle_custom_result"] = result
                         st.success("Το αίτημα ολοκληρώθηκε.")
-                        if isinstance(result, list):
-                            st.dataframe(pd.DataFrame(result), use_container_width=True, hide_index=True)
-                        elif isinstance(result, dict):
-                            st.json(result)
-                        else:
-                            st.write(result)
                     except Exception as e:
                         st.error(f"Αποτυχία αιτήματος: {e}")
+
+            result = st.session_state.get("moodle_custom_result")
+            if result is not None:
+                st.markdown("#### Αποτέλεσμα αιτήματος")
+
+                # Ειδική, φιλική παρουσίαση για αναφορά βαθμολογιών χρήστη.
+                if isinstance(result, dict) and isinstance(result.get("usergrades"), list):
+                    usergrades = result.get("usergrades") or []
+
+                    for idx, ug in enumerate(usergrades):
+                        fullname = ug.get("userfullname") or f"Χρήστης {ug.get('userid','—')}"
+                        courseid = ug.get("courseid", "—")
+                        gradeitems = ug.get("gradeitems") or []
+
+                        st.markdown(f"##### 👤 {fullname}")
+
+                        m1, m2, m3 = st.columns(3)
+                        m1.metric("ID εκπαιδευομένου", ug.get("userid", "—"))
+                        m2.metric("ID μαθήματος", courseid)
+                        m3.metric("Στοιχεία βαθμολογίας", len(gradeitems))
+
+                        rows = []
+                        for item in gradeitems:
+                            raw_grade = item.get("graderaw")
+                            grade_min = item.get("grademin")
+                            grade_max = item.get("grademax")
+                            grade_formatted = item.get("gradeformatted")
+                            percentage = item.get("percentageformatted")
+
+                            rows.append({
+                                "Δραστηριότητα": item.get("itemname") or "—",
+                                "Τύπος": item.get("itemmodule") or item.get("itemtype") or "—",
+                                "Βαθμός": grade_formatted if grade_formatted not in [None, ""] else (
+                                    f"{raw_grade:g}" if isinstance(raw_grade, (int, float)) else "—"
+                                ),
+                                "Ποσοστό": percentage if percentage not in [None, ""] else "—",
+                                "Ελάχιστο": grade_min if grade_min is not None else "—",
+                                "Μέγιστο": grade_max if grade_max is not None else "—",
+                                "Συντελεστής βαρύτητας": item.get("weightformatted") or "—",
+                            })
+
+                        if rows:
+                            st.dataframe(
+                                pd.DataFrame(rows),
+                                use_container_width=True,
+                                hide_index=True
+                            )
+                        else:
+                            st.info("Δεν βρέθηκαν διαθέσιμα στοιχεία βαθμολογίας για τον συγκεκριμένο εκπαιδευόμενο.")
+
+                        if idx < len(usergrades) - 1:
+                            st.divider()
+
+                    with st.expander("🛠️ Τεχνικά δεδομένα", expanded=False):
+                        st.json(result)
+
+                elif isinstance(result, list):
+                    st.dataframe(pd.DataFrame(result), use_container_width=True, hide_index=True)
+
+                elif isinstance(result, dict):
+                    # Γενική προβολή για λοιπές λειτουργίες Moodle.
+                    scalar_rows = []
+                    nested = {}
+                    for key, value in result.items():
+                        if isinstance(value, (dict, list)):
+                            nested[key] = value
+                        else:
+                            scalar_rows.append({"Πεδίο": key, "Τιμή": value if value not in [None, ""] else "—"})
+
+                    if scalar_rows:
+                        st.dataframe(pd.DataFrame(scalar_rows), use_container_width=True, hide_index=True)
+
+                    if nested:
+                        with st.expander("📦 Αναλυτικά αποτελέσματα", expanded=True):
+                            for key, value in nested.items():
+                                st.markdown(f"**{key.replace('_',' ').title()}**")
+                                if isinstance(value, list) and value and all(isinstance(x, dict) for x in value):
+                                    st.dataframe(pd.DataFrame(value), use_container_width=True, hide_index=True)
+                                else:
+                                    st.json(value)
+
+                    with st.expander("🛠️ Τεχνικά δεδομένα", expanded=False):
+                        st.json(result)
+                else:
+                    st.write(result)
 
 
 
