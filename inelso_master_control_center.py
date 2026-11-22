@@ -2088,6 +2088,9 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                 psych_view = psych.copy()
                 psych_view["κατάσταση"] = psych_view["διάκριση"].apply(κατηγορία_διάκρισης)
                 psych_view["ενέργεια"] = psych_view.apply(ενέργεια_ερώτησης, axis=1)
+                psych_view = psych_view.rename(columns={
+                    "facility": "Δείκτης ευκολίας"
+                })
                 st.dataframe(psych_view, use_container_width=True, hide_index=True)
 
                 n_learners = interactions_df["user_id"].nunique() if isinstance(interactions_df, pd.DataFrame) else 0
