@@ -3910,109 +3910,170 @@ elif section == "Προσομοίωση Σεναρίων":
 
     st.subheader("Προσαρμοστική Εξάσκηση — δοκιμή κατωφλίων")
 
-    if "custom_s26" not in st.session_state:
+    _sim_compat = service_dataset_compatibility("S26", ACTIVE_DF)
+
+    if ACTIVE_DF is None or _sim_compat == "ΜΗ ΣΥΜΒΑΤΗ":
         render_empty_state(
-            "Η προσομοίωση είναι διαθέσιμη μόλις ενεργοποιηθεί κατάλληλη πηγή δεδομένων",
-            "Φορτώστε ή συνδέστε δεδομένα και επιστρέψτε εδώ για δοκιμή διαφορετικών κατωφλίων και σεναρίων.",
-            "Μετά την ενεργοποίηση της πηγής, οι επιλογές προσομοίωσης εμφανίζονται αυτόματα."
+            "Δεν υπάρχουν επαρκή δεδομένα για προσομοίωση",
+            "Η προσομοίωση χρειάζεται τουλάχιστον αναγνωριστικό εκπαιδευόμενου και βαθμολογία.",
+            "Φορτώστε ή συνδέστε συμβατό SCORM, CSV ή Excel."
         )
         st.stop()
 
     st.caption(f"Πηγή προσομοίωσης: {ACTIVE_NAME}")
 
-    with st.expander("ℹ️ Πώς λειτουργεί η προσομοίωση;", expanded=False):
-        st.markdown(
-            """
-Η προσομοίωση δείχνει **τι θα συνέβαινε αν αλλάζατε τα όρια** που χρησιμοποιούνται για την κατηγοριοποίηση των εκπαιδευομένων, χωρίς να αλλάζει τίποτα πραγματικά στο Moodle.
+    # ------------------------------------------------------
+    # ΠΛΗΡΗΣ ΣΥΜΒΑΤΟΤΗΤΑ: score + confidence + rubric
+    # ------------------------------------------------------
+    if _sim_compat == "ΠΛΗΡΗΣ" and "custom_s26" in st.session_state:
+        with st.expander("ℹ️ Πώς λειτουργεί η προσομοίωση;", expanded=False):
+            st.markdown(
+                """
+Η πηγή είναι **πλήρως συμβατή**. Μπορείτε να μεταβάλετε τόσο το όριο βαθμολογίας όσο και το όριο βεβαιότητας.
 
-- **Κατώφλι βεβαιότητας**: η ελάχιστη αποδεκτή βεβαιότητα για να μη χρειάζεται ανθρώπινος έλεγχος.
-- **Ελάχιστη βαθμολογία για χαρακτηρισμό ως ΕΤΟΙΜΟ**: ορίζει από ποια βαθμολογία και πάνω ένας εκπαιδευόμενος μπορεί να χαρακτηριστεί «ΕΤΟΙΜΟ», εφόσον πληροί και το απαιτούμενο επίπεδο βεβαιότητας.
+- **Κατώφλι βεβαιότητας**: η ελάχιστη αποδεκτή βεβαιότητα.
+- **Ελάχιστη βαθμολογία για χαρακτηρισμό ως ΕΤΟΙΜΟ**: το όριο επίδοσης.
 
-Η λογική της προσομοίωσης είναι:
-- αν η **βεβαιότητα είναι κάτω από το όριο** → **ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ**
-- αν η βεβαιότητα είναι επαρκής αλλά η **βαθμολογία είναι κάτω από το όριο** → **ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ**
-- αν και η βεβαιότητα και η βαθμολογία είναι επαρκείς → **ΕΤΟΙΜΟ**
+Η προσομοίωση είναι δοκιμαστική και δεν αλλάζει πραγματικά δεδομένα ή βαθμούς στο Moodle.
+                """
+            )
 
-**Παράδειγμα:** αν ένας εκπαιδευόμενος έχει βαθμολογία 66,7 και βεβαιότητα 0,58, με όρια 70 και 0,70 θα παραμείνει σε ανθρώπινο έλεγχο. Αν μειώσετε τα όρια, μπορεί να αλλάξει κατηγορία. Έτσι μπορείτε να δείτε πόσο ευαίσθητες είναι οι αποφάσεις στις επιλογές των κατωφλίων.
-
-Η λειτουργία είναι καθαρά **δοκιμαστική / what-if** και δεν γράφει δεδομένα ούτε μεταβάλλει επίσημες αποφάσεις στο Moodle.
-            """
+        confidence_threshold = st.slider(
+            "Κατώφλι βεβαιότητας",
+            min_value=0.50,
+            max_value=0.95,
+            value=0.70,
+            step=0.01
+        )
+        ready_score_threshold = st.slider(
+            "Ελάχιστη βαθμολογία για χαρακτηρισμό ως ΕΤΟΙΜΟ",
+            min_value=50,
+            max_value=95,
+            value=70,
+            step=5
         )
 
-    confidence_threshold = st.slider(
-        "Κατώφλι βεβαιότητας",
-        min_value=0.50,
-        max_value=0.95,
-        value=0.70,
-        step=0.01
-    )
-    ready_score_threshold = st.slider(
-        "Ελάχιστη βαθμολογία για χαρακτηρισμό ως ΕΤΟΙΜΟ",
-        min_value=50,
-        max_value=95,
-        value=70,
-        step=5
-    )
+        sim = st.session_state["custom_s26"].copy()
 
-    sim = st.session_state['custom_s26'].copy()
+        if "κατάσταση" not in sim.columns:
+            sim["κατάσταση"] = sim.apply(
+                lambda r: κατάσταση_26(
+                    float(r.get("score", 0)) if pd.notna(r.get("score", np.nan)) else 0,
+                    float(r.get("βεβαιότητα", 0)) if pd.notna(r.get("βεβαιότητα", np.nan)) else 0,
+                    float(r.get("RC-01", 2)) if pd.notna(r.get("RC-01", np.nan)) else 2
+                ),
+                axis=1
+            )
 
-    # Το custom_s26 αποθηκεύει τα βασικά mapped δεδομένα και μπορεί να μην
-    # περιλαμβάνει ακόμη την αρχική επιχειρησιακή κατάσταση. Τη δημιουργούμε
-    # με την ίδια λογική που χρησιμοποιείται στην Προσαρμοστική Εξάσκηση,
-    # ώστε η προσομοίωση να μπορεί να συγκρίνει παλιά και νέα κατάσταση.
-    if "κατάσταση" not in sim.columns:
-        sim["κατάσταση"] = sim.apply(
-            lambda r: κατάσταση_26(
-                float(r.get("score", 0)) if pd.notna(r.get("score", np.nan)) else 0,
-                float(r.get("βεβαιότητα", 0)) if pd.notna(r.get("βεβαιότητα", np.nan)) else 0,
-                float(r.get("RC-01", 2)) if pd.notna(r.get("RC-01", np.nan)) else 2
-            ),
-            axis=1
+        def simulate_status(row):
+            if row["βεβαιότητα"] < confidence_threshold:
+                return "ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ"
+            if row["score"] < ready_score_threshold:
+                return "ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ"
+            return "ΕΤΟΙΜΟ"
+
+        sim["Νέα κατάσταση"] = sim.apply(simulate_status, axis=1)
+
+        new_counts = sim["Νέα κατάσταση"].value_counts()
+        a,b,c = st.columns(3)
+        a.metric("ΕΤΟΙΜΟ", int(new_counts.get("ΕΤΟΙΜΟ",0)))
+        b.metric("ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ", int(new_counts.get("ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ",0)))
+        c.metric("ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ", int(new_counts.get("ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ",0)))
+
+        sim["Αλλαγή"] = np.where(
+            sim["κατάσταση"] == sim["Νέα κατάσταση"],
+            "Χωρίς αλλαγή",
+            sim["κατάσταση"] + " → " + sim["Νέα κατάσταση"]
         )
 
-    def simulate_status(row):
-        # Η προσομοίωση μεταβάλλει μόνο τα επιλεγμένα κατώφλια βεβαιότητας και βαθμολογίας.
-        if row["βεβαιότητα"] < confidence_threshold:
-            return "ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ"
-        if row["score"] < ready_score_threshold:
-            return "ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ"
-        return "ΕΤΟΙΜΟ"
+        with st.expander("📋 Αναλυτικά αποτελέσματα εκπαιδευομένων", expanded=False):
+            st.dataframe(
+                sim[["μαθητής","score","βεβαιότητα","κατάσταση","Νέα κατάσταση","Αλλαγή"]],
+                use_container_width=True,
+                hide_index=True
+            )
 
-    sim["Νέα κατάσταση"] = sim.apply(simulate_status, axis=1)
+        changed = int((sim["κατάσταση"] != sim["Νέα κατάσταση"]).sum())
+        st.info(f"Με τα επιλεγμένα όρια αλλάζουν κατηγορία {changed} από {len(sim)} εκπαιδευόμενους.")
 
-    old_counts = sim["κατάσταση"].value_counts()
-    new_counts = sim["Νέα κατάσταση"].value_counts()
-
-    a,b,c = st.columns(3)
-    a.metric("ΕΤΟΙΜΟ",int(new_counts.get("ΕΤΟΙΜΟ",0)))
-    b.metric("ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ",int(new_counts.get("ΝΕΑ ΠΡΟΣΠΑΘΕΙΑ",0)))
-    c.metric("ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ",int(new_counts.get("ΑΝΘΡΩΠΙΝΟΣ ΕΛΕΓΧΟΣ",0)))
-
-    sim["Αλλαγή"] = np.where(
-        sim["κατάσταση"]==sim["Νέα κατάσταση"],
-        "Χωρίς αλλαγή",
-        sim["κατάσταση"] + " → " + sim["Νέα κατάσταση"]
-    )
-
-    with st.expander("📋 Αναλυτικά αποτελέσματα εκπαιδευομένων", expanded=False):
-        st.dataframe(
-            sim[["μαθητής","score","βεβαιότητα","κατάσταση","Νέα κατάσταση","Αλλαγή"]],
-            use_container_width=True,
-            hide_index=True
+    # ------------------------------------------------------
+    # ΜΕΡΙΚΗ ΣΥΜΒΑΤΟΤΗΤΑ: learner + score
+    # ------------------------------------------------------
+    else:
+        learner_col = detect_column(
+            ACTIVE_DF,
+            ["μαθητής","learner","learner_id","user_id","student","student_id","student id"]
+        )
+        score_col = detect_column(
+            ACTIVE_DF,
+            ["score","grade","final_score","final score","score_pct","percentage","percent"]
+        )
+        attempt_col = detect_column(
+            ACTIVE_DF,
+            ["attempt","προσπάθεια","attempt_no","attempt number"]
         )
 
-    changed = int((sim["κατάσταση"] != sim["Νέα κατάσταση"]).sum())
-    st.info(f"Με τα επιλεγμένα όρια αλλάζουν κατηγορία {changed} από {len(sim)} εκπαιδευόμενους.")
+        if learner_col is None or score_col is None:
+            render_empty_state(
+                "Δεν υπάρχουν επαρκή δεδομένα για προσομοίωση",
+                "Η ενεργή πηγή δεν διαθέτει τα ελάχιστα πεδία εκπαιδευόμενου και βαθμολογίας."
+            )
+            st.stop()
 
-    scenarios = pd.DataFrame([
-        {"Σενάριο":"Βασικό","Όριο βεβαιότητας":0.70,"Όριο βαθμολογίας":70},
-        {"Σενάριο":"Πιο αυστηρό","Όριο βεβαιότητας":0.80,"Όριο βαθμολογίας":80},
-        {"Σενάριο":"Πιο ελαστικό","Όριο βεβαιότητας":0.60,"Όριο βαθμολογίας":60},
-    ])
-    with st.expander("📊 Έτοιμα σενάρια ορίων", expanded=False):
-        st.dataframe(scenarios,use_container_width=True,hide_index=True)
+        st.info(
+            "Η πηγή είναι μερικώς συμβατή. Η προσομοίωση χρησιμοποιεί μόνο τα πραγματικά διαθέσιμα πεδία. "
+            "Δεν χρησιμοποιείται κατώφλι βεβαιότητας επειδή η πηγή δεν παρέχει βεβαιότητα."
+        )
 
+        ready_score_threshold = st.slider(
+            "Κατώφλι βαθμολογίας",
+            min_value=0,
+            max_value=100,
+            value=70,
+            step=5,
+            help="Δοκιμάζει πώς αλλάζει η κατηγοριοποίηση όταν μεταβάλλεται μόνο το όριο επίδοσης."
+        )
 
+        cols = [learner_col, score_col] + ([attempt_col] if attempt_col is not None else [])
+        sim = ACTIVE_DF[cols].copy()
+        sim[score_col] = pd.to_numeric(sim[score_col], errors="coerce")
+        sim = sim.dropna(subset=[learner_col, score_col])
+
+        if attempt_col is not None:
+            sim[attempt_col] = pd.to_numeric(sim[attempt_col], errors="coerce")
+            sim = (
+                sim.sort_values([learner_col, attempt_col])
+                   .groupby(learner_col, dropna=False)
+                   .tail(1)
+                   .reset_index(drop=True)
+            )
+        else:
+            sim = sim.drop_duplicates(subset=[learner_col], keep="last").reset_index(drop=True)
+
+        sim["Κατάσταση"] = np.where(
+            sim[score_col] >= ready_score_threshold,
+            "ΕΠΑΡΚΗΣ ΕΠΙΔΟΣΗ",
+            "ΧΡΕΙΑΖΕΤΑΙ ΠΡΟΣΘΕΤΗ ΕΞΑΣΚΗΣΗ"
+        )
+
+        counts = sim["Κατάσταση"].value_counts()
+        a,b = st.columns(2)
+        a.metric("Επαρκής επίδοση", int(counts.get("ΕΠΑΡΚΗΣ ΕΠΙΔΟΣΗ", 0)))
+        b.metric("Πρόσθετη εξάσκηση", int(counts.get("ΧΡΕΙΑΖΕΤΑΙ ΠΡΟΣΘΕΤΗ ΕΞΑΣΚΗΣΗ", 0)))
+
+        display = sim.rename(columns={
+            learner_col: "Εκπαιδευόμενος",
+            score_col: "Βαθμολογία",
+            **({attempt_col: "Προσπάθεια"} if attempt_col is not None else {})
+        })
+
+        with st.expander("📋 Αναλυτικά αποτελέσματα εκπαιδευομένων", expanded=False):
+            st.dataframe(display, use_container_width=True, hide_index=True)
+
+        st.caption(
+            "Η προσομοίωση αυτή βασίζεται αποκλειστικά στη βαθμολογία. "
+            "Δεν εξάγεται συμπέρασμα για βεβαιότητα ή rubric όταν αυτά τα πεδία δεν υπάρχουν."
+        )
 
 # ==========================================================
 # LIVE MOODLE
