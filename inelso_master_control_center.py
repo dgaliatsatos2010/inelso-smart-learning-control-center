@@ -2196,16 +2196,65 @@ elif section == "Προσαρμοστική Εξάσκηση":
     if "custom_s26" not in st.session_state:
         render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
         show_active_dataset_context("S26")
+
+        _learner_col = detect_column(ACTIVE_DF, ["learner_id", "user_id", "learner", "μαθητής", "student_id"])
+        _score_col = detect_column(ACTIVE_DF, ["score", "grade", "final_score", "final score"])
+        _attempt_col = detect_column(ACTIVE_DF, ["attempt", "προσπάθεια"])
+
+        if _learner_col is not None and _score_col is not None:
+            _partial = ACTIVE_DF[[
+                c for c in [_learner_col, _score_col, _attempt_col] if c is not None
+            ]].copy()
+            _partial[_score_col] = pd.to_numeric(_partial[_score_col], errors="coerce")
+            _partial = _partial.dropna(subset=[_learner_col, _score_col])
+
+            if not _partial.empty:
+                _partial[_learner_col] = _partial[_learner_col].astype(str)
+                _partial_learners = sorted(_partial[_learner_col].unique().tolist())
+                _selected_partial_learner = st.selectbox(
+                    "Φοιτητής για προβολή",
+                    _partial_learners,
+                    key="s26_partial_active_learner"
+                )
+                _learner_rows = _partial[
+                    _partial[_learner_col] == _selected_partial_learner
+                ].copy()
+
+                if _attempt_col is not None:
+                    _learner_rows[_attempt_col] = pd.to_numeric(
+                        _learner_rows[_attempt_col], errors="coerce"
+                    )
+                    _learner_rows = _learner_rows.sort_values(_attempt_col)
+
+                _latest_score = float(_learner_rows[_score_col].iloc[-1])
+                _first_score = float(_learner_rows[_score_col].iloc[0])
+                _gain = _latest_score - _first_score
+                _mastery = "Επαρκής" if _latest_score >= 70 else "Αναπτυσσόμενη"
+
+                st.info(
+                    "Η ενεργή πηγή παρέχει πραγματική επίδοση και προσπάθειες, αλλά δεν περιέχει "
+                    "βεβαιότητα ή κλίμακα αξιολόγησης. Εμφανίζονται μόνο οι δείκτες που μπορούν να "
+                    "υπολογιστούν αξιόπιστα από τα διαθέσιμα δεδομένα."
+                )
+
+                c1,c2,c3,c4,c5 = st.columns([1, 1.35, 1, 1, 1])
+                c1.metric("Τρέχουσα επίδοση", f"{_latest_score:.0f}/100")
+                c2.metric("Κατάκτηση", _mastery)
+                c3.metric("Βεβαιότητα", "-")
+                c4.metric("Πρόοδος", f"{_gain:+.2f}" if len(_learner_rows) > 1 else "-")
+                c5.metric("Δείκτης υγείας", "-")
+                st.stop()
+
         st.warning(
-            "Το ενεργή πηγή έχει φορτωθεί, αλλά δεν έχει γίνει ακόμη mapping για Προσαρμοστική Εξάσκηση. "
-            "Χρειάζονται πραγματικά πεδία ανά εκπαιδευόμενο, π.χ. εκπαιδευόμενος/βαθμολογία και, όπου υπάρχουν, προσπάθεια/βεβαιότητα/κλίμακα αξιολόγησης."
+            "Η ενεργή πηγή έχει φορτωθεί, αλλά δεν διαθέτει τα ελάχιστα πεδία "
+            "εκπαιδευόμενου και βαθμολογίας για Προσαρμοστική Εξάσκηση."
         )
         c1,c2,c3,c4,c5 = st.columns(5)
-        c1.metric("Τρέχουσα επίδοση","—")
-        c2.metric("Κατάκτηση","—")
-        c3.metric("Βεβαιότητα","—")
-        c4.metric("Πρόοδος","—")
-        c5.metric("Δείκτης υγείας","—")
+        c1.metric("Τρέχουσα επίδοση","-")
+        c2.metric("Κατάκτηση","-")
+        c3.metric("Βεβαιότητα","-")
+        c4.metric("Πρόοδος","-")
+        c5.metric("Δείκτης υγείας","-")
         st.stop()
 
     render_module_header("Προσαρμοστική Εξάσκηση", "", "s26")
