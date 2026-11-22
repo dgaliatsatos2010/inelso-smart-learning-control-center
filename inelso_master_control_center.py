@@ -387,8 +387,8 @@ MODULE_HELP = {
         "purpose": "Παρακολουθεί την πορεία των προτεινόμενων παρεμβάσεων από τη δημιουργία τους μέχρι τον ανθρώπινο έλεγχο και την ολοκλήρωσή τους.",
         "steps": [
             "Επιλέξτε την παρέμβαση που θέλετε να παρακολουθήσετε.",
-            "Αλλάξτε την κατάστασή της από «ΝΕΑ» σε «ΣΕ ΕΛΕΓΧΟ» όταν ξεκινήσει η εξέτασή της.",
-            "Ορίστε την ως «ΟΛΟΚΛΗΡΩΜΕΝΗ» όταν η ενέργεια έχει ολοκληρωθεί.",
+            "Αλλάξτε την κατάστασή της από «Νέα» σε «Σε εξέλιξη» όταν ξεκινήσει η διαχείρισή της.",
+            "Ορίστε την ως «Ολοκληρώθηκε» όταν η ενέργεια έχει ολοκληρωθεί.",
             "Με την ολοκλήρωση δημιουργείται αυτόματα εγγραφή στο Μητρώο Ενεργειών για ιστορικό και τεκμηρίωση."
         ],
         "data": "Οι παρεμβάσεις δημιουργούνται από τις διαθέσιμες μαθησιακές ενδείξεις της πλατφόρμας. Οι ολοκληρωμένες παρεμβάσεις καταγράφονται αυτόματα στο Μητρώο Ενεργειών."
@@ -2975,7 +2975,7 @@ elif section == "Παρακολούθηση Παρεμβάσεων":
         st.session_state["κατάσταση_ενεργειών"] = {}
     if not lifecycle.empty:
         for code in lifecycle["Κωδικός"].tolist():
-            st.session_state["κατάσταση_ενεργειών"].setdefault(code, "ΝΕΑ")
+            st.session_state["κατάσταση_ενεργειών"].setdefault(code, "Νέα")
 
     registry_columns = [
         "Ημερομηνία","Ενότητα","Οντότητα","Ένδειξη","Προτεραιότητα",
@@ -2986,9 +2986,9 @@ elif section == "Παρακολούθηση Παρεμβάσεων":
 
     c1,c2,c3,c4 = st.columns(4)
     c1.metric("Σύνολο παρεμβάσεων", len(lifecycle))
-    c2.metric("Νέες", sum(v=="ΝΕΑ" for v in st.session_state["κατάσταση_ενεργειών"].values()))
-    c3.metric("Σε έλεγχο", sum(v=="ΣΕ ΕΛΕΓΧΟ" for v in st.session_state["κατάσταση_ενεργειών"].values()))
-    c4.metric("Ολοκληρωμένες", sum(v=="ΟΛΟΚΛΗΡΩΜΕΝΗ" for v in st.session_state["κατάσταση_ενεργειών"].values()))
+    c2.metric("Νέες", sum(v=="Νέα" for v in st.session_state["κατάσταση_ενεργειών"].values()))
+    c3.metric("Σε εξέλιξη", sum(v=="Σε εξέλιξη" for v in st.session_state["κατάσταση_ενεργειών"].values()))
+    c4.metric("Ολοκληρωμένες", sum(v=="Ολοκληρώθηκε" for v in st.session_state["κατάσταση_ενεργειών"].values()))
 
     if not lifecycle.empty:
         επιλογές = lifecycle["Κωδικός"].tolist()
@@ -3003,7 +3003,7 @@ elif section == "Παρακολούθηση Παρεμβάσεων":
         st.write("**Οντότητα:**", row["Οντότητα"])
         st.write("**Προτεινόμενη ενέργεια:**", row["Προτεινόμενη ενέργεια"])
 
-        current = st.session_state["κατάσταση_ενεργειών"].get(code, "ΝΕΑ")
+        current = st.session_state["κατάσταση_ενεργειών"].get(code, "Νέα")
         lifecycle_widget_key = f"lifecycle_state_{code}"
         if lifecycle_widget_key not in st.session_state:
             st.session_state[lifecycle_widget_key] = current
@@ -3012,7 +3012,7 @@ elif section == "Παρακολούθηση Παρεμβάσεων":
             new_state = st.session_state[widget_key]
             st.session_state["κατάσταση_ενεργειών"][action_code] = new_state
 
-            if new_state == "ΟΛΟΚΛΗΡΩΜΕΝΗ":
+            if new_state == "Ολοκληρώθηκε":
                 internal_id = f"ΠΑΡΕΜΒΑΣΗ:{action_code}"
                 action_log = st.session_state.get("action_log", pd.DataFrame(columns=registry_columns))
                 if "_internal_action_id" not in action_log.columns:
@@ -3033,7 +3033,7 @@ elif section == "Παρακολούθηση Παρεμβάσεων":
                         "Προτεραιότητα":action_row["Προτεραιότητα"],
                         "Απόφαση":action_row["Προτεινόμενη ενέργεια"],
                         "Υπεύθυνος":"",
-                        "Κατάσταση":"ΟΛΟΚΛΗΡΩΘΗΚΕ",
+                        "Κατάσταση":"Ολοκληρώθηκε",
                         "Σημειώσεις":"Αυτόματη καταγραφή από την Παρακολούθηση Παρεμβάσεων.",
                         "Πηγή δεδομένων":ACTIVE_NAME,
                         "_internal_action_id":internal_id
@@ -3045,7 +3045,7 @@ elif section == "Παρακολούθηση Παρεμβάσεων":
 
         st.radio(
             "Κατάσταση παρέμβασης",
-            ["ΝΕΑ","ΣΕ ΕΛΕΓΧΟ","ΟΛΟΚΛΗΡΩΜΕΝΗ"],
+            ["Νέα","Σε εξέλιξη","Ολοκληρώθηκε"],
             key=lifecycle_widget_key,
             horizontal=True,
             on_change=_update_lifecycle_state
@@ -5862,15 +5862,25 @@ elif section == "Μητρώο Ενεργειών":
         st.session_state["action_log"] = pd.DataFrame(columns=base_columns)
 
     _registry = st.session_state["action_log"]
+    if len(_registry) and "Κατάσταση" in _registry.columns:
+        _status_map = {
+            "ΝΕΑ":"Νέα",
+            "ΣΕ ΕΛΕΓΧΟ":"Σε εξέλιξη",
+            "ΟΛΟΚΛΗΡΩΘΗΚΕ":"Ολοκληρώθηκε",
+            "ΟΛΟΚΛΗΡΩΜΕΝΗ":"Ολοκληρώθηκε",
+            "ΑΚΥΡΩΘΗΚΕ":"Ακυρώθηκε"
+        }
+        _registry["Κατάσταση"] = _registry["Κατάσταση"].replace(_status_map)
+        st.session_state["action_log"] = _registry
     r1, r2, r3 = st.columns(3)
     r1.metric("Συνολικές ενέργειες", len(_registry))
     r2.metric(
         "Ανοικτές",
-        int(_registry["Κατάσταση"].isin(["ΝΕΑ","ΣΕ ΕΛΕΓΧΟ"]).sum()) if len(_registry) else 0
+        int(_registry["Κατάσταση"].isin(["Νέα","Σε εξέλιξη","ΝΕΑ","ΣΕ ΕΛΕΓΧΟ"]).sum()) if len(_registry) else 0
     )
     r3.metric(
         "Ολοκληρωμένες",
-        int((_registry["Κατάσταση"]=="ΟΛΟΚΛΗΡΩΘΗΚΕ").sum()) if len(_registry) else 0
+        int(_registry["Κατάσταση"].isin(["Ολοκληρώθηκε","ΟΛΟΚΛΗΡΩΘΗΚΕ","ΟΛΟΚΛΗΡΩΜΕΝΗ"]).sum()) if len(_registry) else 0
     )
 
     with st.expander("＋ Νέα ενέργεια", expanded=False):
@@ -5891,7 +5901,7 @@ elif section == "Μητρώο Ενεργειών":
             log_owner = st.text_input("Υπεύθυνος",key="log_owner")
             log_status = st.selectbox(
                 "Κατάσταση",
-                ["ΝΕΑ","ΣΕ ΕΛΕΓΧΟ","ΟΛΟΚΛΗΡΩΘΗΚΕ","ΑΚΥΡΩΘΗΚΕ"],
+                ["Νέα","Σε εξέλιξη","Ολοκληρώθηκε","Ακυρώθηκε"],
                 key="log_status"
             )
             log_notes = st.text_area("Σημειώσεις",key="log_notes",height=90)
@@ -5941,8 +5951,8 @@ elif section == "Μητρώο Ενεργειών":
             status_counts = logdf["Κατάσταση"].value_counts()
             c1,c2,c3 = st.columns(3)
             c1.metric("Σύνολο",len(logdf))
-            c2.metric("Ανοικτές",int(status_counts.get("ΝΕΑ",0)+status_counts.get("ΣΕ ΕΛΕΓΧΟ",0)))
-            c3.metric("Ολοκληρωμένες",int(status_counts.get("ΟΛΟΚΛΗΡΩΘΗΚΕ",0)))
+            c2.metric("Ανοικτές",int(status_counts.get("Νέα",0)+status_counts.get("Σε εξέλιξη",0)+status_counts.get("ΝΕΑ",0)+status_counts.get("ΣΕ ΕΛΕΓΧΟ",0)))
+            c3.metric("Ολοκληρωμένες",int(status_counts.get("Ολοκληρώθηκε",0)+status_counts.get("ΟΛΟΚΛΗΡΩΘΗΚΕ",0)+status_counts.get("ΟΛΟΚΛΗΡΩΜΕΝΗ",0)))
 
             st.download_button(
                 "Λήψη μητρώου CSV",
