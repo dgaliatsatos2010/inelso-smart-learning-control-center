@@ -4376,17 +4376,6 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
         "",
         "moodle_write"
     )
-    pending_meta = st.session_state.get("pending_moodle_result_meta")
-    if isinstance(pending_meta, dict):
-        meta_preview = pd.DataFrame([{
-            "Λειτουργία": pending_meta.get("service"),
-            "Οντότητα": pending_meta.get("entity"),
-            "Κατάσταση": pending_meta.get("status"),
-            "Βαθμολογία": pending_meta.get("score"),
-            "Σύνοψη": pending_meta.get("summary"),
-        }])
-        st.dataframe(meta_preview, use_container_width=True, hide_index=True)
-
 
     moodle_url = st.session_state.get("moodle_base_url", "")
     token = st.session_state.get("moodle_shared_token", "")
