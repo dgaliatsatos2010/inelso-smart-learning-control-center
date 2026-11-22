@@ -6164,19 +6164,73 @@ elif section == "Κεντρική Αναφορά":
         st.info("Δεν υπάρχει ενεργή πηγή δεδομένων. Χρησιμοποιήστε την «Εισαγωγή Δεδομένων» για να φορτώσετε αρχείο.")
 
     c1,c2,c3,c4=st.columns(4)
-    c1.metric("Συνολικός δείκτης υγείας", f"{overall:.1f}" if ACTIVE_DF is not None else "—")
-    c2.metric("Ενέργειες Ποιότητας Αξιολόγησης", open21 if ACTIVE_DF is not None and "custom_s21" in st.session_state else "—")
+    c1.metric("Δείκτης συνολικής κατάστασης", f"{overall:.1f}/100" if ACTIVE_DF is not None else "—")
+    c2.metric("Έλεγχοι Ποιότητας Αξιολόγησης", open21 if ACTIVE_DF is not None and "custom_s21" in st.session_state else "—")
     c3.metric("Ενέργειες Προσαρμοστικής Εξάσκησης", open26 if ACTIVE_DF is not None and "custom_s26" in st.session_state else "—")
-    c4.metric("Ενέργειες Μαθησιακών Ενδείξεων", open31 if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—")
+    c4.metric("Ενδείξεις υψηλής προτεραιότητας", open31 if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—")
+
+    def _report_status(value, available=False):
+        if not available:
+            return "Μη διαθέσιμη"
+        if isinstance(value, (int, float, np.number)):
+            if float(value) < 40:
+                return "Χρειάζεται προσοχή"
+            if float(value) < 70:
+                return "Παρακολούθηση"
+            return "Καλή εικόνα"
+        return "Διαθέσιμη"
 
     report=pd.DataFrame([
-        {"Ενότητα":"Μαθησιακή Ανάλυση","Ρόλος":"Έγκαιρη υποστήριξη","Κατάσταση / δείκτης":"Διαθέσιμη" if ACTIVE_DF is not None else "Μη διαθέσιμη","Ανοικτές ενέργειες":"Ρύθμιση δείκτη" if ACTIVE_DF is not None else "Μη διαθέσιμο","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None else "Μη διαθέσιμο"},
-        {"Ενότητα":"Ποιότητα Αξιολόγησης","Ρόλος":"Ποιότητα αξιολόγησης","Κατάσταση / δείκτης":round(health21,1) if ACTIVE_DF is not None and "custom_s21" in st.session_state else "Μη διαθέσιμο","Ανοικτές ενέργειες":open21 if ACTIVE_DF is not None and "custom_s21" in st.session_state else "Μη διαθέσιμο","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None and "custom_s21" in st.session_state else "Μη διαθέσιμο"},
-        {"Ενότητα":"Δημιουργία Μαθήματος & Αξιολόγησης","Ρόλος":"Υποβοηθούμενη δημιουργία περιεχομένου","Κατάσταση / δείκτης":"Διαθέσιμη" if ACTIVE_DF is not None else "Μη διαθέσιμη","Ανοικτές ενέργειες":"Έλεγχος διδάσκοντα","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None else "Χειροκίνητο πλαίσιο"},
-        {"Ενότητα":"Προσαρμοστική Εξάσκηση","Ρόλος":"Προσαρμοστική εξάσκηση","Κατάσταση / δείκτης":round(health26,1) if ACTIVE_DF is not None and "custom_s26" in st.session_state else "Μη διαθέσιμο","Ανοικτές ενέργειες":open26 if ACTIVE_DF is not None and "custom_s26" in st.session_state else "Μη διαθέσιμο","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None and "custom_s26" in st.session_state else "Μη διαθέσιμο"},
-        {"Ενότητα":"Υποστήριξη Διδάσκοντα","Ρόλος":"Υποστήριξη διδάσκοντα","Κατάσταση / δείκτης":"Διαθέσιμη" if ACTIVE_DF is not None else "Μη διαθέσιμη","Ανοικτές ενέργειες":"Έλεγχος διδάσκοντα","Προέλευση":ACTIVE_NAME if ACTIVE_DF is not None else "Χειροκίνητο πλαίσιο"},
-        {"Ενότητα":"Ενοποιημένες Μαθησιακές Ενδείξεις","Ρόλος":"Σύνθεση μαθησιακών ενδείξεων","Κατάσταση / δείκτης":round(health31,1) if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "Μη διαθέσιμο","Ανοικτές ενέργειες":open31 if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "Μη διαθέσιμο","Προέλευση":f"Ενοποιημένη πηγή — {ACTIVE_NAME}" if ACTIVE_DF is not None else "Μη διαθέσιμο"},
+        {
+            "Ενότητα":"Μαθησιακή Ανάλυση",
+            "Σκοπός":"Έγκαιρη υποστήριξη",
+            "Κατάσταση":"Διαθέσιμη" if ACTIVE_DF is not None else "Μη διαθέσιμη",
+            "Δείκτης":"—",
+            "Ανοικτές ενέργειες":"Ρύθμιση δείκτη" if ACTIVE_DF is not None else "—",
+            "Πηγή δεδομένων":ACTIVE_NAME if ACTIVE_DF is not None else "—"
+        },
+        {
+            "Ενότητα":"Ποιότητα Αξιολόγησης",
+            "Σκοπός":"Έλεγχος ποιότητας ερωτήσεων",
+            "Κατάσταση":_report_status(health21, ACTIVE_DF is not None and "custom_s21" in st.session_state),
+            "Δείκτης":f"{health21:.1f}/100" if ACTIVE_DF is not None and "custom_s21" in st.session_state else "—",
+            "Ανοικτές ενέργειες":open21 if ACTIVE_DF is not None and "custom_s21" in st.session_state else "—",
+            "Πηγή δεδομένων":ACTIVE_NAME if ACTIVE_DF is not None and "custom_s21" in st.session_state else "—"
+        },
+        {
+            "Ενότητα":"Δημιουργία Μαθήματος & Αξιολόγησης",
+            "Σκοπός":"Υποβοηθούμενη δημιουργία περιεχομένου",
+            "Κατάσταση":"Διαθέσιμη" if ACTIVE_DF is not None else "Μη διαθέσιμη",
+            "Δείκτης":"—",
+            "Ανοικτές ενέργειες":"Έλεγχος διδάσκοντα" if ACTIVE_DF is not None else "—",
+            "Πηγή δεδομένων":ACTIVE_NAME if ACTIVE_DF is not None else "Χειροκίνητο πλαίσιο"
+        },
+        {
+            "Ενότητα":"Προσαρμοστική Εξάσκηση",
+            "Σκοπός":"Εξατομικευμένη υποστήριξη",
+            "Κατάσταση":_report_status(health26, ACTIVE_DF is not None and "custom_s26" in st.session_state),
+            "Δείκτης":f"{health26:.1f}/100" if ACTIVE_DF is not None and "custom_s26" in st.session_state else "—",
+            "Ανοικτές ενέργειες":open26 if ACTIVE_DF is not None and "custom_s26" in st.session_state else "—",
+            "Πηγή δεδομένων":ACTIVE_NAME if ACTIVE_DF is not None and "custom_s26" in st.session_state else "—"
+        },
+        {
+            "Ενότητα":"Υποστήριξη Διδάσκοντα",
+            "Σκοπός":"Υποβοήθηση εκπαιδευτικών αποφάσεων",
+            "Κατάσταση":"Διαθέσιμη" if ACTIVE_DF is not None else "Μη διαθέσιμη",
+            "Δείκτης":"—",
+            "Ανοικτές ενέργειες":"Έλεγχος διδάσκοντα" if ACTIVE_DF is not None else "—",
+            "Πηγή δεδομένων":ACTIVE_NAME if ACTIVE_DF is not None else "Χειροκίνητο πλαίσιο"
+        },
+        {
+            "Ενότητα":"Ενοποιημένες Μαθησιακές Ενδείξεις",
+            "Σκοπός":"Σύνθεση μαθησιακών ενδείξεων",
+            "Κατάσταση":_report_status(health31, ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state))),
+            "Δείκτης":f"{health31:.1f}/100" if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—",
+            "Ανοικτές ενέργειες":open31 if ACTIVE_DF is not None and (("custom_s21" in st.session_state) or ("custom_s26" in st.session_state)) else "—",
+            "Πηγή δεδομένων":f"Ενοποιημένη πηγή — {ACTIVE_NAME}" if ACTIVE_DF is not None else "—"
+        },
     ])
+
     st.markdown("#### Τι χρειάζεται προσοχή")
     _attention = []
     if ACTIVE_DF is not None and "custom_s21" in st.session_state and open21:
@@ -6191,35 +6245,36 @@ elif section == "Κεντρική Αναφορά":
         st.success("Δεν υπάρχουν αυτή τη στιγμή καταγεγραμμένες ενέργειες υψηλής προτεραιότητας.")
 
     with st.expander("Αναλυτική κατάσταση λειτουργιών", expanded=False):
-        st.dataframe(report,use_container_width=True,hide_index=True)
+        st.dataframe(
+            report,
+            use_container_width=True,
+            hide_index=True,
+            height=min(420, 82 + 38 * len(report))
+        )
 
-    summary=f"""INELSO Academia ΚΕΝΤΡΙΚΟ ΣΥΣΤΗΜΑ ΕΞΥΠΝΗΣ ΜΑΘΗΣΗΣ — ULTIMATE PRO WRITE
+    summary=f"""INELSO Academia — Κεντρική Αναφορά
 
-ενεργό σύνολο δεδομένων: {ACTIVE_NAME}
-Dataset type: {ACTIVE_KIND}
-Συνολικός δείκτης υγείας: {f"{overall:.1f}/100" if ACTIVE_DF is not None else "—"}
+Ενεργό σύνολο δεδομένων: {ACTIVE_NAME}
+Τύπος συνόλου δεδομένων: {ACTIVE_KIND}
+Δείκτης συνολικής κατάστασης: {f"{overall:.1f}/100" if ACTIVE_DF is not None else "—"}
 
 Ποιότητα Αξιολόγησης:
-- δείκτης υγείας: {health21:.1f}
-- ανοικτές ενέργειες: {open21}
+- Δείκτης: {health21:.1f}/100
+- Ανοικτές ενέργειες: {open21}
 
 Προσαρμοστική Εξάσκηση:
-- δείκτης υγείας: {health26:.1f}
-- ανοικτές ενέργειες: {open26}
+- Δείκτης: {health26:.1f}/100
+- Ανοικτές ενέργειες: {open26}
 
 Ενοποιημένες Μαθησιακές Ενδείξεις:
-- δείκτης υγείας: {health31:.1f}
-- ανοικτές ενέργειες: {open31}
-- προέλευση: σύνθεση πραγματικών/ελεγχόμενων ενδείξεις από Ποιότητα Αξιολόγησης και Προσαρμοστική Εξάσκηση
-
-Αρχιτεκτονική:
-Moodle -> Ποιότητα Αξιολόγησης / 26 ενδείξεις -> Ενοποιημένες Μαθησιακές Ενδείξεις synthesis -> ανθρώπινος έλεγχος -> παρέμβαση / retry / revision -> αναφορά
-
-Δεν πραγματοποιείται αυτόματη αλλαγή επίσημων βαθμών στο Moodle.
+- Δείκτης: {health31:.1f}/100
+- Ανοικτές ενέργειες: {open31}
+- Πηγή: σύνθεση ελεγχόμενων ενδείξεων από Ποιότητα Αξιολόγησης και Προσαρμοστική Εξάσκηση
 """
     st.download_button(
-        "Λήψη κεντρικής σύνοψης",
+        "⬇️ Λήψη αναφοράς",
         summary.encode("utf-8"),
-        "INELSO Academia_Kentriki_Synopsi_ULTIMATE_PRO_WRITE.txt",
+        "INELSO_Academia_Kentriki_Anofora.txt",
         "text/plain"
     )
+
