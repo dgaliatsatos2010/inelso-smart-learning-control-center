@@ -2772,7 +2772,7 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
 
 
     if "s31_view" not in st.session_state:
-        st.session_state["s31_view"] = "Ενιαίες ενδείξεις"
+        st.session_state["s31_view"] = None
 
     b1, b2, b3, b4 = st.columns(4)
     if b1.button("Ενιαίες ενδείξεις", use_container_width=True, key="s31_btn_signals"):
@@ -2798,7 +2798,9 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
 
     current_s31_view = st.session_state["s31_view"]
 
-    if current_s31_view == "Ενιαίες ενδείξεις":
+    if current_s31_view is None:
+        st.caption("Επιλέξτε μία από τις παραπάνω ενότητες για να εμφανιστούν τα αντίστοιχα αποτελέσματα.")
+    elif current_s31_view == "Ενιαίες ενδείξεις":
         st.dataframe(display31,use_container_width=True,hide_index=True)
 
     elif current_s31_view == "Προτεραιότητες":
