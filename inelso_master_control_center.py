@@ -2561,7 +2561,7 @@ elif section == "Υποστήριξη Διδάσκοντα":
     render_module_header("Υποστήριξη Διδάσκοντα", "", "s28")
     show_active_dataset_context("S28")
 
-    s28_tabs = st.tabs(["Δημιουργία", "Προσχέδιο", "Αποθηκευμένα", "Moodle"])
+    s28_tabs = st.tabs(["Δημιουργία", "Προσχέδιο", "Αποθηκευμένα"])
 
     with s28_tabs[0]:
         s28_mode = st.selectbox(
@@ -2725,20 +2725,6 @@ elif section == "Υποστήριξη Διδάσκοντα":
             )
         else:
             st.info("Δεν υπάρχουν ακόμη αποθηκευμένα προσχέδια.")
-
-    with s28_tabs[3]:
-        s28_scorm_ready = bool(st.session_state.get("s28_library"))
-        render_moodle_rest_service_panel(
-            "Υποστήριξη Διδάσκοντα",
-            summary=("Εγκεκριμένο προσχέδιο" if s28_scorm_ready else "Αναμένεται έλεγχος διδάσκοντα"),
-            score=None,
-            status="completed" if s28_scorm_ready else "incomplete",
-            entity="Υποστήριξη Διδάσκοντα",
-            enabled=True,
-            intervention_type="Υποστήριξη Διδάσκοντα — Εγκεκριμένη ανατροφοδότηση",
-            note="",
-        )
-
 
 elif section == "Ενοποιημένες Μαθησιακές Ενδείξεις":
     if ACTIVE_DF is None:
