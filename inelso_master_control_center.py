@@ -383,15 +383,15 @@ MODULE_HELP = {
         "data": "Δεν απαιτεί ξεχωριστό αρχείο. Χρησιμοποιεί τις ενδείξεις που έχουν ήδη δημιουργηθεί από το ενεργό σύνολο δεδομένων."
     },
     "lifecycle": {
-        "title": "Κύκλος Ζωής Ενεργειών",
-        "purpose": "Παρακολουθεί μια ενέργεια από την αρχική ένδειξη μέχρι τον ανθρώπινο έλεγχο, την έγκριση, την εκτέλεση και την επαλήθευση.",
+        "title": "Παρακολούθηση Παρεμβάσεων",
+        "purpose": "Παρακολουθεί την πορεία των προτεινόμενων παρεμβάσεων από τη δημιουργία τους μέχρι τον ανθρώπινο έλεγχο και την ολοκλήρωσή τους.",
         "steps": [
-            "Επιλέξτε την ενέργεια που θέλετε να παρακολουθήσετε.",
-            "Ελέγξτε σε ποια κατάσταση βρίσκεται: νέα, υπό εξέταση, εγκεκριμένη, εκτελεσμένη ή επαληθευμένη.",
-            "Καταγράψτε υπεύθυνο και σχόλια όπου χρειάζεται.",
-            "Θεωρήστε την ενέργεια ολοκληρωμένη μόνο όταν υπάρχει επιβεβαίωση του αποτελέσματος."
+            "Επιλέξτε την παρέμβαση που θέλετε να παρακολουθήσετε.",
+            "Αλλάξτε την κατάστασή της από «ΝΕΑ» σε «ΣΕ ΕΛΕΓΧΟ» όταν ξεκινήσει η εξέτασή της.",
+            "Ορίστε την ως «ΟΛΟΚΛΗΡΩΜΕΝΗ» όταν η ενέργεια έχει ολοκληρωθεί.",
+            "Με την ολοκλήρωση δημιουργείται αυτόματα εγγραφή στο Μητρώο Ενεργειών για ιστορικό και τεκμηρίωση."
         ],
-        "data": "Η ενότητα χρησιμοποιεί το μητρώο ενεργειών και τις αποφάσεις που δημιουργούνται μέσα στην πλατφόρμα."
+        "data": "Οι παρεμβάσεις δημιουργούνται από τις διαθέσιμες μαθησιακές ενδείξεις της πλατφόρμας. Οι ολοκληρωμένες παρεμβάσεις καταγράφονται αυτόματα στο Μητρώο Ενεργειών."
     },
     "methodology": {
         "title": "Μεθοδολογία & Προέλευση",
@@ -1481,7 +1481,7 @@ if section == "__ADVANCED__":
         "Επιλέξτε εργαλείο",
         [
             "Πίνακας Ενεργειών & Παρεμβάσεων",
-            "Κύκλος Ζωής Ενεργειών",
+            "Παρακολούθηση Παρεμβάσεων",
             "Μεθοδολογία & Προέλευση",
             "Εργαστήριο Ανάλυσης Δεδομένων",
             "Προσομοίωση Σεναρίων",
@@ -1510,7 +1510,7 @@ st.sidebar.caption("🔒 Καμία επίσημη βαθμολογία ή κρ�
 SECTION_HELP = {
     "Ανάλυση SCORM Αξιολόγησης": "scorm_analysis",
     "Πίνακας Ενεργειών & Παρεμβάσεων": "flow",
-    "Κύκλος Ζωής Ενεργειών": "lifecycle",
+    "Παρακολούθηση Παρεμβάσεων": "lifecycle",
     "Μεθοδολογία & Προέλευση": "methodology",
     "Εισαγωγή CSV / Excel": "csv_import",
     "Εργαστήριο Ανάλυσης Δεδομένων": "analytics_lab",
@@ -2927,8 +2927,8 @@ elif section == "Πίνακας Ενεργειών & Παρεμβάσεων":
 # ==========================================================
 # ΚΥΚΛΟΣ ΖΩΗΣ ΕΝΕΡΓΕΙΩΝ
 # ==========================================================
-elif section == "Κύκλος Ζωής Ενεργειών":
-    render_module_header("Κύκλος Ζωής Ενεργειών", "", "lifecycle")
+elif section == "Παρακολούθηση Παρεμβάσεων":
+    render_module_header("Παρακολούθηση Παρεμβάσεων", "", "lifecycle")
     show_active_dataset_context("S31")
 
     actions=[]
@@ -2977,15 +2977,22 @@ elif section == "Κύκλος Ζωής Ενεργειών":
         for code in lifecycle["Κωδικός"].tolist():
             st.session_state["κατάσταση_ενεργειών"].setdefault(code, "ΝΕΑ")
 
+    registry_columns = [
+        "Ημερομηνία","Ενότητα","Οντότητα","Ένδειξη","Προτεραιότητα",
+        "Απόφαση","Υπεύθυνος","Κατάσταση","Σημειώσεις","Πηγή δεδομένων"
+    ]
+    if "action_log" not in st.session_state:
+        st.session_state["action_log"] = pd.DataFrame(columns=registry_columns)
+
     c1,c2,c3,c4 = st.columns(4)
-    c1.metric("Σύνολο ενεργειών", len(lifecycle))
+    c1.metric("Σύνολο παρεμβάσεων", len(lifecycle))
     c2.metric("Νέες", sum(v=="ΝΕΑ" for v in st.session_state["κατάσταση_ενεργειών"].values()))
     c3.metric("Σε έλεγχο", sum(v=="ΣΕ ΕΛΕΓΧΟ" for v in st.session_state["κατάσταση_ενεργειών"].values()))
-    c4.metric("Κλειστές", sum(v=="ΚΛΕΙΣΤΗ" for v in st.session_state["κατάσταση_ενεργειών"].values()))
+    c4.metric("Ολοκληρωμένες", sum(v=="ΟΛΟΚΛΗΡΩΜΕΝΗ" for v in st.session_state["κατάσταση_ενεργειών"].values()))
 
     if not lifecycle.empty:
         επιλογές = lifecycle["Κωδικός"].tolist()
-        code = st.selectbox("Επιλέξτε ενέργεια", επιλογές)
+        code = st.selectbox("Επιλέξτε παρέμβαση", επιλογές)
         row = lifecycle.loc[lifecycle["Κωδικός"]==code].iloc[0]
 
         a,b,c = st.columns(3)
@@ -3001,28 +3008,59 @@ elif section == "Κύκλος Ζωής Ενεργειών":
         if lifecycle_widget_key not in st.session_state:
             st.session_state[lifecycle_widget_key] = current
 
-        def _update_lifecycle_state(action_code=code, widget_key=lifecycle_widget_key):
-            st.session_state["κατάσταση_ενεργειών"][action_code] = st.session_state[widget_key]
+        def _update_lifecycle_state(action_code=code, widget_key=lifecycle_widget_key, action_row=row.to_dict()):
+            new_state = st.session_state[widget_key]
+            st.session_state["κατάσταση_ενεργειών"][action_code] = new_state
+
+            if new_state == "ΟΛΟΚΛΗΡΩΜΕΝΗ":
+                marker = f"[ΠΑΡΕΜΒΑΣΗ:{action_code}]"
+                action_log = st.session_state.get("action_log", pd.DataFrame(columns=registry_columns))
+                already_logged = False
+                if len(action_log) and "Σημειώσεις" in action_log.columns:
+                    already_logged = action_log["Σημειώσεις"].astype(str).str.contains(
+                        marker, regex=False, na=False
+                    ).any()
+
+                if not already_logged:
+                    completed_row = pd.DataFrame([{
+                        "Ημερομηνία":datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "Ενότητα":action_row["Ενότητα"],
+                        "Οντότητα":action_row["Οντότητα"],
+                        "Ένδειξη":action_row["Ένδειξη"],
+                        "Προτεραιότητα":action_row["Προτεραιότητα"],
+                        "Απόφαση":action_row["Προτεινόμενη ενέργεια"],
+                        "Υπεύθυνος":"",
+                        "Κατάσταση":"ΟΛΟΚΛΗΡΩΘΗΚΕ",
+                        "Σημειώσεις":f"{marker} Αυτόματη καταγραφή από την Παρακολούθηση Παρεμβάσεων.",
+                        "Πηγή δεδομένων":ACTIVE_NAME
+                    }])
+                    st.session_state["action_log"] = pd.concat(
+                        [action_log, completed_row],
+                        ignore_index=True
+                    )
 
         st.radio(
-            "Κατάσταση κύκλου ζωής",
-            ["ΝΕΑ","ΣΕ ΕΛΕΓΧΟ","ΚΛΕΙΣΤΗ"],
+            "Κατάσταση παρέμβασης",
+            ["ΝΕΑ","ΣΕ ΕΛΕΓΧΟ","ΟΛΟΚΛΗΡΩΜΕΝΗ"],
             key=lifecycle_widget_key,
             horizontal=True,
             on_change=_update_lifecycle_state
         )
 
         export_lifecycle = lifecycle.copy()
-        export_lifecycle["Κατάσταση κύκλου ζωής"] = export_lifecycle["Κωδικός"].map(
+        export_lifecycle["Κατάσταση παρέμβασης"] = export_lifecycle["Κωδικός"].map(
             st.session_state["κατάσταση_ενεργειών"]
         )
         st.dataframe(export_lifecycle,use_container_width=True,hide_index=True)
         st.download_button(
-            "Λήψη μητρώου ενεργειών",
+            "Λήψη παρακολούθησης CSV",
             export_lifecycle.to_csv(index=False).encode("utf-8-sig"),
-            "INELSO Academia_Mitroo_Energeion.csv",
+            "INELSO Academia_Parakolouthisi_Paremvaseon.csv",
             "text/csv"
         )
+    else:
+        st.info("Δεν υπάρχουν αυτή τη στιγμή παρεμβάσεις προς παρακολούθηση.")
+
 
 # ==========================================================
 # ΜΕΘΟΔΟΛΟΓΙΑ & ΠΡΟΕΛΕΥΣΗ
