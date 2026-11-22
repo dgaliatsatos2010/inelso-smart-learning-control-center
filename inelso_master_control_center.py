@@ -2783,12 +2783,10 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
         "προτεραιότητα":"Προτεραιότητα"
     })
 
-    s31_tabs = st.tabs(["Ενιαίες ενδείξεις", "Προτεραιότητες", "Προέλευση", "Αλυσίδα παρέμβασης"])
-
-    with s31_tabs[0]:
+    with st.expander("Ενιαίες ενδείξεις", expanded=False):
         st.dataframe(display31,use_container_width=True,hide_index=True)
 
-    with s31_tabs[1]:
+    with st.expander("Προτεραιότητες", expanded=False):
         sorted31 = service31_integrated.sort_values(
             ["προτεραιότητα","ισχύς_σήματος"],
             ascending=[True,False]
@@ -2806,12 +2804,12 @@ elif section == "Ενοποιημένες Μαθησιακές Ενδείξει�
         st.dataframe(sorted31,use_container_width=True,hide_index=True)
         st.warning("Υψηλή προτεραιότητα σημαίνει ότι η ένδειξη απαιτεί ανθρώπινο έλεγχο πριν από οποιαδήποτε εκπαιδευτική παρέμβαση.")
 
-    with s31_tabs[2]:
+    with st.expander("Προέλευση", expanded=False):
         prov = service31_integrated[["οντότητα","επίπεδο_ένδειξης","πηγή","τύπος","προέλευση"]].copy()
         prov.columns = ["Οντότητα","Επίπεδο ένδειξης","Πηγή","Τύπος ένδειξης","Προέλευση"]
         st.dataframe(prov,use_container_width=True,hide_index=True)
 
-    with s31_tabs[3]:
+    with st.expander("Αλυσίδα παρέμβασης", expanded=False):
         st.markdown("""
 1. Εντοπισμός ένδειξης στην Ποιότητα Quiz ή στην Προσαρμοστική Εξάσκηση  
 2. Διατήρηση της πραγματικής προέλευσης και του τύπου της ένδειξης  
