@@ -4177,7 +4177,75 @@ elif section == "Ζωντανή Σύνδεση Moodle":
                                 "URL": mod.get("url")
                             })
                     if flat:
-                        st.dataframe(pd.DataFrame(flat), use_container_width=True, hide_index=True)
+                        structure_df = pd.DataFrame(flat)
+
+                        type_labels = {
+                            "forum":"Συζήτηση / Forum",
+                            "qbank":"Τράπεζα ερωτήσεων",
+                            "quiz":"Quiz",
+                            "assign":"Εργασία",
+                            "url":"Εξωτερικός σύνδεσμος",
+                            "page":"Σελίδα",
+                            "resource":"Αρχείο / Πόρος",
+                            "folder":"Φάκελος",
+                            "label":"Κείμενο / Ετικέτα",
+                            "scorm":"SCORM",
+                            "book":"Βιβλίο"
+                        }
+                        structure_df["Τύπος περιεχομένου"] = structure_df["Τύπος"].map(type_labels).fillna(
+                            structure_df["Τύπος"].astype(str).str.replace("_"," ").str.title()
+                        )
+
+                        unique_sections = int(structure_df["Ενότητα"].replace("",np.nan).nunique(dropna=True))
+                        unique_types = int(structure_df["Τύπος"].nunique(dropna=True))
+
+                        s1, s2, s3 = st.columns(3)
+                        s1.metric("Ενότητες", unique_sections)
+                        s2.metric("Στοιχεία μαθήματος", len(structure_df))
+                        s3.metric("Τύποι περιεχομένου", unique_types)
+
+                        with st.expander("📚 Περιεχόμενο και δομή μαθήματος", expanded=True):
+                            section_options = ["Όλες οι ενότητες"] + [
+                                x for x in structure_df["Ενότητα"].dropna().astype(str).unique().tolist() if x
+                            ]
+                            selected_section = st.selectbox(
+                                "Προβολή ενότητας",
+                                section_options,
+                                key="live_structure_section_filter"
+                            )
+
+                            visible_structure = structure_df.copy()
+                            if selected_section != "Όλες οι ενότητες":
+                                visible_structure = visible_structure[
+                                    visible_structure["Ενότητα"].astype(str) == selected_section
+                                ]
+
+                            display_cols = ["Ενότητα","Όνομα","Τύπος περιεχομένου","URL"]
+                            st.dataframe(
+                                visible_structure[display_cols],
+                                use_container_width=True,
+                                hide_index=True,
+                                column_config={
+                                    "URL": st.column_config.LinkColumn(
+                                        "Άνοιγμα στο Moodle",
+                                        display_text="Άνοιγμα ↗"
+                                    )
+                                }
+                            )
+
+                        with st.expander("🛠️ Τεχνικές λεπτομέρειες", expanded=False):
+                            st.caption("Αναγνωριστικά και αρχικοί τύποι που επιστρέφονται από το Moodle.")
+                            st.dataframe(
+                                structure_df[["Ενότητα","Όνομα","Τύπος","ID","URL"]],
+                                use_container_width=True,
+                                hide_index=True,
+                                column_config={
+                                    "URL": st.column_config.LinkColumn(
+                                        "URL",
+                                        display_text="Άνοιγμα ↗"
+                                    )
+                                }
+                            )
                     else:
                         st.caption("Δεν βρέθηκε διαθέσιμη δομή.")
                 else:
