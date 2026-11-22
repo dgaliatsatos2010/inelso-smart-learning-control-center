@@ -3321,19 +3321,16 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
     render_module_header("Εργαστήριο Ανάλυσης Δεδομένων", "", "analytics_lab")
     show_active_dataset_context("ANALYTICS")
 
-    source_options = ["Χρήση τελευταίου αρχείου από το Κέντρο Δεδομένων"]
-    if "inelso_uploaded_original" not in st.session_state:
-        st.warning("Δεν υπάρχει ακόμη ανεβασμένο σύνολο δεδομένων. Πήγαινε πρώτα στο «Κέντρο Εισαγωγής & Επεξεργασίας Δεδομένων» και φόρτωσε ένα αρχείο.")
+    if ACTIVE_DF is None or not isinstance(ACTIVE_DF, pd.DataFrame) or ACTIVE_DF.empty:
+        st.warning(
+            "Δεν υπάρχει ενεργό σύνολο δεδομένων. Φορτώστε CSV/Excel ή ενεργοποιήστε ένα SCORM Master Dataset."
+        )
         lab_df = None
     else:
-        source = st.radio("Πηγή δεδομένων", source_options, horizontal=True)
-        lab_df = st.session_state.get(
-            "inelso_uploaded_clean",
-            st.session_state["inelso_uploaded_original"]
-        ).copy()
+        lab_df = ACTIVE_DF.copy()
 
     if lab_df is not None and len(lab_df) > 0:
-        st.success(f"Ενεργό σύνολο δεδομένων: {st.session_state.get('inelso_uploaded_name','Ανεβασμένο αρχείο')}")
+        st.success(f"Ενεργό σύνολο δεδομένων: {ACTIVE_NAME}")
 
         # ------------------------------------------------------
         # Automated data-quality score
