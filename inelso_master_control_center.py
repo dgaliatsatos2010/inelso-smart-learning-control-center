@@ -5946,16 +5946,95 @@ elif section == "Μητρώο Ενεργειών":
         logdf = st.session_state["action_log"]
 
         if len(logdf) > 0:
-            st.dataframe(logdf,use_container_width=True,hide_index=True)
-
             status_counts = logdf["Κατάσταση"].value_counts()
+            open_count = int(
+                status_counts.get("Νέα",0)
+                + status_counts.get("Σε εξέλιξη",0)
+                + status_counts.get("ΝΕΑ",0)
+                + status_counts.get("ΣΕ ΕΛΕΓΧΟ",0)
+            )
+            completed_count = int(
+                status_counts.get("Ολοκληρώθηκε",0)
+                + status_counts.get("ΟΛΟΚΛΗΡΩΘΗΚΕ",0)
+                + status_counts.get("ΟΛΟΚΛΗΡΩΜΕΝΗ",0)
+            )
+
             c1,c2,c3 = st.columns(3)
-            c1.metric("Σύνολο",len(logdf))
-            c2.metric("Ανοικτές",int(status_counts.get("Νέα",0)+status_counts.get("Σε εξέλιξη",0)+status_counts.get("ΝΕΑ",0)+status_counts.get("ΣΕ ΕΛΕΓΧΟ",0)))
-            c3.metric("Ολοκληρωμένες",int(status_counts.get("Ολοκληρώθηκε",0)+status_counts.get("ΟΛΟΚΛΗΡΩΘΗΚΕ",0)+status_counts.get("ΟΛΟΚΛΗΡΩΜΕΝΗ",0)))
+            c1.metric("Σύνολο ενεργειών", len(logdf))
+            c2.metric("Ανοικτές ενέργειες", open_count)
+            c3.metric("Ολοκληρωμένες", completed_count)
+
+            registry_view = logdf.copy()
+
+            priority_labels = {
+                1: "🔴 Υψηλή",
+                2: "🟠 Μεσαία",
+                3: "🟢 Χαμηλή",
+                "1": "🔴 Υψηλή",
+                "2": "🟠 Μεσαία",
+                "3": "🟢 Χαμηλή",
+            }
+            status_labels = {
+                "Νέα": "🆕 Νέα",
+                "Σε εξέλιξη": "🔄 Σε εξέλιξη",
+                "Ολοκληρώθηκε": "✅ Ολοκληρώθηκε",
+                "Ακυρώθηκε": "⛔ Ακυρώθηκε",
+                "ΝΕΑ": "🆕 Νέα",
+                "ΣΕ ΕΛΕΓΧΟ": "🔄 Σε εξέλιξη",
+                "ΟΛΟΚΛΗΡΩΘΗΚΕ": "✅ Ολοκληρώθηκε",
+                "ΟΛΟΚΛΗΡΩΜΕΝΗ": "✅ Ολοκληρώθηκε",
+                "ΑΚΥΡΩΘΗΚΕ": "⛔ Ακυρώθηκε",
+            }
+
+            registry_view["Προτεραιότητα"] = registry_view["Προτεραιότητα"].map(
+                lambda x: priority_labels.get(x, str(x) if pd.notna(x) else "—")
+            )
+            registry_view["Κατάσταση"] = registry_view["Κατάσταση"].map(
+                lambda x: status_labels.get(str(x), str(x) if pd.notna(x) else "—")
+            )
+
+            compact_columns = [
+                "Ημερομηνία",
+                "Ενότητα",
+                "Οντότητα",
+                "Προτεραιότητα",
+                "Απόφαση",
+                "Υπεύθυνος",
+                "Κατάσταση",
+            ]
+            compact_view = registry_view[
+                [col for col in compact_columns if col in registry_view.columns]
+            ].rename(columns={
+                "Ημερομηνία":"Καταχώριση",
+                "Οντότητα":"Αντικείμενο",
+                "Απόφαση":"Ενέργεια",
+            })
+
+            st.markdown("#### Ενέργειες")
+            st.caption("Συνοπτική προβολή των ενεργειών, της προτεραιότητας, του υπευθύνου και της τρέχουσας κατάστασης.")
+            st.dataframe(
+                compact_view,
+                use_container_width=True,
+                hide_index=True,
+                height=min(420, 82 + 36 * len(compact_view))
+            )
+
+            with st.expander("🔎 Πλήρεις λεπτομέρειες καταχωρίσεων", expanded=False):
+                detailed_view = registry_view.rename(columns={
+                    "Ημερομηνία":"Καταχώριση",
+                    "Οντότητα":"Αντικείμενο",
+                    "Απόφαση":"Ενέργεια",
+                    "Ένδειξη":"Ένδειξη / αιτία",
+                })
+                st.dataframe(
+                    detailed_view,
+                    use_container_width=True,
+                    hide_index=True,
+                    height=min(420, 82 + 36 * len(detailed_view))
+                )
 
             st.download_button(
-                "Λήψη μητρώου CSV",
+                "⬇️ Λήψη μητρώου CSV",
                 logdf.to_csv(index=False).encode("utf-8-sig"),
                 "INELSO Academia_Action_Log.csv",
                 "text/csv"
