@@ -3988,7 +3988,6 @@ elif section == "Ζωντανή Σύνδεση Moodle":
 
     with tab_conn:
         st.markdown("### Σύνδεση Moodle")
-        st.caption("Η φόρμα παραμένει κλειστή όταν δεν χρειάζεται, για καθαρότερη προβολή.")
         with st.expander("🔐 Άνοιγμα ρυθμίσεων σύνδεσης", expanded=not st.session_state.get("moodle_connection_verified", False)):
             st.markdown("### Σύνδεση Moodle")
             st.caption("Συμπληρώστε τα στοιχεία μία φορά. Παραμένουν διαθέσιμα όσο διαρκεί η τρέχουσα συνεδρία.")
@@ -4033,9 +4032,9 @@ elif section == "Ζωντανή Σύνδεση Moodle":
                 if st.session_state.get("moodle_connection_verified"):
                     info = st.session_state.get("moodle_site_info", {})
                     st.markdown(
-                        f"**Συνδεδεμένο:** {info.get('sitename','Moodle')}  \\n"
-                        f"**Λογαριασμός:** {info.get('fullname','—')}  \\n"
-                        f"**Έκδοση:** {info.get('release','—')}"
+                        f"**Πλατφόρμα:** {info.get('sitename','Moodle')}  \\n"
+                        f"**Συνδεδεμένος λογαριασμός:** {info.get('fullname','—')}  \\n"
+                        f"**Έκδοση Moodle:** {info.get('release','—')}"
                     )
                 else:
                     st.caption("Μετά τον επιτυχή έλεγχο, δεν χρειάζεται να ξαναδώσετε τα στοιχεία στις άλλες καρτέλες.")
