@@ -5145,101 +5145,102 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
                     except Exception as e:
                         st.error(f"Δεν ήταν δυνατή η φόρτωση χρηστών: {e}")
 
-        assignments = st.session_state.get("grade_assignments", [])
-        selected_assignment_label = None
-        if isinstance(assignments, list) and assignments:
-            assignment_map = {}
-            for a in assignments:
-                if not isinstance(a, dict):
-                    continue
-                aid = a.get("id")
-                if aid is None:
-                    continue
-                name = str(a.get("name", f"Εργασία {aid}"))
-                cmid = a.get("cmid")
-                label = f"{name} — Assignment ID {aid}"
-                if cmid is not None:
-                    label += f" — Activity ID {cmid}"
-                assignment_map[label] = a
-            selected_assignment_label = st.selectbox(
-                "Εργασία Moodle",
-                list(assignment_map.keys()),
-                key="grade_assignment_select"
-            )
-            selected_assignment = assignment_map[selected_assignment_label]
-            component = "mod_assign"
-            assignment_instance_id = int(selected_assignment.get("id"))
-            cmid_value = selected_assignment.get("cmid")
-            if cmid_value is None:
-                st.error(
-                    "Δεν βρέθηκε Course Module ID για την επιλεγμένη εργασία. "
-                    "Δεν είναι ασφαλές να εκτελεστεί αλλαγή βαθμού."
+        with st.expander("✏️ Στοιχεία αλλαγής βαθμού", expanded=False):
+            assignments = st.session_state.get("grade_assignments", [])
+            selected_assignment_label = None
+            if isinstance(assignments, list) and assignments:
+                assignment_map = {}
+                for a in assignments:
+                    if not isinstance(a, dict):
+                        continue
+                    aid = a.get("id")
+                    if aid is None:
+                        continue
+                    name = str(a.get("name", f"Εργασία {aid}"))
+                    cmid = a.get("cmid")
+                    label = f"{name} — Assignment ID {aid}"
+                    if cmid is not None:
+                        label += f" — Activity ID {cmid}"
+                    assignment_map[label] = a
+                selected_assignment_label = st.selectbox(
+                    "Εργασία Moodle",
+                    list(assignment_map.keys()),
+                    key="grade_assignment_select"
                 )
-                activity_id = 0
+                selected_assignment = assignment_map[selected_assignment_label]
+                component = "mod_assign"
+                assignment_instance_id = int(selected_assignment.get("id"))
+                cmid_value = selected_assignment.get("cmid")
+                if cmid_value is None:
+                    st.error(
+                        "Δεν βρέθηκε Course Module ID για την επιλεγμένη εργασία. "
+                        "Δεν είναι ασφαλές να εκτελεστεί αλλαγή βαθμού."
+                    )
+                    activity_id = 0
+                else:
+                    activity_id = int(cmid_value)
+                st.caption(
+                    f"Θα χρησιμοποιηθεί η εργασία «{selected_assignment.get('name','')}» · "
+                    f"Assignment ID {assignment_instance_id} · Activity ID {activity_id}."
+                )
             else:
-                activity_id = int(cmid_value)
-            st.caption(
-                f"Θα χρησιμοποιηθεί η εργασία «{selected_assignment.get('name','')}» · "
-                f"Assignment ID {assignment_instance_id} · Activity ID {activity_id}."
-            )
-        else:
-            st.info(
-                "Πατήστε «Φόρτωση εργασιών μαθήματος» για να επιλέξετε πραγματική εργασία. "
-                "Η χειροκίνητη εισαγωγή παραμένει διαθέσιμη μόνο ως εναλλακτική."
-            )
-            component = st.text_input(
-                "Στοιχείο Moodle",
-                value="mod_assign",
-                key="grade_component_manual"
-            )
-            activity_id = st.number_input(
-                "ID Δραστηριότητας",
-                min_value=1,
-                step=1,
-                value=1,
-                key="grade_activity_manual"
-            )
+                st.info(
+                    "Πατήστε «Φόρτωση εργασιών μαθήματος» για να επιλέξετε πραγματική εργασία. "
+                    "Η χειροκίνητη εισαγωγή παραμένει διαθέσιμη μόνο ως εναλλακτική."
+                )
+                component = st.text_input(
+                    "Στοιχείο Moodle",
+                    value="mod_assign",
+                    key="grade_component_manual"
+                )
+                activity_id = st.number_input(
+                    "ID Δραστηριότητας",
+                    min_value=1,
+                    step=1,
+                    value=1,
+                    key="grade_activity_manual"
+                )
 
-        users_df = st.session_state.get("grade_course_users")
-        selected_user_label = None
-        if isinstance(users_df, pd.DataFrame) and not users_df.empty and "id" in users_df.columns:
-            user_map = {}
-            for _, ur in users_df.iterrows():
-                uid = int(ur["id"])
-                fullname = str(ur.get("fullname", f"Χρήστης {uid}"))
-                email = str(ur.get("email", "") or "")
-                label = f"{fullname} — ID {uid}"
-                if email and email.lower() != "nan":
-                    label += f" — {email}"
-                user_map[label] = uid
-            selected_user_label = st.selectbox(
-                "Εκπαιδευόμενος",
-                list(user_map.keys()),
-                key="grade_user_select"
-            )
-            student_id = user_map[selected_user_label]
-        else:
-            student_id = st.number_input(
-                "ID Εκπαιδευόμενου",
-                min_value=1,
-                step=1,
-                value=208,
-                key="grade_student_manual"
-            )
+            users_df = st.session_state.get("grade_course_users")
+            selected_user_label = None
+            if isinstance(users_df, pd.DataFrame) and not users_df.empty and "id" in users_df.columns:
+                user_map = {}
+                for _, ur in users_df.iterrows():
+                    uid = int(ur["id"])
+                    fullname = str(ur.get("fullname", f"Χρήστης {uid}"))
+                    email = str(ur.get("email", "") or "")
+                    label = f"{fullname} — ID {uid}"
+                    if email and email.lower() != "nan":
+                        label += f" — {email}"
+                    user_map[label] = uid
+                selected_user_label = st.selectbox(
+                    "Εκπαιδευόμενος",
+                    list(user_map.keys()),
+                    key="grade_user_select"
+                )
+                student_id = user_map[selected_user_label]
+            else:
+                student_id = st.number_input(
+                    "ID Εκπαιδευόμενου",
+                    min_value=1,
+                    step=1,
+                    value=208,
+                    key="grade_student_manual"
+                )
 
-        item_number = 0
-        grade_value = st.number_input(
-            "Νέος βαθμός",
-            value=0.0,
-            step=0.5,
-            key="grade_new_value"
-        )
-        feedback = st.text_area(
-            "Προαιρετική ανατροφοδότηση",
-            height=100,
-            key="grade_feedback"
-        )
-        source = "inelso_control_center"
+            item_number = 0
+            grade_value = st.number_input(
+                "Νέος βαθμός",
+                value=0.0,
+                step=0.5,
+                key="grade_new_value"
+            )
+            feedback = st.text_area(
+                "Προαιρετική ανατροφοδότηση",
+                height=100,
+                key="grade_feedback"
+            )
+            source = "inelso_control_center"
 
         grade_preview = pd.DataFrame([{
             "ID Μαθήματος":int(course_id),
