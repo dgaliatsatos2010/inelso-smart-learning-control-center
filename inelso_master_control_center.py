@@ -5700,7 +5700,50 @@ elif section == "Εισαγωγή CSV / Excel":
             st.dataframe(compatibility, use_container_width=True, hide_index=True)
 
         with st.expander("🧾 Προεπισκόπηση δεδομένων", expanded=False):
-            st.dataframe(ACTIVE_DF.head(20), use_container_width=True, hide_index=True)
+            preview_tabs = st.tabs(["Συνοπτική προβολή", "Πλήρης προβολή"])
+
+            with preview_tabs[0]:
+                preferred_cols = [
+                    "learner_id","user_id","learner","μαθητής",
+                    "attempt","προσπάθεια",
+                    "score","grade","final_score",
+                    "confidence","βεβαιότητα",
+                    "question_id","ερώτηση","question_text",
+                    "result","is_correct",
+                    "student_response","correct_response",
+                    "review_flag",
+                    "scorm_name","source_type",
+                    "accuracy_pct","learning_outcome",
+                    "course_id","course_name"
+                ]
+                summary_cols = [col for col in preferred_cols if col in ACTIVE_DF.columns]
+                if not summary_cols:
+                    summary_cols = list(ACTIVE_DF.columns[:10])
+
+                concise_preview = ACTIVE_DF[summary_cols].drop_duplicates().head(15)
+
+                st.caption(
+                    f"Εμφανίζονται {len(concise_preview)} αντιπροσωπευτικές εγγραφές "
+                    f"από {len(ACTIVE_DF)} συνολικά, με τα σημαντικότερα διαθέσιμα πεδία."
+                )
+                st.dataframe(
+                    concise_preview,
+                    use_container_width=True,
+                    hide_index=True,
+                    height=420
+                )
+
+            with preview_tabs[1]:
+                st.caption(
+                    f"Πλήρης τεχνική προβολή των πρώτων {min(50, len(ACTIVE_DF))} "
+                    f"από {len(ACTIVE_DF)} εγγραφές και όλων των διαθέσιμων πεδίων."
+                )
+                st.dataframe(
+                    ACTIVE_DF.head(50),
+                    use_container_width=True,
+                    hide_index=True,
+                    height=520
+                )
 
 # ==========================================================
 # ΚΕΝΤΡΙΚΗ ΑΝΑΦΟΡΑ
