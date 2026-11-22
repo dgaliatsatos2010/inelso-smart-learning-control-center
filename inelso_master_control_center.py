@@ -4394,8 +4394,7 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
     st.markdown("### Σύνδεση Moodle")
     connection_ready = bool(moodle_url and token)
 
-    if connection_ready:
-    else:
+    if not connection_ready:
         st.warning(
             "Δεν υπάρχουν ακόμη ενεργά στοιχεία σύνδεσης Moodle. "
             "Συμπληρώστε τα παρακάτω πριν από καταγραφή ή ανάκτηση δεδομένων."
