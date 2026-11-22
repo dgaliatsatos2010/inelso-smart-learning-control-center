@@ -3339,6 +3339,31 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
 
             if numeric.shape[1] >= 2:
                 corr = numeric.corr(numeric_only=True)
+
+                st.markdown("**Πώς διαβάζεται ο συντελεστής συσχέτισης (r)**")
+                st.caption(
+                    "Το r κυμαίνεται από −1 έως +1. Το πρόσημο δείχνει την κατεύθυνση "
+                    "και η απόλυτη τιμή την ένταση της γραμμικής σχέσης."
+                )
+                scale_df = pd.DataFrame(
+                    [
+                        ["0.00–0.09", "Αμελητέα / πρακτικά καμία"],
+                        ["0.10–0.29", "Ασθενής"],
+                        ["0.30–0.49", "Μέτρια"],
+                        ["0.50–0.69", "Ισχυρή"],
+                        ["0.70–0.89", "Πολύ ισχυρή"],
+                        ["0.90–1.00", "Εξαιρετικά ισχυρή"],
+                    ],
+                    columns=["|r|", "Ερμηνεία έντασης"],
+                )
+                st.dataframe(scale_df, use_container_width=True, hide_index=True)
+                st.caption(
+                    "Θετικό r: οι δύο μεταβλητές τείνουν να αυξάνονται μαζί. "
+                    "Αρνητικό r: όταν η μία αυξάνεται, η άλλη τείνει να μειώνεται. "
+                    "Η συσχέτιση δεν αποδεικνύει αιτιότητα."
+                )
+
+                st.markdown("**Πίνακας συσχετίσεων**")
                 st.dataframe(corr.round(3), use_container_width=True)
 
                 flat = corr.where(
@@ -3346,10 +3371,55 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                 ).stack().reset_index()
                 flat.columns = ["Μεταβλητή 1","Μεταβλητή 2","Συσχέτιση"]
                 flat["Απόλυτη συσχέτιση"] = flat["Συσχέτιση"].abs()
+
+                def _corr_strength(r):
+                    a = abs(float(r))
+                    if a < 0.10:
+                        return "Αμελητέα"
+                    if a < 0.30:
+                        return "Ασθενής"
+                    if a < 0.50:
+                        return "Μέτρια"
+                    if a < 0.70:
+                        return "Ισχυρή"
+                    if a < 0.90:
+                        return "Πολύ ισχυρή"
+                    return "Εξαιρετικά ισχυρή"
+
+                def _corr_direction(r):
+                    if r > 0:
+                        return "Θετική"
+                    if r < 0:
+                        return "Αρνητική"
+                    return "Καμία"
+
+                def _corr_interpretation(r):
+                    strength = _corr_strength(r)
+                    direction = _corr_direction(r)
+                    if direction == "Καμία":
+                        return "Καμία γραμμική συσχέτιση"
+                    return f"{strength} {direction.lower()} συσχέτιση"
+
+                flat["Κατεύθυνση"] = flat["Συσχέτιση"].apply(_corr_direction)
+                flat["Ένταση"] = flat["Συσχέτιση"].apply(_corr_strength)
+                flat["Ερμηνεία"] = flat["Συσχέτιση"].apply(_corr_interpretation)
                 flat = flat.sort_values("Απόλυτη συσχέτιση", ascending=False)
 
                 st.subheader("Ισχυρότερες σχέσεις")
-                st.dataframe(flat.head(15), use_container_width=True, hide_index=True)
+                st.dataframe(
+                    flat.head(15)[
+                        ["Μεταβλητή 1", "Μεταβλητή 2", "Συσχέτιση", "Κατεύθυνση", "Ένταση", "Ερμηνεία"]
+                    ].round({"Συσχέτιση": 3}),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+                if not flat.empty:
+                    top = flat.iloc[0]
+                    st.info(
+                        f"Ισχυρότερη σχέση: **{top['Μεταβλητή 1']} ↔ {top['Μεταβλητή 2']}** "
+                        f"με r = **{top['Συσχέτιση']:.3f}** — **{top['Ερμηνεία']}**."
+                    )
             else:
                 st.info("Απαιτούνται τουλάχιστον δύο αριθμητικές μεταβλητές.")
 
