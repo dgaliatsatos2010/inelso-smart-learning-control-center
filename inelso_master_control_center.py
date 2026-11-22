@@ -3746,11 +3746,6 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
         # ------------------------------------------------------
         with group_box:
             st.subheader("Σύγκριση ομάδων")
-            st.caption(
-                "Η λειτουργία συγκρίνει μία αριθμητική μεταβλητή μεταξύ κατηγοριών ή ομάδων. "
-                "Παράδειγμα: σύγκριση του score μεταξύ διαφορετικών learning_outcome ή ομάδων μαθητών."
-            )
-
             with st.expander("ℹ️ Πώς χρησιμοποιώ και ερμηνεύω τη σύγκριση ομάδων;", expanded=False):
                 st.markdown(
                     """
@@ -3803,21 +3798,6 @@ elif section == "Εργαστήριο Ανάλυσης Δεδομένων":
                 st.dataframe(comparison,use_container_width=True,hide_index=True)
                 st.bar_chart(comparison.set_index(group_col)[["Μέσος"]])
 
-                valid_means = comparison.dropna(subset=["Μέσος"])
-                if len(valid_means) >= 2 and not id_like(value_col):
-                    top = valid_means.loc[valid_means["Μέσος"].idxmax()]
-                    low = valid_means.loc[valid_means["Μέσος"].idxmin()]
-                    diff = float(top["Μέσος"] - low["Μέσος"])
-                    st.info(
-                        f"Ερμηνεία: η υψηλότερη μέση τιμή της «{value_col}» εμφανίζεται στην ομάδα "
-                        f"«{top[group_col]}» ({top['Μέσος']:.2f}), ενώ η χαμηλότερη στην ομάδα "
-                        f"«{low[group_col]}» ({low['Μέσος']:.2f}). Η περιγραφική διαφορά είναι {diff:.2f} μονάδες. "
-                        "Ελέγξτε επίσης N, διάμεσο και τυπική απόκλιση πριν εξαγάγετε συμπέρασμα."
-                    )
-                elif id_like(value_col):
-                    st.info(
-                        "Δεν παράγεται ουσιαστική ερμηνεία μέσων όρων επειδή η επιλεγμένη αριθμητική μεταβλητή είναι αναγνωριστικό."
-                    )
             else:
                 st.info("Δεν εντοπίστηκαν κατάλληλες μεταβλητές ομάδας και αριθμητικές μεταβλητές.")
 
