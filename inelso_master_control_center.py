@@ -1926,14 +1926,9 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
             selected_scorm_id = int(selected_scorm["scorm_id"])
 
             st.markdown("### Ανάκτηση πραγματικών προσπαθειών")
-            st.caption(
-                "Η ομαδική ανάλυση διαβάζει τις υπάρχουσες προσπάθειες όλων των εγγεγραμμένων χρηστών. "
-                "Χρήστες χωρίς προσπάθεια αγνοούνται."
-            )
-
             min_n = st.number_input(
                 "Ελάχιστες απαντήσεις ανά ερώτηση για υπολογισμό δείκτη διάκρισης",
-                min_value=6, max_value=50, value=8, step=1,
+                min_value=20, max_value=100, value=20, step=1,
                 key="scorm_min_discrimination_n"
             )
 
@@ -2066,7 +2061,9 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                 c1.metric("Χρήστες με προσπάθεια", attempts_df["user_id"].nunique())
                 c2.metric("Συνολικές προσπάθειες", len(attempts_df))
                 c3.metric("Μέσο score", f"{attempts_df['score'].dropna().mean():.1f}" if attempts_df["score"].notna().any() else "—")
-                c4.metric("SCORM", st.session_state.get("scorm_live_name", "—"))
+                with c4:
+                    st.markdown("**SCORM**")
+                    st.write(st.session_state.get("scorm_live_name", "—"))
                 st.dataframe(attempts_df, use_container_width=True, hide_index=True)
 
             if isinstance(interactions_df, pd.DataFrame) and not interactions_df.empty:
@@ -2083,8 +2080,10 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
             if isinstance(psych, pd.DataFrame) and not psych.empty:
                 st.subheader("Δείκτες ποιότητας ανά ερώτηση")
                 st.caption(
-                    "Facility = ποσοστό σωστών απαντήσεων. Discrimination = διαφορά επιτυχίας μεταξύ άνω και κάτω 27% "
-                    "βάσει συνολικού score. Όταν το δείγμα δεν επαρκεί, ο δείκτης διάκρισης παραμένει μη εκτιμήσιμος."
+                    "Ο δείκτης ευκολίας (Facility) δείχνει το ποσοστό των σωστών απαντήσεων σε κάθε ερώτηση. "
+                    "Ο δείκτης διάκρισης (Discrimination) εκτιμά πόσο καλά η ερώτηση διαχωρίζει τους εκπαιδευόμενους "
+                    "με υψηλότερη και χαμηλότερη συνολική επίδοση, συγκρίνοντας το ανώτερο και το κατώτερο 27% των scores. "
+                    "Όταν οι διαθέσιμες απαντήσεις είναι ανεπαρκείς, ο δείκτης διάκρισης δεν υπολογίζεται."
                 )
                 psych_view = psych.copy()
                 psych_view["κατάσταση"] = psych_view["διάκριση"].apply(κατηγορία_διάκρισης)
@@ -2133,19 +2132,13 @@ elif section == "Ανάλυση SCORM Αξιολόγησης":
                             )
                     with d3:
                         st.download_button(
-                            "⬇️ Item Statistics",
+                            "⬇️ Στατιστικά Ερωτήσεων",
                             psych_view.to_csv(index=False).encode("utf-8-sig"),
-                            "INELSO Academia_SCORM_ITEM_STATISTICS.csv",
+                            "INELSO Academia_SCORM_ΣΤΑΤΙΣΤΙΚΑ_ΕΡΩΤΗΣΕΩΝ.csv",
                             "text/csv",
                             key="scorm_download_items",
                             use_container_width=True,
                         )
-
-                    st.info(
-                        "Συμβατότητα: Μαθησιακή Ανάλυση = άμεση, Ποιότητα Αξιολόγησης = άμεση, "
-                        "Ενοποιημένες Ενδείξεις = μέσω των πραγματικών signals, Δημιουργία/Υποστήριξη Διδάσκοντα = context. "
-                        "Η Προσαρμοστική Εξάσκηση είναι μερική, επειδή το SCORM δεν παρέχει από μόνο του βεβαιότητα ή κλίμακα αξιολόγησης RC-01–RC-05."
-                    )
 
                     if st.button(
                         "✅ Χρήση SCORM Master Dataset σε όλη την πλατφόρμα",
