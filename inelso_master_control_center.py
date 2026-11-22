@@ -4395,7 +4395,6 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
     connection_ready = bool(moodle_url and token)
 
     if connection_ready:
-        st.success("Υπάρχουν διαθέσιμα στοιχεία σύνδεσης Moodle για την τρέχουσα συνεδρία.")
     else:
         st.warning(
             "Δεν υπάρχουν ακόμη ενεργά στοιχεία σύνδεσης Moodle. "
