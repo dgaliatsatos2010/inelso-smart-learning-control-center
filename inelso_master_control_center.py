@@ -6488,8 +6488,7 @@ elif section == "Βιβλίο Οδηγιών":
         all_controls = {**handbook_controls, **control_extra}
         for label, desc in all_controls.items():
             if not search_control or search_control in (label + " " + desc).lower():
-                st.markdown(f"**{label}**  
-{desc}")
+                st.markdown(f"**{label}**  \\n{desc}")
 
     with glossary_tab:
         term_search = st.text_input(
@@ -6502,8 +6501,7 @@ elif section == "Βιβλίο Οδηγιών":
         for term in sorted(handbook_glossary.keys(), key=lambda x: x.lower()):
             desc = handbook_glossary[term]
             if not term_search or term_search in (term + " " + desc).lower():
-                st.markdown(f"**{term}**  
-{desc}")
+                st.markdown(f"**{term}**  \\n{desc}")
                 matches += 1
         if matches == 0:
             st.info("Δεν βρέθηκε ο όρος. Δοκιμάστε διαφορετική λέξη.")
