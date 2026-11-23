@@ -1567,6 +1567,23 @@ def _moodle_xml_from_approved_questions(df, category="INELSO Academia"):
     xml_bytes = ET.tostring(quiz, encoding="utf-8", xml_declaration=True)
     return xml_bytes.decode("utf-8"), count
 
+def _inelso_moodle_call(base_url, token, function_name, params=None, timeout=30):
+    params = params or {}
+    endpoint = f"{str(base_url).rstrip('/')}/webservice/rest/server.php"
+    payload = {
+        "wstoken": token,
+        "wsfunction": function_name,
+        "moodlewsrestformat": "json",
+    }
+    payload.update(params)
+    response = requests.post(endpoint, data=payload, timeout=timeout)
+    response.raise_for_status()
+    data = response.json()
+    if isinstance(data, dict) and ("exception" in data or "errorcode" in data):
+        raise RuntimeError(data.get("message", data.get("errorcode", str(data))))
+    return data
+
+
 # ==========================================================
 # ΠΛΟΗΓΗΣΗ
 # ==========================================================
@@ -2951,8 +2968,8 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
             if "s25_approved_draft" in st.session_state:
                 st.markdown("### Moodle")
                 st.caption(
-                    "Οι εγκεκριμένες ερωτήσεις μπορούν να μετατραπούν σε Moodle XML για εισαγωγή "
-                    "στην Τράπεζα Ερωτήσεων. Η εισαγωγή στο Moodle γίνεται μόνο μετά από δική σας επιβεβαίωση."
+                    "Οι εγκεκριμένες ερωτήσεις μπορούν να σταλούν απευθείας στην Τράπεζα Ερωτήσεων "
+                    "του Moodle, εφόσον είναι ενεργή η λειτουργία εισαγωγής INELSO στο Moodle."
                 )
 
                 moodle_target = st.radio(
@@ -2965,61 +2982,100 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                     key="s25_moodle_target"
                 )
 
+                mc1, mc2 = st.columns(2)
+                with mc1:
+                    moodle_course_id_direct = st.number_input(
+                        "ID Μαθήματος Moodle",
+                        min_value=1,
+                        step=1,
+                        value=int(st.session_state.get("moodle_selected_course_id", 6) or 6),
+                        key="s25_direct_course_id"
+                    )
+                with mc2:
+                    moodle_category_name = st.text_input(
+                        "Κατηγορία Τράπεζας Ερωτήσεων",
+                        value=st.session_state.get("s25_moodle_category_name", "INELSO Academia"),
+                        key="s25_moodle_category_name"
+                    )
+
+                st.caption(
+                    "Αν η κατηγορία δεν υπάρχει, το Moodle endpoint μπορεί να τη δημιουργήσει "
+                    "ανάλογα με τα δικαιώματα του συνδεδεμένου λογαριασμού."
+                )
+
+                approved = st.session_state["s25_approved_draft"].copy()
+                xml_text, xml_count = _moodle_xml_from_approved_questions(
+                    approved,
+                    category=moodle_category_name.strip() or "INELSO Academia"
+                )
+
+                moodle_url_direct = st.session_state.get("moodle_base_url", "")
+                moodle_token_direct = st.session_state.get("moodle_shared_token", "")
+
                 if st.button(
-                    "Προετοιμασία για Moodle",
+                    "Εισαγωγή απευθείας στο Moodle",
                     type="primary",
                     use_container_width=True,
-                    key="s25_prepare_moodle"
+                    key="s25_direct_moodle_import"
                 ):
-                    approved = st.session_state["s25_approved_draft"].copy()
-                    xml_text, xml_count = _moodle_xml_from_approved_questions(
-                        approved,
-                        category="INELSO Academia"
-                    )
-
-                    st.session_state["s25_moodle_xml"] = xml_text
-                    st.session_state["s25_moodle_question_count"] = xml_count
-                    st.session_state["s25_moodle_target_ready"] = moodle_target
-                    st.session_state["pending_moodle_question_package"] = {
-                        "source": st.session_state.get("s25_material_source", "Δημιουργία Αξιολόγησης"),
-                        "target": moodle_target,
-                        "count": xml_count,
-                        "xml": xml_text,
-                    }
-                    st.success(
-                        f"Προετοιμάστηκαν {xml_count} ερωτήσεις για Moodle."
-                    )
-
-                if st.session_state.get("s25_moodle_xml"):
-                    xml_text = st.session_state["s25_moodle_xml"]
-                    xml_count = st.session_state.get("s25_moodle_question_count", 0)
-                    target_ready = st.session_state.get("s25_moodle_target_ready", "Τράπεζα Ερωτήσεων")
-
-                    m1, m2 = st.columns(2)
-                    with m1:
-                        st.download_button(
-                            "Λήψη Moodle XML",
-                            xml_text.encode("utf-8"),
-                            "INELSO_Academia_Moodle_Questions.xml",
-                            "application/xml",
-                            key="s25_download_moodle_xml",
-                            use_container_width=True
+                    if not moodle_url_direct or not moodle_token_direct:
+                        st.error(
+                            "Δεν υπάρχει ενεργή σύνδεση Moodle. Ανοίξτε πρώτα τη «Ζωντανή Σύνδεση Moodle» "
+                            "ή την «Ελεγχόμενη Εγγραφή Moodle» και επιβεβαιώστε τη σύνδεση."
                         )
-                    with m2:
-                        st.button(
-                            "Μετάβαση στην Ελεγχόμενη Εγγραφή Moodle",
-                            use_container_width=True,
-                            key="s25_go_moodle_write",
-                            on_click=navigate_advanced,
-                            args=("Ελεγχόμενη Εγγραφή Moodle",)
-                        )
+                    else:
+                        try:
+                            result = _inelso_moodle_call(
+                                moodle_url_direct,
+                                moodle_token_direct,
+                                "local_inelsoquestions_import_xml",
+                                {
+                                    "courseid": int(moodle_course_id_direct),
+                                    "categoryname": moodle_category_name.strip() or "INELSO Academia",
+                                    "xml": xml_text,
+                                    "createquiz": 1 if "νέο Quiz" in moodle_target else 0,
+                                },
+                                timeout=45
+                            )
 
-                    st.info(
-                        f"Πακέτο Moodle έτοιμο: {xml_count} ερωτήσεις. "
-                        f"Επιλογή: {target_ready}. "
-                        "Το Moodle XML εισάγει πρώτα τις ερωτήσεις στην Τράπεζα Ερωτήσεων. "
-                        "Αν επιλέξατε χρήση σε νέο Quiz, το Quiz δημιουργείται ή ανοίγει στο Moodle "
-                        "και οι εισαγμένες ερωτήσεις προστίθενται από την Τράπεζα Ερωτήσεων."
+                            imported = (
+                                result.get("imported", xml_count)
+                                if isinstance(result, dict) else xml_count
+                            )
+                            st.success(
+                                f"Η εισαγωγή ολοκληρώθηκε: {imported} ερωτήσεις στάλθηκαν "
+                                f"στην κατηγορία «{moodle_category_name.strip() or 'INELSO Academia'}»."
+                            )
+                            st.session_state["s25_last_direct_moodle_result"] = result
+
+                        except Exception as e:
+                            error_text = str(e)
+                            if (
+                                "function" in error_text.lower()
+                                or "not found" in error_text.lower()
+                                or "does not exist" in error_text.lower()
+                                or "invalidparameter" in error_text.lower()
+                            ):
+                                st.error(
+                                    "Η απευθείας εισαγωγή δεν είναι ακόμη ενεργοποιημένη στο Moodle. "
+                                    "Χρειάζεται να εγκατασταθεί/ενεργοποιηθεί μία φορά η λειτουργία "
+                                    "«local_inelsoquestions_import_xml» από τον διαχειριστή του Moodle."
+                                )
+                            else:
+                                st.error(f"Η απευθείας εισαγωγή απέτυχε: {e}")
+
+                with st.expander("Εναλλακτική εισαγωγή με Moodle XML", expanded=False):
+                    st.download_button(
+                        "Λήψη Moodle XML",
+                        xml_text.encode("utf-8"),
+                        "INELSO_Academia_Moodle_Questions.xml",
+                        "application/xml",
+                        key="s25_download_moodle_xml",
+                        use_container_width=True
+                    )
+                    st.caption(
+                        "Η εναλλακτική αυτή χρειάζεται μόνο αν η one-click λειτουργία δεν έχει ακόμη "
+                        "ενεργοποιηθεί από τον διαχειριστή του Moodle."
                     )
 
 
