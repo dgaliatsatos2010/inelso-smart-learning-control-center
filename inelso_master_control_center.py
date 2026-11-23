@@ -350,6 +350,17 @@ MODULE_HELP = {
         ],
         "data": "Οι ενδείξεις διατηρούν την προέλευσή τους ώστε να είναι ελέγξιμες και εξηγήσιμες."
     },
+    "learning_material": {
+        "title": "Εκπαιδευτικό Υλικό",
+        "purpose": "Φορτώνει έγγραφα μαθήματος ως πηγή περιεχομένου για δημιουργία αξιολόγησης και υποστήριξη διδάσκοντα, χωρίς να τα αντιμετωπίζει ως dataset.",
+        "steps": [
+            "Ανεβάστε PDF, DOCX, PPTX, TXT ή Markdown με εκπαιδευτικό περιεχόμενο.",
+            "Ελέγξτε την προεπισκόπηση του κειμένου που αναγνωρίστηκε από το αρχείο.",
+            "Στείλτε το υλικό στη «Δημιουργία Αξιολόγησης» ή στην «Υποστήριξη Διδάσκοντα» με ένα κουμπί.",
+            "Το αρχείο χρησιμοποιείται ως πηγή περιεχομένου και δεν συμμετέχει σε στατιστικά ή machine-learning analytics."
+        ],
+        "data": "PDF: εξάγεται το διαθέσιμο ενσωματωμένο κείμενο. DOCX: παράγραφοι και πίνακες. PPTX: κείμενο διαφανειών. TXT/MD: απλό κείμενο. Σαρωμένα PDF χωρίς ενσωματωμένο κείμενο χρειάζονται OCR και δεν αναλύονται αυτόματα από αυτή τη λειτουργία."
+    },
     "csv_import": {
         "title": "Εισαγωγή Δεδομένων",
         "purpose": "Φορτώνει δομημένα δεδομένα από συνηθισμένες εκπαιδευτικές, ερευνητικές και αναλυτικές μορφές και τα μετατρέπει σε κοινή ενεργή πηγή για την πλατφόρμα.",
@@ -1480,6 +1491,7 @@ NAV_DISPLAY_TO_INTERNAL = {
     "Προσαρμοστική Εξάσκηση": "Προσαρμοστική Εξάσκηση",
     "Υποστήριξη Διδάσκοντα": "Υποστήριξη Διδάσκοντα",
     "Μαθησιακές Ενδείξεις": "Ενοποιημένες Μαθησιακές Ενδείξεις",
+    "Εκπαιδευτικό Υλικό": "Εισαγωγή Εκπαιδευτικού Υλικού",
     "Εισαγωγή Δεδομένων": "Εισαγωγή CSV / Excel",
     "Εργαλεία & Διαχείριση": "__ADVANCED__",
 }
@@ -1528,6 +1540,7 @@ SECTION_HELP = {
     "Πίνακας Ενεργειών & Παρεμβάσεων": "flow",
     "Παρακολούθηση Παρεμβάσεων": "lifecycle",
     "Μεθοδολογία, Διαφάνεια & Ασφάλεια": "methodology",
+    "Εισαγωγή Εκπαιδευτικού Υλικού": "learning_material",
     "Εισαγωγή CSV / Excel": "csv_import",
     "Εργαστήριο Ανάλυσης Δεδομένων": "analytics_lab",
     "Προσομοίωση Σεναρίων": "whatif",
@@ -1561,7 +1574,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
     show_active_dataset_context("DASHBOARD", compact=False)
 
     if ACTIVE_DF is None:
-        a,b = st.columns(2)
+        a,b,c = st.columns(3)
         with a:
             st.markdown(
                 "<div class='inelso-feature-card'><div class='kicker'>Ζωντανή πηγή</div>"
@@ -1571,11 +1584,18 @@ if section == "Κεντρική Εικόνα Ελέγχου":
             st.button("Άνοιγμα Ανάλυσης SCORM", use_container_width=True, on_click=_home_nav, args=("Ανάλυση SCORM",), key="home_open_scorm_empty")
         with b:
             st.markdown(
-                "<div class='inelso-feature-card'><div class='kicker'>Αρχείο</div>"
-                "<h3>Αρχεία Δεδομένων</h3><p>Εισαγωγή CSV, Excel, JSON, XML, Parquet, SPSS, Stata, SAS, SQLite, ZIP και άλλων υποστηριζόμενων μορφών με αυτόματο έλεγχο ποιότητας και συμβατότητας.</p></div>",
+                "<div class='inelso-feature-card'><div class='kicker'>Δεδομένα</div>"
+                "<h3>Αρχεία Δεδομένων</h3><p>CSV, Excel, JSON, XML, Parquet, SPSS, Stata, SAS, SQLite, ZIP και άλλες δομημένες μορφές για analytics.</p></div>",
                 unsafe_allow_html=True
             )
             st.button("Εισαγωγή δεδομένων", use_container_width=True, on_click=_home_nav, args=("Εισαγωγή Δεδομένων",), key="home_open_data_empty")
+        with c:
+            st.markdown(
+                "<div class='inelso-feature-card'><div class='kicker'>Περιεχόμενο</div>"
+                "<h3>Εκπαιδευτικό Υλικό</h3><p>PDF, Word, PowerPoint, TXT και Markdown για δημιουργία αξιολόγησης και υποστήριξη διδάσκοντα.</p></div>",
+                unsafe_allow_html=True
+            )
+            st.button("Εισαγωγή εκπαιδευτικού υλικού", use_container_width=True, on_click=_home_nav, args=("Εκπαιδευτικό Υλικό",), key="home_open_material_empty")
 
     else:
         q = dataset_quality_metrics(ACTIVE_DF)
@@ -2437,18 +2457,22 @@ elif section == "Προσαρμοστική Εξάσκηση":
 # SERVICE 25 — AI-ASSISTED COURSE & ASSESSMENT AUTHORING
 # ==========================================================
 elif section == "Δημιουργία Μαθήματος & Αξιολόγησης":
-    if ACTIVE_DF is None:
-        render_module_header("Δημιουργία Μαθήματος & Αξιολόγησης", "", "s25")
-        show_active_dataset_context("S25")
-        st.metric("Κατάσταση","—")
-        st.stop()
+    _has_s25_material = bool(st.session_state.get("s25_material_prefill", "").strip())
 
     render_module_header("Δημιουργία Μαθήματος & Αξιολόγησης", "", "s25")
-    show_active_dataset_context("S25")
+    if ACTIVE_DF is not None:
+        show_active_dataset_context("S25")
+    elif _has_s25_material:
+        st.caption(f"Πηγή περιεχομένου: {st.session_state.get('s25_material_source', 'Εκπαιδευτικό υλικό')}")
+    else:
+        st.info("Μπορείτε να επικολλήσετε περιεχόμενο ή να φορτώσετε PDF/Word/PowerPoint από την ενότητα «Εκπαιδευτικό Υλικό».")
 
     s25_tabs = st.tabs(["Δημιουργία", "Οδηγίες", "Προσχέδιο"])
 
     with s25_tabs[0]:
+        if "s25_content" not in st.session_state and st.session_state.get("s25_material_prefill"):
+            st.session_state["s25_content"] = st.session_state["s25_material_prefill"]
+
         s25_content = st.text_area(
             "Υλικό μαθήματος / πηγή",
             height=180,
@@ -2457,7 +2481,7 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
         )
 
         use_csv_s25 = st.checkbox(
-            "Χρήση του ενεργού CSV ως πρόσθετου πλαισίου",
+            "Χρήση της ενεργής πηγής δεδομένων ως πρόσθετου πλαισίου",
             value=ACTIVE_DF is not None,
             key="s25_use_active_csv"
         )
@@ -2508,7 +2532,7 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
             raw_csv = csv_context_as_text(ACTIVE_DF, max_rows=3) if use_csv_s25 and ACTIVE_DF is not None else ""
             raw = " ".join((raw_manual + " " + raw_csv).split())
             if not raw:
-                st.error("Χρειάζεται εκπαιδευτικό περιεχόμενο ή ενεργό πλαίσιο από CSV.")
+                st.error("Χρειάζεται εκπαιδευτικό περιεχόμενο ή ενεργό πλαίσιο δεδομένων.")
             else:
                 sentences = [
                     s.strip()
@@ -2623,14 +2647,15 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
 # SERVICE 28 — FACULTY TEACHING AMPLIFICATION
 # ==========================================================
 elif section == "Υποστήριξη Διδάσκοντα":
-    if ACTIVE_DF is None:
-        render_module_header("Υποστήριξη Διδάσκοντα", "", "s28")
-        show_active_dataset_context("S28")
-        st.metric("Κατάσταση","—")
-        st.stop()
+    _has_s28_material = bool(st.session_state.get("s28_material_prefill", "").strip())
 
     render_module_header("Υποστήριξη Διδάσκοντα", "", "s28")
-    show_active_dataset_context("S28")
+    if ACTIVE_DF is not None:
+        show_active_dataset_context("S28")
+    elif _has_s28_material:
+        st.caption(f"Πηγή περιεχομένου: {st.session_state.get('s28_material_source', 'Εκπαιδευτικό υλικό')}")
+    else:
+        st.info("Μπορείτε να εισαγάγετε εγκεκριμένο πλαίσιο χειροκίνητα ή από την ενότητα «Εκπαιδευτικό Υλικό».")
 
     s28_tabs = st.tabs(["Δημιουργία", "Προσχέδιο", "Αποθηκευμένα"])
 
@@ -2652,6 +2677,9 @@ elif section == "Υποστήριξη Διδάσκοντα":
         else:
             st.caption("Δημιουργεί προσχέδιο ανατροφοδότησης για συγκεκριμένη περίπτωση φοιτητή.")
 
+        if "s28_context" not in st.session_state and st.session_state.get("s28_material_prefill"):
+            st.session_state["s28_context"] = st.session_state["s28_material_prefill"]
+
         source_context = st.text_area(
             "Εγκεκριμένο πλαίσιο μαθήματος / πολιτική / κλίμακα αξιολόγησης",
             height=140,
@@ -2660,7 +2688,7 @@ elif section == "Υποστήριξη Διδάσκοντα":
         )
 
         use_csv_s28 = st.checkbox(
-            "Συμπερίληψη ενεργού CSV ως τεκμηριωμένου πλαισίου",
+            "Συμπερίληψη ενεργής πηγής δεδομένων ως τεκμηριωμένου πλαισίου",
             value=ACTIVE_DF is not None,
             key="s28_use_active_csv"
         )
@@ -6131,6 +6159,152 @@ elif section == "Μητρώο Ενεργειών":
             )
         else:
             st.info("Δεν υπάρχουν ακόμη καταχωρισμένες ενέργειες.")
+
+# ==========================================================
+# ΕΙΣΑΓΩΓΗ ΕΚΠΑΙΔΕΥΤΙΚΟΥ ΥΛΙΚΟΥ
+# ==========================================================
+elif section == "Εισαγωγή Εκπαιδευτικού Υλικού":
+    render_module_header(
+        "Εκπαιδευτικό Υλικό",
+        "",
+        "learning_material"
+    )
+
+    st.caption(
+        "Τα αρχεία αυτής της ενότητας χρησιμοποιούνται ως πηγή περιεχομένου και όχι ως dataset για στατιστική ανάλυση."
+    )
+
+    material_file = st.file_uploader(
+        "Επιλέξτε PDF, Word, PowerPoint, TXT ή Markdown",
+        type=["pdf", "docx", "pptx", "txt", "md"],
+        key="learning_material_uploader"
+    )
+
+    def _extract_learning_material(file_bytes, file_name):
+        lower_name = str(file_name).lower()
+        parts = []
+
+        if lower_name.endswith(".pdf"):
+            from pypdf import PdfReader
+            reader = PdfReader(io.BytesIO(file_bytes))
+            for page_no, page in enumerate(reader.pages, start=1):
+                text = page.extract_text() or ""
+                if text.strip():
+                    parts.append(f"[Σελίδα {page_no}]\n{text.strip()}")
+
+        elif lower_name.endswith(".docx"):
+            from docx import Document
+            doc = Document(io.BytesIO(file_bytes))
+            for p in doc.paragraphs:
+                if p.text.strip():
+                    parts.append(p.text.strip())
+            for table in doc.tables:
+                for row in table.rows:
+                    values = [cell.text.strip() for cell in row.cells]
+                    if any(values):
+                        parts.append(" | ".join(values))
+
+        elif lower_name.endswith(".pptx"):
+            from pptx import Presentation
+            prs = Presentation(io.BytesIO(file_bytes))
+            for slide_no, slide in enumerate(prs.slides, start=1):
+                slide_parts = []
+                for shape in slide.shapes:
+                    if hasattr(shape, "text") and str(shape.text).strip():
+                        slide_parts.append(str(shape.text).strip())
+                if slide_parts:
+                    parts.append(f"[Διαφάνεια {slide_no}]\n" + "\n".join(slide_parts))
+
+        elif lower_name.endswith((".txt", ".md")):
+            try:
+                parts.append(file_bytes.decode("utf-8-sig"))
+            except UnicodeDecodeError:
+                parts.append(file_bytes.decode("latin-1"))
+
+        else:
+            raise ValueError("Μη υποστηριζόμενη μορφή εκπαιδευτικού υλικού.")
+
+        return "\n\n".join(x for x in parts if str(x).strip()).strip()
+
+    if material_file is not None:
+        try:
+            material_bytes = material_file.getvalue()
+            material_hash = hashlib.sha256(material_bytes).hexdigest()
+
+            if st.session_state.get("learning_material_hash") != material_hash:
+                extracted_text = _extract_learning_material(material_bytes, material_file.name)
+                st.session_state["learning_material_hash"] = material_hash
+                st.session_state["learning_material_name"] = material_file.name
+                st.session_state["learning_material_text"] = extracted_text
+
+            material_text = st.session_state.get("learning_material_text", "")
+            material_name = st.session_state.get("learning_material_name", material_file.name)
+
+            if not material_text.strip():
+                st.warning(
+                    "Δεν εντοπίστηκε αναγνώσιμο κείμενο στο αρχείο. "
+                    "Αν πρόκειται για σαρωμένο PDF, απαιτείται OCR."
+                )
+            else:
+                words = len(re.findall(r"\S+", material_text))
+                chars = len(material_text)
+
+                st.success(f"Το εκπαιδευτικό υλικό «{material_name}» αναγνώστηκε επιτυχώς.")
+                m1,m2 = st.columns(2)
+                m1.metric("Λέξεις", f"{words:,}".replace(",", "."))
+                m2.metric("Χαρακτήρες", f"{chars:,}".replace(",", "."))
+
+                with st.expander("🧾 Προεπισκόπηση περιεχομένου", expanded=True):
+                    preview_limit = 12000
+                    preview_text = material_text[:preview_limit]
+                    if len(material_text) > preview_limit:
+                        preview_text += "\n\n[… η προεπισκόπηση έχει περιοριστεί …]"
+                    st.text_area(
+                        "Εξαγόμενο κείμενο",
+                        value=preview_text,
+                        height=360,
+                        disabled=True,
+                        key="learning_material_preview"
+                    )
+
+                c1,c2 = st.columns(2)
+                with c1:
+                    if st.button(
+                        "Χρήση στη Δημιουργία Αξιολόγησης",
+                        type="primary",
+                        use_container_width=True,
+                        key="material_to_s25"
+                    ):
+                        st.session_state["s25_material_prefill"] = material_text
+                        st.session_state["s25_material_source"] = material_name
+                        st.success("Το υλικό είναι έτοιμο για χρήση στη Δημιουργία Αξιολόγησης.")
+
+                with c2:
+                    if st.button(
+                        "Χρήση στην Υποστήριξη Διδάσκοντα",
+                        use_container_width=True,
+                        key="material_to_s28"
+                    ):
+                        st.session_state["s28_material_prefill"] = material_text
+                        st.session_state["s28_material_source"] = material_name
+                        st.success("Το υλικό είναι έτοιμο για χρήση στην Υποστήριξη Διδάσκοντα.")
+
+        except Exception as e:
+            st.error(f"Δεν ήταν δυνατή η ανάγνωση του εκπαιδευτικού υλικού: {e}")
+
+    elif st.session_state.get("learning_material_text"):
+        material_text = st.session_state["learning_material_text"]
+        material_name = st.session_state.get("learning_material_name", "Εκπαιδευτικό υλικό")
+        st.info(f"Διαθέσιμο στη συνεδρία: {material_name}")
+        with st.expander("🧾 Προεπισκόπηση αποθηκευμένου υλικού", expanded=False):
+            st.text_area(
+                "Περιεχόμενο",
+                value=material_text[:12000],
+                height=320,
+                disabled=True,
+                key="learning_material_saved_preview"
+            )
+
 
 # ==========================================================
 # ΕΙΣΑΓΩΓΗ ΔΕΔΟΜΕΝΩΝ
