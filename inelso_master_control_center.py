@@ -6512,16 +6512,9 @@ elif section == "Βιβλίο Οδηγιών":
         if not visible_controls:
             st.info("Δεν βρέθηκε σχετικό κουμπί ή πεδίο.")
         else:
-            for i in range(0, len(visible_controls), 2):
-                cols = st.columns(2)
-                for j, col in enumerate(cols):
-                    idx = i + j
-                    if idx < len(visible_controls):
-                        label, desc = visible_controls[idx]
-                        with col:
-                            with st.container(border=True):
-                                st.markdown(f"#### {label}")
-                                st.write(desc)
+            for label, desc in visible_controls:
+                with st.expander(f"▾ {label}", expanded=False):
+                    st.write(desc)
 
     with glossary_tab:
         term_search = st.text_input(
@@ -6538,16 +6531,9 @@ elif section == "Βιβλίο Οδηγιών":
         if not visible_terms:
             st.info("Δεν βρέθηκε ο όρος. Δοκιμάστε διαφορετική λέξη.")
         else:
-            for i in range(0, len(visible_terms), 2):
-                cols = st.columns(2)
-                for j, col in enumerate(cols):
-                    idx = i + j
-                    if idx < len(visible_terms):
-                        term, desc = visible_terms[idx]
-                        with col:
-                            with st.container(border=True):
-                                st.markdown(f"#### {term}")
-                                st.write(desc)
+            for term, desc in visible_terms:
+                with st.expander(f"▾ {term}", expanded=False):
+                    st.write(desc)
 
     with trouble_tab:
         st.markdown("### Γρήγορη επίλυση συνηθισμένων θεμάτων")
