@@ -5564,7 +5564,15 @@ elif section == "Μαθησιακή Ανάλυση & Έγκαιρη Υποστή
             k1.metric("Φοιτητές", "—")
             k2.metric("Υψηλή προτεραιότητα", "—")
             k3.metric("Μεσαία προτεραιότητα", "—")
-            k4.metric("Κατάσταση", "Αναμονή δεδομένων")
+            with k4:
+                st.markdown(
+                    "<div class='inelso-feature-card' style='min-height:95px;padding:14px 16px;'>"
+                    "<div style='font-size:.9rem;color:#334e68;margin-bottom:8px;'>Κατάσταση</div>"
+                    "<div style='font-size:1.05rem;font-weight:700;color:#102a43;white-space:normal;line-height:1.25;'>"
+                    "Αναμονή δεδομένων"
+                    "</div></div>",
+                    unsafe_allow_html=True
+                )
 
         with no_data_tabs[1]:
             st.markdown("### Ελάχιστα χρήσιμα πεδία")
