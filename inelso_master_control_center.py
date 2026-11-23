@@ -2631,6 +2631,7 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                     key="s25_review_queue"
                 ):
                     st.session_state["s25_approved_draft"] = edited_s25.copy()
+                    st.session_state.pop("s25_moodle_xml", None)
                     st.success("Το προσχέδιο εγκρίθηκε στην τρέχουσα συνεδρία.")
 
             with c2:
@@ -2642,6 +2643,139 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                     key="s25_download",
                     use_container_width=True
                 )
+
+            if "s25_approved_draft" in st.session_state:
+                st.markdown("### Moodle")
+                st.caption(
+                    "Οι εγκεκριμένες ερωτήσεις μπορούν να μετατραπούν σε Moodle XML για εισαγωγή "
+                    "στην Τράπεζα Ερωτήσεων. Η εισαγωγή στο Moodle γίνεται μόνο μετά από δική σας επιβεβαίωση."
+                )
+
+                moodle_target = st.radio(
+                    "Προορισμός",
+                    ["Τράπεζα Ερωτήσεων", "Νέο Quiz"],
+                    horizontal=True,
+                    key="s25_moodle_target"
+                )
+
+                if st.button(
+                    "Προετοιμασία για Moodle",
+                    type="primary",
+                    use_container_width=True,
+                    key="s25_prepare_moodle"
+                ):
+                    approved = st.session_state["s25_approved_draft"].copy()
+                    xml_text, xml_count = _moodle_xml_from_approved_questions(
+                        approved,
+                        category="INELSO Academia"
+                    )
+
+                    st.session_state["s25_moodle_xml"] = xml_text
+                    st.session_state["s25_moodle_question_count"] = xml_count
+                    st.session_state["s25_moodle_target_ready"] = moodle_target
+                    st.session_state["pending_moodle_question_package"] = {
+                        "source": st.session_state.get("s25_material_source", "Δημιουργία Αξιολόγησης"),
+                        "target": moodle_target,
+                        "count": xml_count,
+                        "xml": xml_text,
+                    }
+                    st.success(
+                        f"Προετοιμάστηκαν {xml_count} ερωτήσεις για Moodle."
+                    )
+
+                if st.session_state.get("s25_moodle_xml"):
+                    xml_text = st.session_state["s25_moodle_xml"]
+                    xml_count = st.session_state.get("s25_moodle_question_count", 0)
+                    target_ready = st.session_state.get("s25_moodle_target_ready", "Τράπεζα Ερωτήσεων")
+
+                    m1, m2 = st.columns(2)
+                    with m1:
+                        st.download_button(
+                            "Λήψη Moodle XML",
+                            xml_text.encode("utf-8"),
+                            "INELSO_Academia_Moodle_Questions.xml",
+                            "application/xml",
+                            key="s25_download_moodle_xml",
+                            use_container_width=True
+                        )
+                    with m2:
+                        if st.button(
+                            "Μετάβαση στην Ελεγχόμενη Εγγραφή Moodle",
+                            use_container_width=True,
+                            key="s25_go_moodle_write"
+                        ):
+                            st.session_state["inelso_main_navigation"] = "Εργαλεία & Διαχείριση"
+                            st.session_state["inelso_advanced_navigation"] = "Ελεγχόμενη Εγγραφή Moodle"
+                            st.rerun()
+
+                    st.info(
+                        f"Πακέτο Moodle έτοιμο: {xml_count} ερωτήσεις · Προορισμός: {target_ready}. "
+                        "Το Moodle XML εισάγει τις ερωτήσεις στην Τράπεζα Ερωτήσεων. "
+                        "Αν επιλέχθηκε «Νέο Quiz», μετά την εισαγωγή οι ερωτήσεις προστίθενται στο Quiz από το Moodle."
+                    )
+
+
+def _moodle_xml_from_approved_questions(df, category="INELSO Academia"):
+    """Μετατρέπει εγκεκριμένο προσχέδιο ερωτήσεων σε Moodle XML."""
+    import xml.etree.ElementTree as ET
+
+    quiz = ET.Element("quiz")
+
+    cat_q = ET.SubElement(quiz, "question", {"type": "category"})
+    cat = ET.SubElement(cat_q, "category")
+    ET.SubElement(cat, "text").text = f"$course$/top/{category}"
+
+    count = 0
+    for idx, row in df.reset_index(drop=True).iterrows():
+        question_text = str(
+            row.get("Προσχέδιο ερώτησης",
+            row.get("Προσχέδιο",
+            row.get("Άσκηση", "")))
+        ).strip()
+
+        if not question_text:
+            continue
+
+        qid = str(row.get("ID", f"Q{idx+1:02d}")).strip() or f"Q{idx+1:02d}"
+        qtype_label = str(row.get("Τύπος", "")).lower()
+        correct = str(row.get("Σωστή απάντηση / κριτήριο", "")).strip()
+
+        # Όταν υπάρχει σαφής σωστή απάντηση, δημιουργούμε shortanswer.
+        # Διαφορετικά χρησιμοποιούμε essay ώστε να μη δημιουργούνται τεχνητές επιλογές.
+        moodle_type = "shortanswer" if correct and "ανοικ" not in qtype_label else "essay"
+
+        q = ET.SubElement(quiz, "question", {"type": moodle_type})
+        name = ET.SubElement(q, "name")
+        ET.SubElement(name, "text").text = qid
+
+        qt = ET.SubElement(q, "questiontext", {"format": "html"})
+        ET.SubElement(qt, "text").text = question_text
+
+        gf = ET.SubElement(q, "generalfeedback", {"format": "html"})
+        ET.SubElement(gf, "text").text = ""
+        ET.SubElement(q, "defaultgrade").text = "1.0000000"
+        ET.SubElement(q, "penalty").text = "0.3333333"
+        ET.SubElement(q, "hidden").text = "0"
+        ET.SubElement(q, "idnumber").text = ""
+
+        if moodle_type == "shortanswer":
+            ET.SubElement(q, "usecase").text = "0"
+            ans = ET.SubElement(q, "answer", {"fraction": "100", "format": "html"})
+            ET.SubElement(ans, "text").text = correct
+            feedback = ET.SubElement(ans, "feedback", {"format": "html"})
+            ET.SubElement(feedback, "text").text = ""
+        else:
+            ET.SubElement(q, "responseformat").text = "editor"
+            ET.SubElement(q, "responserequired").text = "1"
+            ET.SubElement(q, "responsefieldlines").text = "15"
+            ET.SubElement(q, "attachments").text = "0"
+            ET.SubElement(q, "attachmentsrequired").text = "0"
+
+        count += 1
+
+    xml_bytes = ET.tostring(quiz, encoding="utf-8", xml_declaration=True)
+    return xml_bytes.decode("utf-8"), count
+
 
 # ==========================================================
 # SERVICE 28 — FACULTY TEACHING AMPLIFICATION
@@ -4600,6 +4734,56 @@ elif section == "Ελεγχόμενη Εγγραφή Moodle":
     # Επαναφόρτωση μετά από πιθανή επιτυχή σύνδεση.
     moodle_url = st.session_state.get("moodle_base_url", moodle_url)
     token = st.session_state.get("moodle_shared_token", token)
+
+    pending_questions = st.session_state.get("pending_moodle_question_package")
+    if isinstance(pending_questions, dict):
+        st.markdown("### Πακέτο Ερωτήσεων για Moodle")
+        q1,q2,q3 = st.columns(3)
+        q1.metric("Ερωτήσεις", pending_questions.get("count", 0))
+        q2.metric("Προορισμός", pending_questions.get("target", "—"))
+        q3.metric("Κατάσταση", "Έτοιμο για εισαγωγή")
+
+        st.caption(
+            "Το Moodle XML έχει δημιουργηθεί από εγκεκριμένο προσχέδιο. "
+            "Η τρέχουσα σύνδεση REST δεν διαθέτει ασφαλή standard λειτουργία για αυτόματη δημιουργία "
+            "ερωτήσεων στο Question Bank, επομένως η εισαγωγή γίνεται από το Moodle μέσω "
+            "Τράπεζα Ερωτήσεων → Εισαγωγή → Moodle XML."
+        )
+
+        st.download_button(
+            "Λήψη Moodle XML",
+            pending_questions.get("xml", "").encode("utf-8"),
+            "INELSO_Academia_Moodle_Questions.xml",
+            "application/xml",
+            key="controlled_download_questions_xml",
+            use_container_width=True
+        )
+
+        with st.expander("Οδηγίες εισαγωγής στο Moodle", expanded=False):
+            st.markdown(
+                """
+1. Ανοίξτε το μάθημα στο Moodle.
+2. Μεταβείτε **Τράπεζα Ερωτήσεων → Εισαγωγή**.
+3. Επιλέξτε μορφή **Moodle XML**.
+4. Ανεβάστε το αρχείο που δημιουργήθηκε από το INELSO.
+5. Ελέγξτε τις ερωτήσεις πριν ολοκληρώσετε την εισαγωγή.
+6. Αν ο προορισμός είναι **Νέο Quiz**, δημιουργήστε/ανοίξτε το Quiz και προσθέστε τις εισαγμένες ερωτήσεις από την Τράπεζα Ερωτήσεων.
+                """
+            )
+
+        if st.button(
+            "Το πακέτο εισήχθη και ελέγχθηκε στο Moodle",
+            key="confirm_questions_imported"
+        ):
+            add_note = {
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "count": pending_questions.get("count", 0),
+                "target": pending_questions.get("target", ""),
+                "source": pending_questions.get("source", ""),
+            }
+            st.session_state.setdefault("moodle_question_import_history", []).append(add_note)
+            st.session_state.pop("pending_moodle_question_package", None)
+            st.success("Η εισαγωγή σημειώθηκε ως επιβεβαιωμένη στην τρέχουσα συνεδρία.")
 
     if "moodle_write_audit" not in st.session_state:
         st.session_state["moodle_write_audit"] = pd.DataFrame(columns=[
