@@ -3047,12 +3047,51 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                 moodle_url_direct = st.session_state.get("moodle_base_url", "")
                 moodle_token_direct = st.session_state.get("moodle_shared_token", "")
 
+                selected_bank_cmid = 0
+                if moodle_url_direct and moodle_token_direct:
+                    try:
+                        course_contents = _inelso_moodle_call(
+                            moodle_url_direct,
+                            moodle_token_direct,
+                            "core_course_get_contents",
+                            {"courseid": int(moodle_course_id_direct)},
+                            timeout=25
+                        )
+                        bank_options = {}
+                        for sec in course_contents if isinstance(course_contents, list) else []:
+                            for mod in sec.get("modules", []) if isinstance(sec, dict) else []:
+                                if str(mod.get("modname", "")).lower() == "qbank":
+                                    cmid = int(mod.get("id", 0) or 0)
+                                    if cmid > 0:
+                                        label = str(mod.get("name") or f"Question Bank {cmid}")
+                                        bank_options[label] = cmid
+
+                        if bank_options:
+                            bank_labels = list(bank_options.keys())
+                            default_bank_idx = 0
+                            last_bank_cmid = int(st.session_state.get("s25_last_question_bank_cmid", 0) or 0)
+                            if last_bank_cmid > 0:
+                                for idx, label in enumerate(bank_labels):
+                                    if bank_options[label] == last_bank_cmid:
+                                        default_bank_idx = idx
+                                        break
+
+                            selected_bank_label = st.selectbox(
+                                "Τράπεζα Ερωτήσεων Moodle",
+                                bank_labels,
+                                index=default_bank_idx,
+                                key="s25_question_bank_selector"
+                            )
+                            selected_bank_cmid = int(bank_options[selected_bank_label])
+                            st.session_state["s25_last_question_bank_cmid"] = selected_bank_cmid
+                    except Exception:
+                        selected_bank_cmid = int(st.session_state.get("s25_last_question_bank_cmid", 0) or 0)
+
                 if moodle_url_direct:
-                    bank_cmid = int(st.session_state.get("s25_last_question_bank_cmid", 0) or 0)
-                    if bank_cmid > 0:
+                    if selected_bank_cmid > 0:
                         question_bank_url = (
                             f"{moodle_url_direct.rstrip('/')}/question/edit.php"
-                            f"?cmid={bank_cmid}"
+                            f"?cmid={selected_bank_cmid}"
                         )
                     else:
                         question_bank_url = (
@@ -3138,7 +3177,7 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                                     "courseid": int(moodle_course_id_direct),
                                     "rulesversion": rules_version,
                                     "xml": xml_text,
-                                    "bankcmid": 0,
+                                    "bankcmid": int(selected_bank_cmid or 0),
                                 },
                                 timeout=60
                             )
