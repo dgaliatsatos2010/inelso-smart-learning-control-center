@@ -1494,12 +1494,17 @@ def _moodle_xml_from_approved_questions(df, category="INELSO Academia"):
             continue
 
         qid = str(row.get("ID", f"Q{idx+1:02d}")).strip() or f"Q{idx+1:02d}"
-        qtype_label = str(row.get("Τύπος", "")).lower()
+        qtype_label = str(row.get("Τύπος", "")).strip().lower()
         correct = str(row.get("Σωστή απάντηση / κριτήριο", "")).strip()
 
-        # Όταν υπάρχει σαφής σωστή απάντηση, δημιουργούμε shortanswer.
-        # Διαφορετικά χρησιμοποιούμε essay ώστε να μη δημιουργούνται τεχνητές επιλογές.
-        moodle_type = "shortanswer" if correct and "ανοικ" not in qtype_label else "essay"
+        if "πολλαπ" in qtype_label:
+            moodle_type = "multichoice"
+        elif "σωστό" in qtype_label or "λάθος" in qtype_label:
+            moodle_type = "truefalse"
+        elif "σύντομη" in qtype_label or "συμπλήρωση" in qtype_label:
+            moodle_type = "shortanswer"
+        else:
+            moodle_type = "essay"
 
         q = ET.SubElement(quiz, "question", {"type": moodle_type})
         name = ET.SubElement(q, "name")
@@ -1515,18 +1520,47 @@ def _moodle_xml_from_approved_questions(df, category="INELSO Academia"):
         ET.SubElement(q, "hidden").text = "0"
         ET.SubElement(q, "idnumber").text = ""
 
-        if moodle_type == "shortanswer":
+        if moodle_type == "multichoice":
+            ET.SubElement(q, "single").text = "true"
+            ET.SubElement(q, "shuffleanswers").text = "true"
+            ET.SubElement(q, "answernumbering").text = "abc"
+            choices = []
+            for letter in ["A", "B", "C", "D"]:
+                text_value = str(row.get(f"Επιλογή {letter}", "")).strip()
+                if text_value:
+                    choices.append((letter, text_value))
+            for letter, text_value in choices:
+                fraction = "100" if letter.upper() == correct.upper() else "0"
+                ans = ET.SubElement(q, "answer", {"fraction": fraction, "format": "html"})
+                ET.SubElement(ans, "text").text = text_value
+                feedback = ET.SubElement(ans, "feedback", {"format": "html"})
+                ET.SubElement(feedback, "text").text = ""
+
+        elif moodle_type == "truefalse":
+            is_true = correct.lower() in {"σωστό", "true", "1", "ναι"}
+            for value, label in [(True, "true"), (False, "false")]:
+                fraction = "100" if value == is_true else "0"
+                ans = ET.SubElement(q, "answer", {"fraction": fraction, "format": "moodle_auto_format"})
+                ET.SubElement(ans, "text").text = label
+                feedback = ET.SubElement(ans, "feedback", {"format": "html"})
+                ET.SubElement(feedback, "text").text = ""
+
+        elif moodle_type == "shortanswer":
             ET.SubElement(q, "usecase").text = "0"
             ans = ET.SubElement(q, "answer", {"fraction": "100", "format": "html"})
             ET.SubElement(ans, "text").text = correct
             feedback = ET.SubElement(ans, "feedback", {"format": "html"})
             ET.SubElement(feedback, "text").text = ""
+
         else:
             ET.SubElement(q, "responseformat").text = "editor"
             ET.SubElement(q, "responserequired").text = "1"
             ET.SubElement(q, "responsefieldlines").text = "15"
             ET.SubElement(q, "attachments").text = "0"
             ET.SubElement(q, "attachmentsrequired").text = "0"
+            if correct:
+                grader = ET.SubElement(q, "graderinfo", {"format": "html"})
+                ET.SubElement(grader, "text").text = correct
 
         count += 1
 
@@ -2582,6 +2616,21 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                 key="s25_level"
             )
 
+        question_style = "Μικτό σετ"
+        if s25_type in {"Τράπεζα ερωτήσεων", "Κουίζ / Σύντομο τεστ"}:
+            question_style = st.selectbox(
+                "Μορφή ερωτήσεων",
+                [
+                    "Μικτό σετ",
+                    "Πολλαπλής επιλογής",
+                    "Σωστό / Λάθος",
+                    "Σύντομη απάντηση",
+                    "Αναπτυξιακή",
+                    "Συμπλήρωση κενού"
+                ],
+                key="s25_question_style"
+            )
+
         learning_goal = st.text_input(
             "Μαθησιακός στόχος",
             placeholder="π.χ. Ο φοιτητής να μπορεί να εφαρμόζει...",
@@ -2592,39 +2641,63 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
             raw_manual = " ".join(s25_content.strip().split())
             raw_csv = csv_context_as_text(ACTIVE_DF, max_rows=3) if use_csv_s25 and ACTIVE_DF is not None else ""
             raw = " ".join((raw_manual + " " + raw_csv).split())
+
             if not raw:
                 st.error("Χρειάζεται εκπαιδευτικό περιεχόμενο ή ενεργό πλαίσιο δεδομένων.")
             else:
+                raw = re.sub(r"\[(Σελίδα|Διαφάνεια)\s+\d+\]", " ", raw)
+                raw = re.sub(r"\s+", " ", raw).strip()
+
                 sentences = [
-                    s.strip()
-                    for s in re.split(r"(?<=[.!?;])\s+", raw)
-                    if len(s.strip()) > 18
+                    re.sub(r"^[•\-–—\d.\s]+", "", x).strip()
+                    for x in re.split(r"(?<=[.!?;])\s+", raw)
+                    if len(x.strip()) > 24
                 ]
+                sentences = [x for x in sentences if len(x) > 24]
                 if not sentences:
                     sentences = [raw]
 
+                goal_text = learning_goal.strip()
+                goal_suffix = (
+                    f" σε σχέση με τον μαθησιακό στόχο «{goal_text}»"
+                    if goal_text else ""
+                )
+
+                question_types = [
+                    "Πολλαπλής επιλογής",
+                    "Σωστό / Λάθος",
+                    "Σύντομη απάντηση",
+                    "Αναπτυξιακή",
+                    "Συμπλήρωση κενού"
+                ]
+
+                def _clip(text, limit=220):
+                    text = " ".join(str(text).split())
+                    return text if len(text) <= limit else text[:limit].rstrip() + "…"
+
+                def _candidate_distractors(index, correct_text):
+                    candidates = []
+                    for offset in range(1, len(sentences) + 1):
+                        cand = _clip(sentences[(index + offset) % len(sentences)], 170)
+                        if cand and cand != correct_text and cand not in candidates:
+                            candidates.append(cand)
+                        if len(candidates) == 3:
+                            break
+                    while len(candidates) < 3:
+                        candidates.append(
+                            [
+                                "Η πρόταση δεν υποστηρίζεται από το παρεχόμενο υλικό.",
+                                "Το στοιχείο αφορά διαφορετική έννοια από αυτή που εξετάζεται.",
+                                "Δεν προκύπτει τέτοιο συμπέρασμα από την πηγή."
+                            ][len(candidates)]
+                        )
+                    return candidates[:3]
+
                 items = []
                 for i in range(s25_count):
-                    src_sentence = sentences[i % len(sentences)]
-                    short = src_sentence[:240].rstrip()
+                    src_sentence = _clip(sentences[i % len(sentences)], 220)
 
-                    if s25_type == "Τράπεζα ερωτήσεων":
-                        items.append({
-                            "ID": f"Q{i+1:02d}",
-                            "Προσχέδιο ερώτησης": f"Εξήγησε ή εφάρμοσε την ακόλουθη έννοια: {short}",
-                            "Τύπος": "Ανοικτή απάντηση",
-                            "Επίπεδο": s25_level,
-                            "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
-                        })
-                    elif s25_type == "Κουίζ / Σύντομο τεστ":
-                        items.append({
-                            "ID": f"Q{i+1:02d}",
-                            "Προσχέδιο ερώτησης": f"Ποια διατύπωση αποδίδει καλύτερα το ακόλουθο σημείο; {short}",
-                            "Σωστή απάντηση / κριτήριο": short,
-                            "Επίπεδο": s25_level,
-                            "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
-                        })
-                    elif s25_type == "Κλίμακα αξιολόγησης":
+                    if s25_type == "Κλίμακα αξιολόγησης":
                         criteria = ["Ακρίβεια", "Μεθοδολογία", "Τεκμηρίωση", "Πληρότητα", "Σαφήνεια"]
                         criterion = criteria[i % len(criteria)]
                         weights = [30, 25, 15, 15, 15]
@@ -2633,29 +2706,111 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                             "Προτεινόμενο βάρος": weights[i % len(weights)],
                             "Περιγραφή": (
                                 f"Αξιολόγηση ως προς {criterion.lower()} σε σχέση με τον στόχο: "
-                                f"{learning_goal or 'τον δηλωμένο μαθησιακό στόχο'}."
+                                f"{goal_text or 'τον δηλωμένο μαθησιακό στόχο'}."
                             ),
                             "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
                         })
-                    else:
+                        continue
+
+                    if s25_type == "Ασκήσεις εξάσκησης":
                         items.append({
                             "Άσκηση": f"Άσκηση {i+1}",
-                            "Προσχέδιο": f"Εφάρμοσε την έννοια «{short}» σε νέο παράδειγμα και αιτιολόγησε τα βήματά σου.",
+                            "Προσχέδιο": (
+                                f"Χρησιμοποίησε το παρακάτω σημείο ως βάση και εφάρμοσέ το σε νέο παράδειγμα{goal_suffix}: "
+                                f"{src_sentence}"
+                            ),
+                            "Τύπος": "Άσκηση εφαρμογής",
                             "Επίπεδο": s25_level,
                             "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
                         })
+                        continue
+
+                    qtype = question_types[i % len(question_types)] if question_style == "Μικτό σετ" else question_style
+                    base = {
+                        "ID": f"Q{i+1:02d}",
+                        "Τύπος": qtype,
+                        "Επίπεδο": s25_level,
+                        "Έλεγχος διδάσκοντα": "ΑΠΑΙΤΕΙΤΑΙ"
+                    }
+
+                    if qtype == "Πολλαπλής επιλογής":
+                        correct = src_sentence
+                        distractors = _candidate_distractors(i, correct)
+                        options = [correct] + distractors
+                        shift = i % 4
+                        options = options[shift:] + options[:shift]
+                        correct_index = options.index(correct)
+                        letters = ["A", "B", "C", "D"]
+
+                        base.update({
+                            "Προσχέδιο ερώτησης": (
+                                "Ποια από τις παρακάτω διατυπώσεις αποδίδει σωστά το περιεχόμενο "
+                                f"της πηγής{goal_suffix};"
+                            ),
+                            "Επιλογή A": options[0],
+                            "Επιλογή B": options[1],
+                            "Επιλογή C": options[2],
+                            "Επιλογή D": options[3],
+                            "Σωστή απάντηση / κριτήριο": letters[correct_index]
+                        })
+
+                    elif qtype == "Σωστό / Λάθος":
+                        is_true = (i % 2 == 0)
+                        statement = src_sentence if is_true else f"Δεν ισχύει ότι {src_sentence[0].lower() + src_sentence[1:] if len(src_sentence) > 1 else src_sentence}"
+                        base.update({
+                            "Προσχέδιο ερώτησης": f"Σωστό ή Λάθος: {statement}",
+                            "Σωστή απάντηση / κριτήριο": "Σωστό" if is_true else "Λάθος"
+                        })
+
+                    elif qtype == "Σύντομη απάντηση":
+                        key_terms = [
+                            w for w in re.findall(r"[A-Za-zΑ-Ωα-ωΆ-ώ0-9\-]+", src_sentence)
+                            if len(w) >= 5
+                        ]
+                        expected = " ".join(key_terms[:6]) if key_terms else src_sentence
+                        base.update({
+                            "Προσχέδιο ερώτησης": (
+                                f"Σε 1–2 προτάσεις, ποιο είναι το βασικό νόημα του ακόλουθου σημείου{goal_suffix}; "
+                                f"{src_sentence}"
+                            ),
+                            "Σωστή απάντηση / κριτήριο": _clip(expected, 140)
+                        })
+
+                    elif qtype == "Αναπτυξιακή":
+                        base.update({
+                            "Προσχέδιο ερώτησης": (
+                                f"Ανάπτυξε τεκμηριωμένα το ακόλουθο σημείο και σύνδεσέ το με ένα νέο παράδειγμα{goal_suffix}: "
+                                f"{src_sentence}"
+                            ),
+                            "Σωστή απάντηση / κριτήριο": (
+                                "Η απάντηση πρέπει να αποδίδει σωστά το περιεχόμενο της πηγής, "
+                                "να περιλαμβάνει αιτιολόγηση και σχετικό παράδειγμα."
+                            )
+                        })
+
+                    else:  # Συμπλήρωση κενού
+                        words = re.findall(r"[A-Za-zΑ-Ωα-ωΆ-ώ0-9\-]+", src_sentence)
+                        target = next((w for w in words if len(w) >= 7), words[0] if words else "")
+                        blanked = re.sub(rf"\b{re.escape(target)}\b", "_____", src_sentence, count=1) if target else src_sentence
+                        base.update({
+                            "Προσχέδιο ερώτησης": f"Συμπλήρωσε το κενό: {blanked}",
+                            "Σωστή απάντηση / κριτήριο": target
+                        })
+
+                    items.append(base)
 
                 st.session_state["s25_draft"] = pd.DataFrame(items)
-                st.success("Το προσχέδιο δημιουργήθηκε.")
+                st.success("Το προσχέδιο δημιουργήθηκε με παιδαγωγικά διαφοροποιημένους τύπους ερωτήσεων.")
 
     with s25_tabs[1]:
         with st.expander("🧩 Οδηγίες για Κουίζ", expanded=False):
             st.markdown("""
 1. Ξεκινήστε από έναν σαφή μαθησιακό στόχο.
-2. Κάθε ερώτηση να ελέγχει μία βασική γνώση ή δεξιότητα.
-3. Ορίστε σαφή σωστή απάντηση ή κανόνα βαθμολόγησης.
-4. Αποφύγετε αμφίσημες διατυπώσεις.
-5. Μετά από πραγματικές προσπάθειες, χρησιμοποιήστε την **Ποιότητα Quiz** από το αριστερό μενού.
+2. Επιλέξτε **Μικτό σετ** ή συγκεκριμένο τύπο: Πολλαπλής Επιλογής, Σωστό/Λάθος, Σύντομη Απάντηση, Αναπτυξιακή ή Συμπλήρωση Κενού.
+3. Κάθε ερώτηση να ελέγχει μία βασική γνώση ή δεξιότητα.
+4. Ελέγξτε τις επιλογές, τη σωστή απάντηση και το κριτήριο βαθμολόγησης πριν από την έγκριση.
+5. Αποφύγετε αμφίσημες διατυπώσεις και παραπλανητικές επιλογές χωρίς παιδαγωγικό λόγο.
+6. Μετά από πραγματικές προσπάθειες, χρησιμοποιήστε την **Ποιότητα Quiz** από το αριστερό μενού.
 """)
 
         with st.expander("📋 Οδηγίες για Κλίμακα Αξιολόγησης", expanded=False):
