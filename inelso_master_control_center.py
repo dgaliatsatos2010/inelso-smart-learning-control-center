@@ -3001,11 +3001,6 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                         key="s25_moodle_category_name"
                     )
 
-                st.caption(
-                    "Αν η κατηγορία δεν υπάρχει, το Moodle plugin μπορεί να τη δημιουργήσει "
-                    "ανάλογα με τα δικαιώματα του συνδεδεμένου λογαριασμού."
-                )
-
                 if "νέο Quiz" in moodle_target:
                     qn1, qn2 = st.columns(2)
                     with qn1:
