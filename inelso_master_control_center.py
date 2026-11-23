@@ -2708,10 +2708,22 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                 if not sentences:
                     sentences = [raw]
 
-                goal_text = learning_goal.strip()
+                goal_text = " ".join(learning_goal.strip().split())
+                goal_is_usable = bool(
+                    goal_text
+                    and len(goal_text) >= 12
+                    and len(goal_text.split()) >= 3
+                    and goal_text.lower() not in {
+                        "ο φοιτητής",
+                        "η φοιτήτρια",
+                        "ο εκπαιδευόμενος",
+                        "η εκπαιδευόμενη",
+                        "μαθησιακός στόχος",
+                    }
+                )
                 goal_suffix = (
                     f" σε σχέση με τον μαθησιακό στόχο «{goal_text}»"
-                    if goal_text else ""
+                    if goal_is_usable else ""
                 )
 
                 question_types = [
@@ -2868,14 +2880,21 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                         })
 
                     elif qtype == "Αναπτυξιακή":
-                        base.update({
-                            "Προσχέδιο ερώτησης": (
-                                f"Ανάπτυξε τεκμηριωμένα το ακόλουθο σημείο και σύνδεσέ το με ένα νέο παράδειγμα{goal_suffix}: "
+                        if goal_is_usable:
+                            essay_prompt = (
+                                f"Ανάπτυξε και τεκμηρίωσε το ακόλουθο σημείο με ένα συγκεκριμένο παράδειγμα "
+                                f"που συνδέεται με τον μαθησιακό στόχο «{goal_text}»: {src_sentence}"
+                            )
+                        else:
+                            essay_prompt = (
+                                f"Ανάπτυξε και τεκμηρίωσε το ακόλουθο σημείο με ένα συγκεκριμένο παράδειγμα εφαρμογής: "
                                 f"{src_sentence}"
-                            ),
+                            )
+                        base.update({
+                            "Προσχέδιο ερώτησης": essay_prompt,
                             "Σωστή απάντηση / κριτήριο": (
                                 "Η απάντηση πρέπει να αποδίδει σωστά το περιεχόμενο της πηγής, "
-                                "να περιλαμβάνει αιτιολόγηση και σχετικό παράδειγμα."
+                                "να περιλαμβάνει σαφή αιτιολόγηση και σχετικό παράδειγμα εφαρμογής."
                             )
                         })
 
@@ -3027,6 +3046,17 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
 
                 moodle_url_direct = st.session_state.get("moodle_base_url", "")
                 moodle_token_direct = st.session_state.get("moodle_shared_token", "")
+
+                if moodle_url_direct:
+                    question_bank_url = (
+                        f"{moodle_url_direct.rstrip('/')}/question/banks.php"
+                        f"?courseid={int(moodle_course_id_direct)}"
+                    )
+                    st.link_button(
+                        "Άνοιγμα Τράπεζας Ερωτήσεων στο Moodle",
+                        question_bank_url,
+                        use_container_width=True
+                    )
 
                 direct_import_available = False
                 direct_import_checked = False
