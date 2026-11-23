@@ -1577,6 +1577,10 @@ st.sidebar.markdown("<div class='inelso-section-label'>Κύριες λειτου
 def navigate_main(target_label):
     st.session_state["inelso_main_navigation"] = target_label
 
+def navigate_advanced(target_label):
+    st.session_state["inelso_main_navigation"] = "Εργαλεία & Διαχείριση"
+    st.session_state["inelso_advanced_navigation"] = target_label
+
 NAV_DISPLAY_TO_INTERNAL = {
     "Αρχική": "Κεντρική Εικόνα Ελέγχου",
     "Έγκαιρη Υποστήριξη": "Μαθησιακή Ανάλυση & Έγκαιρη Υποστήριξη",
@@ -3002,14 +3006,13 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                             use_container_width=True
                         )
                     with m2:
-                        if st.button(
+                        st.button(
                             "Μετάβαση στην Ελεγχόμενη Εγγραφή Moodle",
                             use_container_width=True,
-                            key="s25_go_moodle_write"
-                        ):
-                            st.session_state["inelso_main_navigation"] = "Εργαλεία & Διαχείριση"
-                            st.session_state["inelso_advanced_navigation"] = "Ελεγχόμενη Εγγραφή Moodle"
-                            st.rerun()
+                            key="s25_go_moodle_write",
+                            on_click=navigate_advanced,
+                            args=("Ελεγχόμενη Εγγραφή Moodle",)
+                        )
 
                     st.info(
                         f"Πακέτο Moodle έτοιμο: {xml_count} ερωτήσεις. "
