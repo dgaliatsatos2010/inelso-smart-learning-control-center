@@ -6,6 +6,7 @@ import io
 import json
 import hashlib
 import zipfile
+import sqlite3
 import xml.etree.ElementTree as ET
 from datetime import datetime
 import requests
@@ -350,15 +351,15 @@ MODULE_HELP = {
         "data": "Οι ενδείξεις διατηρούν την προέλευσή τους ώστε να είναι ελέγξιμες και εξηγήσιμες."
     },
     "csv_import": {
-        "title": "Εισαγωγή CSV ή Excel",
-        "purpose": "Φορτώνει εξωτερικά ή χειροκίνητα αρχεία δεδομένων ως εναλλακτική/συμπληρωματική πηγή για την πλατφόρμα.",
+        "title": "Εισαγωγή Δεδομένων",
+        "purpose": "Φορτώνει δομημένα δεδομένα από συνηθισμένες εκπαιδευτικές, ερευνητικές και αναλυτικές μορφές και τα μετατρέπει σε κοινή ενεργή πηγή για την πλατφόρμα.",
         "steps": [
-            "Ανεβάστε CSV, Excel, JSON ή XML με σαφείς επικεφαλίδες στηλών.",
-            "Ελέγξτε προεπισκόπηση, κενά, διπλοεγγραφές και τύπους μεταβλητών.",
-            "Χρησιμοποιήστε την αυτόματη αναγνώριση για να δείτε ποιες λειτουργίες υποστηρίζονται από το αρχείο.",
-            "Το καθαρισμένο αρχείο γίνεται το ενεργό σύνολο δεδομένων για όλη την πλατφόρμα."
+            "Ανεβάστε CSV/TSV/TXT, Excel/ODS, JSON/JSONL, XML, Parquet/Feather, SPSS, Stata, SAS ή SQLite. Μπορείτε επίσης να ανεβάσετε ZIP που περιέχει υποστηριζόμενα αρχεία.",
+            "Σε Excel/ODS με πολλά φύλλα, SQLite με πολλούς πίνακες ή ZIP με πολλά datasets, επιλέξτε ποιο dataset θέλετε να ενεργοποιήσετε.",
+            "Ελέγξτε την προεπισκόπηση, τα κενά, τα διπλότυπα και την αυτόματη αναγνώριση συμβατότητας πριν χρησιμοποιήσετε τα αποτελέσματα.",
+            "Κάθε λειτουργία της πλατφόρμας υπολογίζει μόνο ό,τι υποστηρίζεται από τα πραγματικά διαθέσιμα πεδία του ενεργού dataset."
         ],
-        "data": "Η εισαγωγή CSV ή Excel παραμένει ανεξάρτητη από τη ζωντανή ανάκτηση SCORM και είναι χρήσιμη για εξωτερικά σύνολα δεδομένων ή πρόσθετες μεταβλητές."
+        "data": "CSV/TSV/TXT: γενικά tabular exports. Excel/ODS: φύλλα εργασίας. JSON/JSONL/XML: exports από εφαρμογές και APIs. Parquet/Feather: μεγάλα αναλυτικά datasets. SPSS/Stata/SAS: ερευνητικά/στατιστικά αρχεία. SQLite: τοπικές βάσεις με επιλογή πίνακα. ZIP: πακέτο πολλών υποστηριζόμενων datasets. Δεν υποστηρίζονται εκτελέσιμες ή μη ασφαλείς serialized μορφές όπως Python pickle."
     },
     "scorm_analysis": {
         "title": "Ανάλυση SCORM Αξιολόγησης",
@@ -6134,42 +6135,175 @@ elif section == "Εισαγωγή CSV / Excel":
     )
 
     st.markdown("### Αρχείο δεδομένων")
+    supported_extensions = [
+        "csv", "tsv", "txt",
+        "xlsx", "xls", "ods",
+        "json", "jsonl", "ndjson",
+        "xml",
+        "parquet", "feather",
+        "sav", "dta", "sas7bdat", "xpt",
+        "sqlite", "sqlite3", "db",
+        "zip"
+    ]
+
     uploaded_file = st.file_uploader(
-        "Επιλέξτε αρχείο CSV, Excel ή ZIP",
-        type=["csv", "xlsx", "xls", "zip"],
+        "Επιλέξτε αρχείο δεδομένων ή ZIP",
+        type=supported_extensions,
         key="main_data_file_uploader"
     )
 
-    def _read_supported_dataset(file_bytes, file_name):
+    def _safe_dataset_name(name):
+        return str(name).replace("\\", "/").split("/")[-1]
+
+    def _read_supported_datasets(file_bytes, file_name):
+        """
+        Επιστρέφει dict {όνομα_dataset: DataFrame}.
+        Δεν εκτελεί serialized Python objects και δεν γράφει περιεχόμενο στον server,
+        εκτός από προσωρινό SQLite αρχείο που διαγράφεται αμέσως μετά την ανάγνωση.
+        """
         lower_name = str(file_name).lower()
+        base_name = _safe_dataset_name(file_name)
         buffer = io.BytesIO(file_bytes)
+        datasets = {}
 
         if lower_name.endswith(".csv"):
             try:
-                return pd.read_csv(buffer)
+                df = pd.read_csv(buffer)
             except UnicodeDecodeError:
                 buffer.seek(0)
-                return pd.read_csv(buffer, encoding="latin-1")
+                df = pd.read_csv(buffer, encoding="latin-1")
+            datasets[base_name] = df
 
-        if lower_name.endswith((".xlsx", ".xls")):
-            return pd.read_excel(buffer)
+        elif lower_name.endswith(".tsv"):
+            datasets[base_name] = pd.read_csv(buffer, sep="\t")
 
-        raise ValueError("Μη υποστηριζόμενος τύπος αρχείου.")
+        elif lower_name.endswith(".txt"):
+            try:
+                datasets[base_name] = pd.read_csv(buffer, sep=None, engine="python")
+            except Exception:
+                buffer.seek(0)
+                datasets[base_name] = pd.read_csv(buffer, sep="\t")
+
+        elif lower_name.endswith((".xlsx", ".xls", ".ods")):
+            excel = pd.ExcelFile(buffer)
+            for sheet in excel.sheet_names:
+                try:
+                    df = pd.read_excel(excel, sheet_name=sheet)
+                    if isinstance(df, pd.DataFrame) and not df.empty:
+                        label = base_name if len(excel.sheet_names) == 1 else f"{base_name} → {sheet}"
+                        datasets[label] = df
+                except Exception:
+                    continue
+
+        elif lower_name.endswith(".json"):
+            try:
+                obj = json.loads(file_bytes.decode("utf-8-sig"))
+                if isinstance(obj, list):
+                    datasets[base_name] = pd.json_normalize(obj)
+                elif isinstance(obj, dict):
+                    tabular_found = False
+                    for key, value in obj.items():
+                        if isinstance(value, list) and value and isinstance(value[0], (dict, list)):
+                            df = pd.json_normalize(value)
+                            if not df.empty:
+                                datasets[f"{base_name} → {key}"] = df
+                                tabular_found = True
+                    if not tabular_found:
+                        datasets[base_name] = pd.json_normalize(obj)
+                else:
+                    datasets[base_name] = pd.DataFrame({"value": [obj]})
+            except Exception:
+                buffer.seek(0)
+                datasets[base_name] = pd.read_json(buffer)
+
+        elif lower_name.endswith((".jsonl", ".ndjson")):
+            datasets[base_name] = pd.read_json(buffer, lines=True)
+
+        elif lower_name.endswith(".xml"):
+            datasets[base_name] = pd.read_xml(buffer)
+
+        elif lower_name.endswith(".parquet"):
+            datasets[base_name] = pd.read_parquet(buffer)
+
+        elif lower_name.endswith(".feather"):
+            datasets[base_name] = pd.read_feather(buffer)
+
+        elif lower_name.endswith(".sav"):
+            import pyreadstat
+            df, _meta = pyreadstat.read_sav(io.BytesIO(file_bytes))
+            datasets[base_name] = df
+
+        elif lower_name.endswith(".dta"):
+            datasets[base_name] = pd.read_stata(buffer)
+
+        elif lower_name.endswith(".sas7bdat"):
+            import pyreadstat
+            df, _meta = pyreadstat.read_sas7bdat(io.BytesIO(file_bytes))
+            datasets[base_name] = df
+
+        elif lower_name.endswith(".xpt"):
+            import pyreadstat
+            df, _meta = pyreadstat.read_xport(io.BytesIO(file_bytes))
+            datasets[base_name] = df
+
+        elif lower_name.endswith((".sqlite", ".sqlite3", ".db")):
+            # sqlite3 χρειάζεται path. Χρησιμοποιούμε NamedTemporaryFile μόνο κατά την ανάγνωση.
+            import tempfile
+            tmp_path = None
+            try:
+                with tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False) as tmp:
+                    tmp.write(file_bytes)
+                    tmp_path = tmp.name
+                conn = sqlite3.connect(f"file:{tmp_path}?mode=ro", uri=True)
+                try:
+                    tables = pd.read_sql_query(
+                        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+                        conn
+                    )["name"].astype(str).tolist()
+                    for table in tables:
+                        safe_table = table.replace('"', '""')
+                        try:
+                            df = pd.read_sql_query(f'SELECT * FROM "{safe_table}"', conn)
+                            if not df.empty:
+                                datasets[f"{base_name} → {table}"] = df
+                        except Exception:
+                            continue
+                finally:
+                    conn.close()
+            finally:
+                if tmp_path:
+                    try:
+                        Path(tmp_path).unlink(missing_ok=True)
+                    except Exception:
+                        pass
+
+        else:
+            raise ValueError("Μη υποστηριζόμενος τύπος αρχείου.")
+
+        return {
+            name: df for name, df in datasets.items()
+            if isinstance(df, pd.DataFrame) and not df.empty
+        }
+
+    def _activate_uploaded_dataset(df, active_name):
+        st.session_state["inelso_uploaded_original"] = df.copy()
+        st.session_state["inelso_uploaded_clean"] = df.copy()
+        st.session_state["inelso_uploaded_name"] = active_name
+        auto_map_unified_services(df, active_name)
 
     if uploaded_file is not None:
         try:
             file_name = uploaded_file.name
             lower_name = file_name.lower()
+            raw_bytes = uploaded_file.getvalue()
+            upload_key = hashlib.sha256(raw_bytes).hexdigest()
 
             if lower_name.endswith(".zip"):
-                zip_bytes = uploaded_file.getvalue()
-                archive_key = hashlib.sha256(zip_bytes).hexdigest()
-
-                if st.session_state.get("inelso_zip_archive_key") != archive_key:
+                if st.session_state.get("inelso_zip_archive_key") != upload_key:
                     candidates = {}
                     ignored = []
 
-                    with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+                    with zipfile.ZipFile(io.BytesIO(raw_bytes)) as zf:
                         for info in zf.infolist():
                             if info.is_dir():
                                 continue
@@ -6177,59 +6311,53 @@ elif section == "Εισαγωγή CSV / Excel":
                             member_name = info.filename
                             member_lower = member_name.lower()
 
-                            if not member_lower.endswith((".csv", ".xlsx", ".xls")):
+                            if not any(member_lower.endswith("." + ext) for ext in supported_extensions if ext != "zip"):
                                 ignored.append(member_name)
                                 continue
 
-                            # Προστασία από υπερβολικά μεγάλα μεμονωμένα αρχεία μέσα στο ZIP.
-                            if info.file_size > 50 * 1024 * 1024:
+                            if info.file_size > 100 * 1024 * 1024:
                                 ignored.append(member_name)
                                 continue
 
                             try:
                                 member_bytes = zf.read(info)
-                                member_df = _read_supported_dataset(member_bytes, member_name)
-                                if isinstance(member_df, pd.DataFrame) and not member_df.empty:
-                                    candidates[member_name] = member_df
-                                else:
+                                member_sets = _read_supported_datasets(member_bytes, member_name)
+                                for ds_name, ds_df in member_sets.items():
+                                    candidates[ds_name] = ds_df
+                                if not member_sets:
                                     ignored.append(member_name)
                             except Exception:
                                 ignored.append(member_name)
 
-                    st.session_state["inelso_zip_archive_key"] = archive_key
+                    st.session_state["inelso_zip_archive_key"] = upload_key
                     st.session_state["inelso_zip_candidates"] = candidates
                     st.session_state["inelso_zip_ignored"] = ignored
 
-                zip_candidates = st.session_state.get("inelso_zip_candidates", {})
-                zip_ignored = st.session_state.get("inelso_zip_ignored", [])
+                candidates = st.session_state.get("inelso_zip_candidates", {})
+                ignored = st.session_state.get("inelso_zip_ignored", [])
 
-                if not zip_candidates:
-                    st.error("Δεν βρέθηκε αναγνώσιμο CSV ή Excel μέσα στο ZIP.")
+                if not candidates:
+                    st.error("Δεν βρέθηκε αναγνώσιμο υποστηριζόμενο dataset μέσα στο ZIP.")
                 else:
-                    st.success(
-                        f"Βρέθηκαν {len(zip_candidates)} συμβατά dataset"
-                        f"{'s' if len(zip_candidates) != 1 else ''} μέσα στο ZIP."
-                    )
-
-                    candidate_summary = pd.DataFrame([
-                        {
-                            "Αρχείο": name,
-                            "Εγγραφές": len(df),
-                            "Πεδία": len(df.columns),
-                        }
-                        for name, df in zip_candidates.items()
+                    st.success(f"Βρέθηκαν {len(candidates)} διαθέσιμα datasets μέσα στο ZIP.")
+                    summary = pd.DataFrame([
+                        {"Dataset": name, "Εγγραφές": len(df), "Πεδία": len(df.columns)}
+                        for name, df in candidates.items()
                     ])
-                    st.dataframe(candidate_summary, use_container_width=True, hide_index=True)
+                    st.dataframe(summary, use_container_width=True, hide_index=True)
 
-                    selected_zip_name = st.selectbox(
+                    selected_name = st.selectbox(
                         "Επιλέξτε dataset από το ZIP",
-                        list(zip_candidates.keys()),
+                        list(candidates.keys()),
                         key="inelso_zip_selected_dataset"
                     )
 
-                    if zip_ignored:
-                        with st.expander(f"Παραλείφθηκαν {len(zip_ignored)} μη υποστηριζόμενα ή μη αναγνώσιμα αρχεία", expanded=False):
-                            for ignored_name in zip_ignored[:100]:
+                    if ignored:
+                        with st.expander(
+                            f"Παραλείφθηκαν {len(ignored)} μη υποστηριζόμενα ή μη αναγνώσιμα αρχεία",
+                            expanded=False
+                        ):
+                            for ignored_name in ignored[:100]:
                                 st.write("•", ignored_name)
 
                     if st.button(
@@ -6237,35 +6365,48 @@ elif section == "Εισαγωγή CSV / Excel":
                         type="primary",
                         key="inelso_activate_zip_dataset"
                     ):
-                        uploaded_df = zip_candidates[selected_zip_name].copy()
-                        active_name = f"{file_name} → {selected_zip_name}"
-
-                        st.session_state["inelso_uploaded_original"] = uploaded_df.copy()
-                        st.session_state["inelso_uploaded_clean"] = uploaded_df.copy()
-                        st.session_state["inelso_uploaded_name"] = active_name
-                        auto_map_unified_services(uploaded_df, active_name)
-
-                        st.success(
-                            f"Το dataset «{selected_zip_name}» ενεργοποιήθηκε "
-                            f"({len(uploaded_df)} εγγραφές × {len(uploaded_df.columns)} πεδία)."
-                        )
+                        selected_df = candidates[selected_name].copy()
+                        active_name = f"{file_name} → {selected_name}"
+                        _activate_uploaded_dataset(selected_df, active_name)
                         st.rerun()
 
             else:
-                uploaded_df = _read_supported_dataset(uploaded_file.getvalue(), file_name)
+                if st.session_state.get("inelso_multi_upload_key") != upload_key:
+                    datasets = _read_supported_datasets(raw_bytes, file_name)
+                    st.session_state["inelso_multi_upload_key"] = upload_key
+                    st.session_state["inelso_multi_upload_candidates"] = datasets
 
-                if uploaded_df.empty:
-                    st.error("Το αρχείο δεν περιέχει εγγραφές.")
+                datasets = st.session_state.get("inelso_multi_upload_candidates", {})
+
+                if not datasets:
+                    st.error("Δεν βρέθηκε αναγνώσιμο dataset στο αρχείο.")
+                elif len(datasets) == 1:
+                    ds_name, ds_df = next(iter(datasets.items()))
+                    activation_key = f"{upload_key}:{ds_name}"
+                    if st.session_state.get("inelso_last_auto_activated_upload") != activation_key:
+                        _activate_uploaded_dataset(ds_df, ds_name)
+                        st.session_state["inelso_last_auto_activated_upload"] = activation_key
+                        st.rerun()
                 else:
-                    st.session_state["inelso_uploaded_original"] = uploaded_df.copy()
-                    st.session_state["inelso_uploaded_clean"] = uploaded_df.copy()
-                    st.session_state["inelso_uploaded_name"] = file_name
-                    auto_map_unified_services(uploaded_df, file_name)
-                    st.success(
-                        f"Το αρχείο «{file_name}» φορτώθηκε επιτυχώς "
-                        f"({len(uploaded_df)} εγγραφές × {len(uploaded_df.columns)} πεδία)."
+                    st.success(f"Βρέθηκαν {len(datasets)} datasets στο αρχείο.")
+                    summary = pd.DataFrame([
+                        {"Dataset": name, "Εγγραφές": len(df), "Πεδία": len(df.columns)}
+                        for name, df in datasets.items()
+                    ])
+                    st.dataframe(summary, use_container_width=True, hide_index=True)
+
+                    selected_name = st.selectbox(
+                        "Επιλέξτε dataset",
+                        list(datasets.keys()),
+                        key="inelso_multidataset_selected"
                     )
-                    st.rerun()
+                    if st.button(
+                        "Χρήση επιλεγμένου dataset",
+                        type="primary",
+                        key="inelso_activate_multidataset"
+                    ):
+                        _activate_uploaded_dataset(datasets[selected_name], selected_name)
+                        st.rerun()
 
         except zipfile.BadZipFile:
             st.error("Το ZIP δεν είναι έγκυρο ή είναι κατεστραμμένο.")
