@@ -1524,6 +1524,13 @@ def _moodle_xml_from_approved_questions(df, category="INELSO Academia"):
             ET.SubElement(q, "single").text = "true"
             ET.SubElement(q, "shuffleanswers").text = "true"
             ET.SubElement(q, "answernumbering").text = "abc"
+
+            cf = ET.SubElement(q, "correctfeedback", {"format": "html"})
+            ET.SubElement(cf, "text").text = "Σωστά. Η απάντηση συμφωνεί με το εκπαιδευτικό υλικό."
+            pcf = ET.SubElement(q, "partiallycorrectfeedback", {"format": "html"})
+            ET.SubElement(pcf, "text").text = "Ελέγξτε ξανά τη βασική έννοια και συγκρίνετε προσεκτικά τις επιλογές."
+            icf = ET.SubElement(q, "incorrectfeedback", {"format": "html"})
+            ET.SubElement(icf, "text").text = "Ξαναδιαβάστε το σχετικό σημείο του εκπαιδευτικού υλικού πριν απαντήσετε ξανά."
             choices = []
             for letter in ["A", "B", "C", "D"]:
                 text_value = str(row.get(f"Επιλογή {letter}", "")).strip()
@@ -2999,9 +3006,26 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                     )
 
                 st.caption(
-                    "Αν η κατηγορία δεν υπάρχει, το Moodle endpoint μπορεί να τη δημιουργήσει "
+                    "Αν η κατηγορία δεν υπάρχει, το Moodle plugin μπορεί να τη δημιουργήσει "
                     "ανάλογα με τα δικαιώματα του συνδεδεμένου λογαριασμού."
                 )
+
+                if "νέο Quiz" in moodle_target:
+                    qn1, qn2 = st.columns(2)
+                    with qn1:
+                        st.text_input(
+                            "Όνομα νέου Quiz",
+                            value=st.session_state.get("s25_quiz_name", "INELSO Quiz"),
+                            key="s25_quiz_name"
+                        )
+                    with qn2:
+                        st.number_input(
+                            "Αριθμός ενότητας Moodle",
+                            min_value=0,
+                            step=1,
+                            value=int(st.session_state.get("s25_quiz_section", 0) or 0),
+                            key="s25_quiz_section"
+                        )
 
                 approved = st.session_state["s25_approved_draft"].copy()
                 xml_text, xml_count = _moodle_xml_from_approved_questions(
@@ -3034,7 +3058,7 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                                     elif isinstance(item, str):
                                         available_functions.append(item)
                         direct_import_available = (
-                            "local_inelsoquestions_import_xml" in available_functions
+                            "local_quizbuilder_import_questions" in available_functions
                         )
                     except Exception:
                         direct_import_checked = True
@@ -3044,7 +3068,7 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                     st.warning(
                         "Η one-click εισαγωγή δεν είναι ακόμη ενεργοποιημένη στο Moodle. "
                         "Ο διαχειριστής πρέπει να εγκαταστήσει/ενεργοποιήσει μία φορά τη λειτουργία "
-                        "«local_inelsoquestions_import_xml». Μέχρι τότε μπορείτε να χρησιμοποιήσετε "
+                        "«Quiz Builder (local_quizbuilder)». Μέχρι τότε μπορείτε να χρησιμοποιήσετε "
                         "την εναλλακτική εισαγωγή με Moodle XML."
                     )
 
@@ -3062,28 +3086,115 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                         )
                     else:
                         try:
+                            rules_result = _inelso_moodle_call(
+                                moodle_url_direct,
+                                moodle_token_direct,
+                                "local_quizbuilder_get_rules",
+                                {},
+                                timeout=20
+                            )
+                            rules_version = (
+                                str(rules_result.get("version", ""))
+                                if isinstance(rules_result, dict) else ""
+                            )
+                            if not rules_version:
+                                raise RuntimeError("Δεν επιστράφηκε rulesversion από το Quiz Builder.")
+
                             result = _inelso_moodle_call(
                                 moodle_url_direct,
                                 moodle_token_direct,
-                                "local_inelsoquestions_import_xml",
+                                "local_quizbuilder_import_questions",
                                 {
                                     "courseid": int(moodle_course_id_direct),
-                                    "categoryname": moodle_category_name.strip() or "INELSO Academia",
+                                    "rulesversion": rules_version,
                                     "xml": xml_text,
-                                    "createquiz": 1 if "νέο Quiz" in moodle_target else 0,
+                                    "bankcmid": 0,
                                 },
-                                timeout=45
+                                timeout=60
                             )
 
                             imported = (
-                                result.get("imported", xml_count)
+                                int(result.get("count", xml_count))
                                 if isinstance(result, dict) else xml_count
                             )
-                            st.success(
-                                f"Η εισαγωγή ολοκληρώθηκε: {imported} ερωτήσεις στάλθηκαν "
-                                f"στην κατηγορία «{moodle_category_name.strip() or 'INELSO Academia'}»."
+                            question_ids = (
+                                result.get("questionids", [])
+                                if isinstance(result, dict) else []
                             )
-                            st.session_state["s25_last_direct_moodle_result"] = result
+                            category_id = (
+                                int(result.get("categoryid", 0))
+                                if isinstance(result, dict) else 0
+                            )
+
+                            quiz_result = None
+                            add_result = None
+                            if "νέο Quiz" in moodle_target:
+                                quiz_name = st.session_state.get(
+                                    "s25_quiz_name",
+                                    f"INELSO Quiz - {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+                                )
+                                section_num = int(st.session_state.get("s25_quiz_section", 0) or 0)
+
+                                quiz_result = _inelso_moodle_call(
+                                    moodle_url_direct,
+                                    moodle_token_direct,
+                                    "local_quizbuilder_create_quiz",
+                                    {
+                                        "courseid": int(moodle_course_id_direct),
+                                        "sectionnum": section_num,
+                                        "name": quiz_name,
+                                        "intro": "Δημιουργήθηκε από το INELSO Academia.",
+                                        "visible": 0,
+                                        "attempts": 1,
+                                        "preferredbehaviour": "deferredfeedback",
+                                        "shuffleanswers": 1,
+                                        "timelimit": 0,
+                                        "grade": 10,
+                                        "timeopen": 0,
+                                        "timeclose": 0,
+                                        "reviewafter": 1,
+                                    },
+                                    timeout=45
+                                )
+
+                                quiz_cmid = int(quiz_result.get("cmid", 0))
+                                if quiz_cmid <= 0:
+                                    raise RuntimeError("Το Quiz δημιουργήθηκε χωρίς έγκυρο cmid.")
+
+                                add_params = {
+                                    "cmid": quiz_cmid,
+                                    "categoryid": category_id,
+                                    "maxmark": 0,
+                                    "shuffle": 1,
+                                }
+                                if question_ids:
+                                    for qi, qid in enumerate(question_ids):
+                                        add_params[f"questionids[{qi}]"] = int(qid)
+
+                                add_result = _inelso_moodle_call(
+                                    moodle_url_direct,
+                                    moodle_token_direct,
+                                    "local_quizbuilder_add_quiz_questions",
+                                    add_params,
+                                    timeout=45
+                                )
+
+                            if quiz_result is not None:
+                                st.success(
+                                    f"Η εισαγωγή ολοκληρώθηκε: {imported} ερωτήσεις μπήκαν στην Τράπεζα Ερωτήσεων "
+                                    f"και δημιουργήθηκε νέο Quiz με τις εισαγμένες ερωτήσεις."
+                                )
+                            else:
+                                st.success(
+                                    f"Η εισαγωγή ολοκληρώθηκε: {imported} ερωτήσεις μπήκαν "
+                                    f"στην κατηγορία «{moodle_category_name.strip() or 'INELSO Academia'}»."
+                                )
+
+                            st.session_state["s25_last_direct_moodle_result"] = {
+                                "import": result,
+                                "quiz": quiz_result,
+                                "add_questions": add_result,
+                            }
 
                         except Exception as e:
                             error_text = str(e)
