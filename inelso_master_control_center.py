@@ -5,6 +5,7 @@ import ast
 import io
 import json
 import hashlib
+import zipfile
 import xml.etree.ElementTree as ET
 from datetime import datetime
 import requests
@@ -6134,37 +6135,140 @@ elif section == "Εισαγωγή CSV / Excel":
 
     st.markdown("### Αρχείο δεδομένων")
     uploaded_file = st.file_uploader(
-        "Επιλέξτε αρχείο CSV ή Excel",
-        type=["csv", "xlsx", "xls"],
+        "Επιλέξτε αρχείο CSV, Excel ή ZIP",
+        type=["csv", "xlsx", "xls", "zip"],
         key="main_data_file_uploader"
     )
+
+    def _read_supported_dataset(file_bytes, file_name):
+        lower_name = str(file_name).lower()
+        buffer = io.BytesIO(file_bytes)
+
+        if lower_name.endswith(".csv"):
+            try:
+                return pd.read_csv(buffer)
+            except UnicodeDecodeError:
+                buffer.seek(0)
+                return pd.read_csv(buffer, encoding="latin-1")
+
+        if lower_name.endswith((".xlsx", ".xls")):
+            return pd.read_excel(buffer)
+
+        raise ValueError("Μη υποστηριζόμενος τύπος αρχείου.")
 
     if uploaded_file is not None:
         try:
             file_name = uploaded_file.name
             lower_name = file_name.lower()
 
-            if lower_name.endswith(".csv"):
-                try:
-                    uploaded_df = pd.read_csv(uploaded_file)
-                except UnicodeDecodeError:
-                    uploaded_file.seek(0)
-                    uploaded_df = pd.read_csv(uploaded_file, encoding="latin-1")
-            else:
-                uploaded_df = pd.read_excel(uploaded_file)
+            if lower_name.endswith(".zip"):
+                zip_bytes = uploaded_file.getvalue()
+                archive_key = hashlib.sha256(zip_bytes).hexdigest()
 
-            if uploaded_df.empty:
-                st.error("Το αρχείο δεν περιέχει εγγραφές.")
+                if st.session_state.get("inelso_zip_archive_key") != archive_key:
+                    candidates = {}
+                    ignored = []
+
+                    with zipfile.ZipFile(io.BytesIO(zip_bytes)) as zf:
+                        for info in zf.infolist():
+                            if info.is_dir():
+                                continue
+
+                            member_name = info.filename
+                            member_lower = member_name.lower()
+
+                            if not member_lower.endswith((".csv", ".xlsx", ".xls")):
+                                ignored.append(member_name)
+                                continue
+
+                            # Προστασία από υπερβολικά μεγάλα μεμονωμένα αρχεία μέσα στο ZIP.
+                            if info.file_size > 50 * 1024 * 1024:
+                                ignored.append(member_name)
+                                continue
+
+                            try:
+                                member_bytes = zf.read(info)
+                                member_df = _read_supported_dataset(member_bytes, member_name)
+                                if isinstance(member_df, pd.DataFrame) and not member_df.empty:
+                                    candidates[member_name] = member_df
+                                else:
+                                    ignored.append(member_name)
+                            except Exception:
+                                ignored.append(member_name)
+
+                    st.session_state["inelso_zip_archive_key"] = archive_key
+                    st.session_state["inelso_zip_candidates"] = candidates
+                    st.session_state["inelso_zip_ignored"] = ignored
+
+                zip_candidates = st.session_state.get("inelso_zip_candidates", {})
+                zip_ignored = st.session_state.get("inelso_zip_ignored", [])
+
+                if not zip_candidates:
+                    st.error("Δεν βρέθηκε αναγνώσιμο CSV ή Excel μέσα στο ZIP.")
+                else:
+                    st.success(
+                        f"Βρέθηκαν {len(zip_candidates)} συμβατά dataset"
+                        f"{'s' if len(zip_candidates) != 1 else ''} μέσα στο ZIP."
+                    )
+
+                    candidate_summary = pd.DataFrame([
+                        {
+                            "Αρχείο": name,
+                            "Εγγραφές": len(df),
+                            "Πεδία": len(df.columns),
+                        }
+                        for name, df in zip_candidates.items()
+                    ])
+                    st.dataframe(candidate_summary, use_container_width=True, hide_index=True)
+
+                    selected_zip_name = st.selectbox(
+                        "Επιλέξτε dataset από το ZIP",
+                        list(zip_candidates.keys()),
+                        key="inelso_zip_selected_dataset"
+                    )
+
+                    if zip_ignored:
+                        with st.expander(f"Παραλείφθηκαν {len(zip_ignored)} μη υποστηριζόμενα ή μη αναγνώσιμα αρχεία", expanded=False):
+                            for ignored_name in zip_ignored[:100]:
+                                st.write("•", ignored_name)
+
+                    if st.button(
+                        "Χρήση επιλεγμένου dataset",
+                        type="primary",
+                        key="inelso_activate_zip_dataset"
+                    ):
+                        uploaded_df = zip_candidates[selected_zip_name].copy()
+                        active_name = f"{file_name} → {selected_zip_name}"
+
+                        st.session_state["inelso_uploaded_original"] = uploaded_df.copy()
+                        st.session_state["inelso_uploaded_clean"] = uploaded_df.copy()
+                        st.session_state["inelso_uploaded_name"] = active_name
+                        auto_map_unified_services(uploaded_df, active_name)
+
+                        st.success(
+                            f"Το dataset «{selected_zip_name}» ενεργοποιήθηκε "
+                            f"({len(uploaded_df)} εγγραφές × {len(uploaded_df.columns)} πεδία)."
+                        )
+                        st.rerun()
+
             else:
-                st.session_state["inelso_uploaded_original"] = uploaded_df.copy()
-                st.session_state["inelso_uploaded_clean"] = uploaded_df.copy()
-                st.session_state["inelso_uploaded_name"] = file_name
-                mapped = auto_map_unified_services(uploaded_df, file_name)
-                st.success(
-                    f"Το αρχείο «{file_name}» φορτώθηκε επιτυχώς "
-                    f"({len(uploaded_df)} εγγραφές × {len(uploaded_df.columns)} πεδία)."
-                )
-                st.rerun()
+                uploaded_df = _read_supported_dataset(uploaded_file.getvalue(), file_name)
+
+                if uploaded_df.empty:
+                    st.error("Το αρχείο δεν περιέχει εγγραφές.")
+                else:
+                    st.session_state["inelso_uploaded_original"] = uploaded_df.copy()
+                    st.session_state["inelso_uploaded_clean"] = uploaded_df.copy()
+                    st.session_state["inelso_uploaded_name"] = file_name
+                    auto_map_unified_services(uploaded_df, file_name)
+                    st.success(
+                        f"Το αρχείο «{file_name}» φορτώθηκε επιτυχώς "
+                        f"({len(uploaded_df)} εγγραφές × {len(uploaded_df.columns)} πεδία)."
+                    )
+                    st.rerun()
+
+        except zipfile.BadZipFile:
+            st.error("Το ZIP δεν είναι έγκυρο ή είναι κατεστραμμένο.")
         except Exception as e:
             st.error(f"Δεν ήταν δυνατή η ανάγνωση του αρχείου: {e}")
 
