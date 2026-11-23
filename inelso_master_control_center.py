@@ -3048,10 +3048,18 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                 moodle_token_direct = st.session_state.get("moodle_shared_token", "")
 
                 if moodle_url_direct:
-                    question_bank_url = (
-                        f"{moodle_url_direct.rstrip('/')}/question/banks.php"
-                        f"?courseid={int(moodle_course_id_direct)}"
-                    )
+                    bank_cmid = int(st.session_state.get("s25_last_question_bank_cmid", 0) or 0)
+                    if bank_cmid > 0:
+                        question_bank_url = (
+                            f"{moodle_url_direct.rstrip('/')}/question/edit.php"
+                            f"?cmid={bank_cmid}"
+                        )
+                    else:
+                        question_bank_url = (
+                            f"{moodle_url_direct.rstrip('/')}/question/banks.php"
+                            f"?courseid={int(moodle_course_id_direct)}"
+                        )
+
                     st.link_button(
                         "Άνοιγμα Τράπεζας Ερωτήσεων στο Moodle",
                         question_bank_url,
@@ -3217,6 +3225,16 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                                 "quiz": quiz_result,
                                 "add_questions": add_result,
                             }
+
+                            if isinstance(result, dict):
+                                bank_cmid = int(
+                                    result.get("bankcmid", 0)
+                                    or result.get("qbankcmid", 0)
+                                    or result.get("cmid", 0)
+                                    or 0
+                                )
+                                if bank_cmid > 0:
+                                    st.session_state["s25_last_question_bank_cmid"] = bank_cmid
 
                             if isinstance(quiz_result, dict) and quiz_result.get("cmid"):
                                 st.session_state["inelso_last_created_quiz"] = {
