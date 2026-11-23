@@ -6413,30 +6413,48 @@ elif section == "Βιβλίο Οδηγιών":
     ]
 
     start_tab, modules_tab, controls_tab, glossary_tab, trouble_tab = st.tabs([
-        "Ξεκίνα εδώ",
-        "Οδηγός ανά ενότητα",
-        "Κουμπιά & πεδία",
-        "Γλωσσάρι",
-        "Συχνά προβλήματα",
+        "🚀 Γρήγορη Εκκίνηση",
+        "🧭 Λειτουργίες",
+        "🎛️ Κουμπιά & Πεδία",
+        "📚 Γλωσσάρι",
+        "🛠️ Αντιμετώπιση",
     ])
 
     with start_tab:
-        st.markdown("### Πρώτη χρήση σε 7 βήματα")
-        st.markdown("""
-1. **Διάλεξε τι έχεις:** εκπαιδευτικό υλικό (PDF/Word/PowerPoint) ή δεδομένα (CSV/Excel/SCORM/Moodle).
-2. **Εκπαιδευτικό υλικό:** πήγαινε «Εκπαιδευτικό Υλικό» για να το χρησιμοποιήσεις σε αξιολόγηση ή υποστήριξη διδάσκοντα.
-3. **Δεδομένα:** πήγαινε «Εισαγωγή Δεδομένων» ή «Ανάλυση SCORM» και έλεγξε τη συμβατότητα.
-4. **Δημιουργία Quiz:** δημιούργησε προσχέδιο, έλεγξέ το και πάτησε «Έγκριση προσχεδίου».
-5. **Moodle:** επίλεξε μάθημα, Τράπεζα Ερωτήσεων και κατηγορία και κάνε απευθείας εισαγωγή.
-6. **Μετά τις απαντήσεις των φοιτητών:** ανάκτησε/φόρτωσε τα αποτελέσματα και χρησιμοποίησε «Ποιότητα Quiz», «Έγκαιρη Υποστήριξη» ή «Προσαρμοστική Εξάσκηση».
-7. **Πριν από κρίσιμη ενέργεια:** έλεγξε πάντα τα πρωτογενή δεδομένα και κάνε ανθρώπινη επιβεβαίωση.
-""")
-        st.info("Κανένα κουμπί που αφορά επίσημη βαθμολογία ή κρίσιμη εκπαιδευτική απόφαση δεν πρέπει να θεωρείται αυτόματη τελική κρίση.")
+        st.markdown("### Ξεκινήστε σε λίγα λεπτά")
+        st.caption("Ο πιο απλός τρόπος να καταλάβετε τη ροή του INELSO από την πρώτη χρήση.")
 
-        st.markdown("### Παράδειγμα πλήρους ροής")
-        st.markdown("""
-**PDF → Δημιουργία ερωτήσεων → Έγκριση → Question Bank Moodle → Quiz → Απαντήσεις φοιτητών → Ανάκτηση δεδομένων → Ανάλυση → Feedback / επόμενη παρέμβαση**
-""")
+        quick_steps = [
+            ("1", "Επιλέξτε πηγή", "Ανεβάστε εκπαιδευτικό υλικό ή δεδομένα από Moodle, SCORM, CSV, Excel και άλλες υποστηριζόμενες μορφές."),
+            ("2", "Δημιουργήστε ή αναλύστε", "Μετατρέψτε υλικό σε αξιολόγηση ή ενεργοποιήστε τις αναλύσεις που είναι συμβατές με τα δεδομένα σας."),
+            ("3", "Ελέγξτε πριν συνεχίσετε", "Εξετάστε προσχέδια, ερωτήσεις, δείκτες και προτεινόμενες ενέργειες πριν από κάθε επόμενο βήμα."),
+            ("4", "Συνδεθείτε με Moodle", "Στείλτε εγκεκριμένες ερωτήσεις στην επιλεγμένη Τράπεζα Ερωτήσεων ή δημιουργήστε νέο Quiz."),
+            ("5", "Συλλέξτε πραγματικές προσπάθειες", "Αφήστε τους φοιτητές να απαντήσουν και ανακτήστε τα πραγματικά αποτελέσματα."),
+            ("6", "Μετατρέψτε τα δεδομένα σε ενδείξεις", "Χρησιμοποιήστε Ποιότητα Quiz, Έγκαιρη Υποστήριξη, Προσαρμοστική Εξάσκηση και Μαθησιακές Ενδείξεις."),
+        ]
+        for i in range(0, len(quick_steps), 2):
+            cols = st.columns(2)
+            for j, col in enumerate(cols):
+                idx = i + j
+                if idx < len(quick_steps):
+                    num, title, desc = quick_steps[idx]
+                    with col:
+                        with st.container(border=True):
+                            st.caption(f"ΒΗΜΑ {num}")
+                            st.markdown(f"#### {title}")
+                            st.write(desc)
+
+        with st.container(border=True):
+            st.markdown("#### Από το υλικό στη μαθησιακή απόφαση")
+            st.markdown(
+                "**PDF / Word / PowerPoint → Ερωτήσεις → Έγκριση → Moodle Question Bank → "
+                "Quiz → Απαντήσεις → Ανάλυση → Feedback / Παρέμβαση**"
+            )
+
+        st.info(
+            "Το INELSO υποστηρίζει τον διδάσκοντα στη λήψη αποφάσεων. "
+            "Οι επίσημες βαθμολογίες και οι κρίσιμες εκπαιδευτικές ενέργειες δεν αλλάζουν αυτόματα."
+        )
 
     with modules_tab:
         search_module = st.text_input(
@@ -6486,9 +6504,24 @@ elif section == "Βιβλίο Οδηγιών":
             "Έλεγξα και εγκρίνω το περιεχόμενο": "Υποχρεωτική ανθρώπινη επιβεβαίωση πριν η πλατφόρμα θεωρήσει το προσχέδιο εγκεκριμένο.",
         }
         all_controls = {**handbook_controls, **control_extra}
-        for label, desc in all_controls.items():
-            if not search_control or search_control in (label + " " + desc).lower():
-                st.markdown(f"**{label}**  \\n{desc}")
+        visible_controls = [
+            (label, desc)
+            for label, desc in all_controls.items()
+            if not search_control or search_control in (label + " " + desc).lower()
+        ]
+        if not visible_controls:
+            st.info("Δεν βρέθηκε σχετικό κουμπί ή πεδίο.")
+        else:
+            for i in range(0, len(visible_controls), 2):
+                cols = st.columns(2)
+                for j, col in enumerate(cols):
+                    idx = i + j
+                    if idx < len(visible_controls):
+                        label, desc = visible_controls[idx]
+                        with col:
+                            with st.container(border=True):
+                                st.markdown(f"#### {label}")
+                                st.write(desc)
 
     with glossary_tab:
         term_search = st.text_input(
@@ -6497,18 +6530,30 @@ elif section == "Βιβλίο Οδηγιών":
             key="handbook_glossary_search"
         ).strip().lower()
 
-        matches = 0
-        for term in sorted(handbook_glossary.keys(), key=lambda x: x.lower()):
-            desc = handbook_glossary[term]
-            if not term_search or term_search in (term + " " + desc).lower():
-                st.markdown(f"**{term}**  \\n{desc}")
-                matches += 1
-        if matches == 0:
+        visible_terms = [
+            (term, handbook_glossary[term])
+            for term in sorted(handbook_glossary.keys(), key=lambda x: x.lower())
+            if not term_search or term_search in (term + " " + handbook_glossary[term]).lower()
+        ]
+        if not visible_terms:
             st.info("Δεν βρέθηκε ο όρος. Δοκιμάστε διαφορετική λέξη.")
+        else:
+            for i in range(0, len(visible_terms), 2):
+                cols = st.columns(2)
+                for j, col in enumerate(cols):
+                    idx = i + j
+                    if idx < len(visible_terms):
+                        term, desc = visible_terms[idx]
+                        with col:
+                            with st.container(border=True):
+                                st.markdown(f"#### {term}")
+                                st.write(desc)
 
     with trouble_tab:
+        st.markdown("### Γρήγορη επίλυση συνηθισμένων θεμάτων")
+        st.caption("Επιλέξτε το πρόβλημα που βλέπετε και ακολουθήστε την προτεινόμενη ενέργεια.")
         for title, solution in handbook_troubleshooting:
-            with st.expander(title):
+            with st.expander(f"🔧 {title}"):
                 st.write(solution)
 
 # ==========================================================
