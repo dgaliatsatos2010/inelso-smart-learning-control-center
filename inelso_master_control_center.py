@@ -1572,7 +1572,7 @@ if section == "Κεντρική Εικόνα Ελέγχου":
         with b:
             st.markdown(
                 "<div class='inelso-feature-card'><div class='kicker'>Αρχείο</div>"
-                "<h3>CSV / Excel</h3><p>Εισαγωγή εξωτερικών ή συμπληρωματικών δεδομένων με αυτόματο έλεγχο ποιότητας και συμβατότητας.</p></div>",
+                "<h3>Αρχεία Δεδομένων</h3><p>Εισαγωγή CSV, Excel, JSON, XML, Parquet, SPSS, Stata, SAS, SQLite, ZIP και άλλων υποστηριζόμενων μορφών με αυτόματο έλεγχο ποιότητας και συμβατότητας.</p></div>",
                 unsafe_allow_html=True
             )
             st.button("Εισαγωγή δεδομένων", use_container_width=True, on_click=_home_nav, args=("Εισαγωγή Δεδομένων",), key="home_open_data_empty")
