@@ -3012,11 +3012,48 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                 moodle_url_direct = st.session_state.get("moodle_base_url", "")
                 moodle_token_direct = st.session_state.get("moodle_shared_token", "")
 
+                direct_import_available = False
+                direct_import_checked = False
+                if moodle_url_direct and moodle_token_direct:
+                    try:
+                        site_info = _inelso_moodle_call(
+                            moodle_url_direct,
+                            moodle_token_direct,
+                            "core_webservice_get_site_info",
+                            {},
+                            timeout=20
+                        )
+                        direct_import_checked = True
+                        available_functions = []
+                        if isinstance(site_info, dict):
+                            raw_functions = site_info.get("functions", [])
+                            if isinstance(raw_functions, list):
+                                for item in raw_functions:
+                                    if isinstance(item, dict) and item.get("name"):
+                                        available_functions.append(str(item.get("name")))
+                                    elif isinstance(item, str):
+                                        available_functions.append(item)
+                        direct_import_available = (
+                            "local_inelsoquestions_import_xml" in available_functions
+                        )
+                    except Exception:
+                        direct_import_checked = True
+                        direct_import_available = False
+
+                if direct_import_checked and not direct_import_available:
+                    st.warning(
+                        "Η one-click εισαγωγή δεν είναι ακόμη ενεργοποιημένη στο Moodle. "
+                        "Ο διαχειριστής πρέπει να εγκαταστήσει/ενεργοποιήσει μία φορά τη λειτουργία "
+                        "«local_inelsoquestions_import_xml». Μέχρι τότε μπορείτε να χρησιμοποιήσετε "
+                        "την εναλλακτική εισαγωγή με Moodle XML."
+                    )
+
                 if st.button(
                     "Εισαγωγή απευθείας στο Moodle",
                     type="primary",
                     use_container_width=True,
-                    key="s25_direct_moodle_import"
+                    key="s25_direct_moodle_import",
+                    disabled=(direct_import_checked and not direct_import_available)
                 ):
                     if not moodle_url_direct or not moodle_token_direct:
                         st.error(
@@ -3055,6 +3092,8 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                                 or "not found" in error_text.lower()
                                 or "does not exist" in error_text.lower()
                                 or "invalidparameter" in error_text.lower()
+                                or "data record" in error_text.lower()
+                                or "εγγραφής δεδομένων" in error_text.lower()
                             ):
                                 st.error(
                                     "Η απευθείας εισαγωγή δεν είναι ακόμη ενεργοποιημένη στο Moodle. "
