@@ -2653,7 +2653,29 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                     for x in re.split(r"(?<=[.!?;])\s+", raw)
                     if len(x.strip()) > 24
                 ]
-                sentences = [x for x in sentences if len(x) > 24]
+
+                noisy_patterns = [
+                    r"^INELSO\s+Academia",
+                    r"^Σκοπός του αρχείου",
+                    r"^Θέμα:",
+                    r"^Μαθησιακοί στόχοι",
+                    r"^Βασικές έννοιες$",
+                    r"^Παράδειγμα καμπάνιας$",
+                    r"^Ερωτήσεις κατανόησης$",
+                    r"^Μικρή δραστηριότητα$",
+                ]
+
+                def _is_content_sentence(text):
+                    t = " ".join(str(text).split()).strip()
+                    if len(t) <= 24:
+                        return False
+                    if any(re.search(p, t, flags=re.IGNORECASE) for p in noisy_patterns):
+                        return False
+                    if t.lower().startswith(("το pdf περιέχει", "σκοπός του αρχείου", "δείγμα εκπαιδευτικού υλικού")):
+                        return False
+                    return True
+
+                sentences = [x for x in sentences if _is_content_sentence(x)]
                 if not sentences:
                     sentences = [raw]
 
@@ -2679,18 +2701,27 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                     candidates = []
                     for offset in range(1, len(sentences) + 1):
                         cand = _clip(sentences[(index + offset) % len(sentences)], 170)
-                        if cand and cand != correct_text and cand not in candidates:
+                        if (
+                            cand
+                            and cand != correct_text
+                            and cand not in candidates
+                            and _is_content_sentence(cand)
+                        ):
                             candidates.append(cand)
                         if len(candidates) == 3:
                             break
-                    while len(candidates) < 3:
-                        candidates.append(
-                            [
-                                "Η πρόταση δεν υποστηρίζεται από το παρεχόμενο υλικό.",
-                                "Το στοιχείο αφορά διαφορετική έννοια από αυτή που εξετάζεται.",
-                                "Δεν προκύπτει τέτοιο συμπέρασμα από την πηγή."
-                            ][len(candidates)]
-                        )
+
+                    fallback = [
+                        "Η μέτρηση περιορίζεται αποκλειστικά στον αριθμό των εμφανίσεων, χωρίς να εξετάζεται καμία αλληλεπίδραση.",
+                        "Η αποτελεσματικότητα μιας ενέργειας δεν συνδέεται με τον στόχο της καμπάνιας ούτε με το κοινό στο οποίο απευθύνεται.",
+                        "Όλοι οι δείκτες απόδοσης περιγράφουν ακριβώς το ίδιο φαινόμενο και μπορούν να χρησιμοποιούνται εναλλακτικά."
+                    ]
+                    for item in fallback:
+                        if len(candidates) >= 3:
+                            break
+                        if item not in candidates and item != correct_text:
+                            candidates.append(item)
+
                     return candidates[:3]
 
                 items = []
@@ -2756,7 +2787,38 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
 
                     elif qtype == "Σωστό / Λάθος":
                         is_true = (i % 2 == 0)
-                        statement = src_sentence if is_true else f"Δεν ισχύει ότι {src_sentence[0].lower() + src_sentence[1:] if len(src_sentence) > 1 else src_sentence}"
+
+                        if is_true:
+                            statement = src_sentence
+                        else:
+                            replacements = [
+                                ("σημαντικό", "ασήμαντο"),
+                                ("αύξηση", "μείωση"),
+                                ("υψηλότερο", "χαμηλότερο"),
+                                ("μοναδικών", "συνολικών"),
+                                ("συνολικό", "μοναδικό"),
+                                ("επιτρέπει", "εμποδίζει"),
+                                ("περισσότερες", "λιγότερες")
+                            ]
+                            statement = src_sentence
+                            changed = False
+                            for a, b in replacements:
+                                if re.search(rf"\b{re.escape(a)}\b", statement, flags=re.IGNORECASE):
+                                    statement = re.sub(
+                                        rf"\b{re.escape(a)}\b",
+                                        b,
+                                        statement,
+                                        count=1,
+                                        flags=re.IGNORECASE
+                                    )
+                                    changed = True
+                                    break
+                            if not changed:
+                                statement = (
+                                    "Η ακόλουθη διατύπωση δεν αποδίδει σωστά το περιεχόμενο της πηγής: "
+                                    + src_sentence
+                                )
+
                         base.update({
                             "Προσχέδιο ερώτησης": f"Σωστό ή Λάθος: {statement}",
                             "Σωστή απάντηση / κριτήριο": "Σωστό" if is_true else "Λάθος"
@@ -2826,12 +2888,34 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
         if "s25_draft" not in st.session_state:
             st.info("Δεν έχει δημιουργηθεί ακόμη προσχέδιο.")
         else:
-            edited_s25 = st.data_editor(
-                st.session_state["s25_draft"],
+            _draft_full = st.session_state["s25_draft"].copy()
+            _hidden_option_cols = [
+                c for c in ["Επιλογή A", "Επιλογή B", "Επιλογή C", "Επιλογή D"]
+                if c in _draft_full.columns
+            ]
+            _main_cols = [c for c in _draft_full.columns if c not in _hidden_option_cols]
+
+            edited_main = st.data_editor(
+                _draft_full[_main_cols],
                 use_container_width=True,
                 hide_index=True,
                 key="s25_editor"
             )
+
+            edited_s25 = _draft_full.copy()
+            for col in edited_main.columns:
+                edited_s25[col] = edited_main[col]
+
+            if _hidden_option_cols:
+                with st.expander("🔎 Επιλογές πολλαπλής επιλογής", expanded=False):
+                    option_view = _draft_full[
+                        [c for c in ["ID"] + _hidden_option_cols + ["Σωστή απάντηση / κριτήριο"] if c in _draft_full.columns]
+                    ].copy()
+                    st.dataframe(
+                        option_view.where(pd.notna(option_view), "-"),
+                        use_container_width=True,
+                        hide_index=True
+                    )
 
             faculty_ok = st.checkbox(
                 "Έλεγξα και εγκρίνω το περιεχόμενο.",
