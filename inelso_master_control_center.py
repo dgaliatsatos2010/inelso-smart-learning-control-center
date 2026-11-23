@@ -13,6 +13,7 @@ import requests
 import numpy as np
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
@@ -3187,6 +3188,15 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                                 "add_questions": add_result,
                             }
 
+                            if isinstance(quiz_result, dict) and quiz_result.get("cmid"):
+                                st.session_state["inelso_last_created_quiz"] = {
+                                    "courseid": int(moodle_course_id_direct),
+                                    "cmid": int(quiz_result.get("cmid")),
+                                    "quizid": int(quiz_result.get("quizid", 0) or 0),
+                                    "name": st.session_state.get("s25_quiz_name", "INELSO Quiz"),
+                                    "base_url": moodle_url_direct.rstrip("/"),
+                                }
+
                         except Exception as e:
                             error_text = str(e)
                             if (
@@ -3214,6 +3224,90 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                         key="s25_download_moodle_xml",
                         use_container_width=True
                     )
+
+                last_quiz = st.session_state.get("inelso_last_created_quiz")
+                if isinstance(last_quiz, dict) and last_quiz.get("cmid"):
+                    st.markdown("### Τελευταίο Quiz στο Moodle")
+                    quiz_url = (
+                        f"{last_quiz.get('base_url','').rstrip('/')}/mod/quiz/view.php"
+                        f"?id={int(last_quiz['cmid'])}"
+                    )
+
+                    qv1, qv2 = st.columns(2)
+                    with qv1:
+                        st.link_button(
+                            "Άνοιγμα Quiz στο Moodle",
+                            quiz_url,
+                            use_container_width=True
+                        )
+                    with qv2:
+                        if st.button(
+                            "Ανανέωση αποτελεσμάτων",
+                            use_container_width=True,
+                            key="s25_refresh_quiz_results"
+                        ):
+                            try:
+                                info = _inelso_moodle_call(
+                                    moodle_url_direct,
+                                    moodle_token_direct,
+                                    "core_webservice_get_site_info",
+                                    {},
+                                    timeout=20
+                                )
+                                funcs = []
+                                if isinstance(info, dict):
+                                    raw_funcs = info.get("functions", [])
+                                    for item in raw_funcs if isinstance(raw_funcs, list) else []:
+                                        if isinstance(item, dict) and item.get("name"):
+                                            funcs.append(str(item["name"]))
+                                        elif isinstance(item, str):
+                                            funcs.append(item)
+
+                                required = [
+                                    "mod_quiz_get_quizzes_by_courses",
+                                    "mod_quiz_get_user_attempts",
+                                    "mod_quiz_get_attempt_review",
+                                ]
+                                missing = [x for x in required if x not in funcs]
+
+                                if missing:
+                                    st.warning(
+                                        "Το Moodle token δεν διαθέτει ακόμη όλες τις λειτουργίες για πλήρη "
+                                        "ανάκτηση προσπαθειών Quiz: " + ", ".join(missing)
+                                    )
+                                else:
+                                    quizzes = _inelso_moodle_call(
+                                        moodle_url_direct,
+                                        moodle_token_direct,
+                                        "mod_quiz_get_quizzes_by_courses",
+                                        {"courseids[0]": int(last_quiz["courseid"])},
+                                        timeout=30
+                                    )
+                                    qlist = quizzes.get("quizzes", quizzes) if isinstance(quizzes, dict) else quizzes
+                                    qdf = pd.DataFrame(qlist if isinstance(qlist, list) else [])
+                                    st.session_state["inelso_last_quiz_results_meta"] = qdf
+                                    st.success("Τα διαθέσιμα δεδομένα του Quiz ανανεώθηκαν από το Moodle.")
+                            except Exception as e:
+                                st.error(f"Η ανανέωση αποτελεσμάτων απέτυχε: {e}")
+
+                    with st.expander("Προβολή Quiz μέσα στο INELSO", expanded=False):
+                        components.iframe(
+                            quiz_url,
+                            height=820,
+                            scrolling=True
+                        )
+
+                    quiz_meta = st.session_state.get("inelso_last_quiz_results_meta")
+                    if isinstance(quiz_meta, pd.DataFrame) and not quiz_meta.empty:
+                        show_cols = [
+                            c for c in ["id","name","course","grade","sumgrades","timeopen","timeclose"]
+                            if c in quiz_meta.columns
+                        ]
+                        st.dataframe(
+                            quiz_meta[show_cols] if show_cols else quiz_meta,
+                            use_container_width=True,
+                            hide_index=True
+                        )
 
 
 # ==========================================================
