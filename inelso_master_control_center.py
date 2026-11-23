@@ -2974,10 +2974,6 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
 
             if "s25_approved_draft" in st.session_state:
                 st.markdown("### Moodle")
-                st.caption(
-                    "Οι εγκεκριμένες ερωτήσεις μπορούν να σταλούν απευθείας στην Τράπεζα Ερωτήσεων "
-                    "του Moodle, εφόσον είναι ενεργή η λειτουργία εισαγωγής INELSO στο Moodle."
-                )
 
                 moodle_target = st.radio(
                     "Τι θέλετε να κάνετε με τις ερωτήσεις;",
