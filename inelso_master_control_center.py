@@ -1472,6 +1472,67 @@ open21 = int(
 open26 = int((cohort26["κατάσταση"]!="ΕΤΟΙΜΟ").sum())
 open31 = high31
 
+def _moodle_xml_from_approved_questions(df, category="INELSO Academia"):
+    """Μετατρέπει εγκεκριμένο προσχέδιο ερωτήσεων σε Moodle XML."""
+    import xml.etree.ElementTree as ET
+
+    quiz = ET.Element("quiz")
+
+    cat_q = ET.SubElement(quiz, "question", {"type": "category"})
+    cat = ET.SubElement(cat_q, "category")
+    ET.SubElement(cat, "text").text = f"$course$/top/{category}"
+
+    count = 0
+    for idx, row in df.reset_index(drop=True).iterrows():
+        question_text = str(
+            row.get("Προσχέδιο ερώτησης",
+            row.get("Προσχέδιο",
+            row.get("Άσκηση", "")))
+        ).strip()
+
+        if not question_text:
+            continue
+
+        qid = str(row.get("ID", f"Q{idx+1:02d}")).strip() or f"Q{idx+1:02d}"
+        qtype_label = str(row.get("Τύπος", "")).lower()
+        correct = str(row.get("Σωστή απάντηση / κριτήριο", "")).strip()
+
+        # Όταν υπάρχει σαφής σωστή απάντηση, δημιουργούμε shortanswer.
+        # Διαφορετικά χρησιμοποιούμε essay ώστε να μη δημιουργούνται τεχνητές επιλογές.
+        moodle_type = "shortanswer" if correct and "ανοικ" not in qtype_label else "essay"
+
+        q = ET.SubElement(quiz, "question", {"type": moodle_type})
+        name = ET.SubElement(q, "name")
+        ET.SubElement(name, "text").text = qid
+
+        qt = ET.SubElement(q, "questiontext", {"format": "html"})
+        ET.SubElement(qt, "text").text = question_text
+
+        gf = ET.SubElement(q, "generalfeedback", {"format": "html"})
+        ET.SubElement(gf, "text").text = ""
+        ET.SubElement(q, "defaultgrade").text = "1.0000000"
+        ET.SubElement(q, "penalty").text = "0.3333333"
+        ET.SubElement(q, "hidden").text = "0"
+        ET.SubElement(q, "idnumber").text = ""
+
+        if moodle_type == "shortanswer":
+            ET.SubElement(q, "usecase").text = "0"
+            ans = ET.SubElement(q, "answer", {"fraction": "100", "format": "html"})
+            ET.SubElement(ans, "text").text = correct
+            feedback = ET.SubElement(ans, "feedback", {"format": "html"})
+            ET.SubElement(feedback, "text").text = ""
+        else:
+            ET.SubElement(q, "responseformat").text = "editor"
+            ET.SubElement(q, "responserequired").text = "1"
+            ET.SubElement(q, "responsefieldlines").text = "15"
+            ET.SubElement(q, "attachments").text = "0"
+            ET.SubElement(q, "attachmentsrequired").text = "0"
+
+        count += 1
+
+    xml_bytes = ET.tostring(quiz, encoding="utf-8", xml_declaration=True)
+    return xml_bytes.decode("utf-8"), count
+
 # ==========================================================
 # ΠΛΟΗΓΗΣΗ
 # ==========================================================
@@ -2713,68 +2774,6 @@ elif section == "Δημιουργία Μαθήματος & Αξιολόγηση�
                         "Το Moodle XML εισάγει τις ερωτήσεις στην Τράπεζα Ερωτήσεων. "
                         "Αν επιλέχθηκε «Νέο Quiz», μετά την εισαγωγή οι ερωτήσεις προστίθενται στο Quiz από το Moodle."
                     )
-
-
-def _moodle_xml_from_approved_questions(df, category="INELSO Academia"):
-    """Μετατρέπει εγκεκριμένο προσχέδιο ερωτήσεων σε Moodle XML."""
-    import xml.etree.ElementTree as ET
-
-    quiz = ET.Element("quiz")
-
-    cat_q = ET.SubElement(quiz, "question", {"type": "category"})
-    cat = ET.SubElement(cat_q, "category")
-    ET.SubElement(cat, "text").text = f"$course$/top/{category}"
-
-    count = 0
-    for idx, row in df.reset_index(drop=True).iterrows():
-        question_text = str(
-            row.get("Προσχέδιο ερώτησης",
-            row.get("Προσχέδιο",
-            row.get("Άσκηση", "")))
-        ).strip()
-
-        if not question_text:
-            continue
-
-        qid = str(row.get("ID", f"Q{idx+1:02d}")).strip() or f"Q{idx+1:02d}"
-        qtype_label = str(row.get("Τύπος", "")).lower()
-        correct = str(row.get("Σωστή απάντηση / κριτήριο", "")).strip()
-
-        # Όταν υπάρχει σαφής σωστή απάντηση, δημιουργούμε shortanswer.
-        # Διαφορετικά χρησιμοποιούμε essay ώστε να μη δημιουργούνται τεχνητές επιλογές.
-        moodle_type = "shortanswer" if correct and "ανοικ" not in qtype_label else "essay"
-
-        q = ET.SubElement(quiz, "question", {"type": moodle_type})
-        name = ET.SubElement(q, "name")
-        ET.SubElement(name, "text").text = qid
-
-        qt = ET.SubElement(q, "questiontext", {"format": "html"})
-        ET.SubElement(qt, "text").text = question_text
-
-        gf = ET.SubElement(q, "generalfeedback", {"format": "html"})
-        ET.SubElement(gf, "text").text = ""
-        ET.SubElement(q, "defaultgrade").text = "1.0000000"
-        ET.SubElement(q, "penalty").text = "0.3333333"
-        ET.SubElement(q, "hidden").text = "0"
-        ET.SubElement(q, "idnumber").text = ""
-
-        if moodle_type == "shortanswer":
-            ET.SubElement(q, "usecase").text = "0"
-            ans = ET.SubElement(q, "answer", {"fraction": "100", "format": "html"})
-            ET.SubElement(ans, "text").text = correct
-            feedback = ET.SubElement(ans, "feedback", {"format": "html"})
-            ET.SubElement(feedback, "text").text = ""
-        else:
-            ET.SubElement(q, "responseformat").text = "editor"
-            ET.SubElement(q, "responserequired").text = "1"
-            ET.SubElement(q, "responsefieldlines").text = "15"
-            ET.SubElement(q, "attachments").text = "0"
-            ET.SubElement(q, "attachmentsrequired").text = "0"
-
-        count += 1
-
-    xml_bytes = ET.tostring(quiz, encoding="utf-8", xml_declaration=True)
-    return xml_bytes.decode("utf-8"), count
 
 
 # ==========================================================
