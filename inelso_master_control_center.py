@@ -112,9 +112,10 @@ def render_moodle_rest_service_panel(
 # ==========================================================
 st.markdown("""
 <style>
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
 :root{
- --navy:#102a43; --navy2:#173b5e; --teal:#2a8c99;
- --soft:#f5f8fb; --line:#dde6ee; --muted:#667085;
+ --navy:#11283E; --navy2:#11283E; --teal:#AD8544;
+ --soft:#FBFAF8; --line:#E9E3DB; --muted:#4B5A67;
 }
 .block-container{padding-top:.35rem!important;padding-bottom:3rem;max-width:1550px}
 [data-testid="stHeader"]{height:0!important;min-height:0!important;background:transparent!important}
@@ -127,32 +128,32 @@ h3{font-size:1.15rem!important}
 [data-testid="stMetricValue"]{font-size:1.7rem}
 [data-testid="stMetricLabel"]{font-size:.9rem}
 .hero{
- background:linear-gradient(135deg,#102a43,#1f5f87);
+ background:linear-gradient(135deg,#11283E,#0E2032);
  color:white;border-radius:20px;padding:1.25rem 1.45rem;margin:.15rem 0 1rem 0;
 }
 .hero h1,.hero h2,.hero h3{color:white!important;margin:0}
 .hero p{margin:.45rem 0 0;opacity:.92}
 .flow{
- border:1px dashed #a9bdcf;background:#f8fbfd;padding:.8rem 1rem;border-radius:12px;
+ border:1px dashed #D9C39C;background:#FBFAF8;padding:.8rem 1rem;border-radius:12px;
  font-weight:650
 }
 .callout{
- border-left:5px solid var(--teal);background:#f4fbfc;padding:.85rem 1rem;border-radius:10px
+ border-left:5px solid var(--teal);background:#F4F0EB;padding:.85rem 1rem;border-radius:10px
 }
 
 /* Εμπορική έκδοση: καθαρότερη, φιλική εμφάνιση */
-[data-testid="stSidebar"]{background:linear-gradient(180deg,#f8fbfd 0%,#eef5f9 100%);border-right:1px solid #d8e4ec}
+[data-testid="stSidebar"]{background:linear-gradient(180deg,#FBFAF8 0%,#F4F0EB 100%);border-right:1px solid #E9E3DB}
 [data-testid="stSidebar"] [role="radiogroup"] label{padding:.22rem .15rem;border-radius:9px}
 [data-testid="stButton"] button,[data-testid="stDownloadButton"] button{border-radius:10px;font-weight:650;min-height:2.55rem}
-[data-testid="stExpander"]{border:1px solid #dfe8ef;border-radius:14px!important;background:#fff}
-div[data-testid="stMetric"]{background:#fff;border:1px solid #e3ebf1;border-radius:14px;padding:.65rem .75rem;box-shadow:0 3px 14px rgba(16,42,67,.045)}
-.inelso-card{background:white;border:1px solid #e1e9ef;border-radius:16px;padding:1rem 1.15rem;box-shadow:0 5px 18px rgba(16,42,67,.055);margin:.55rem 0}
-.inelso-card h3{margin:.05rem 0 .35rem;color:#173b5e!important}.inelso-card p{margin:.18rem 0;color:#475467}
-.inelso-step{display:inline-block;background:#e8f4f6;color:#17616c;border-radius:999px;padding:.2rem .58rem;font-size:.78rem;font-weight:700;margin-right:.25rem}
+[data-testid="stExpander"]{border:1px solid #E9E3DB;border-radius:14px!important;background:#fff}
+div[data-testid="stMetric"]{background:#fff;border:1px solid #E9E3DB;border-radius:14px;padding:.65rem .75rem;box-shadow:0 3px 14px rgba(16,42,67,.045)}
+.inelso-card{background:white;border:1px solid #E9E3DB;border-radius:16px;padding:1rem 1.15rem;box-shadow:0 5px 18px rgba(16,42,67,.055);margin:.55rem 0}
+.inelso-card h3{margin:.05rem 0 .35rem;color:#11283E!important}.inelso-card p{margin:.18rem 0;color:#4B5A67}
+.inelso-step{display:inline-block;background:#F4F0EB;color:#11283E;border-radius:999px;padding:.2rem .58rem;font-size:.78rem;font-weight:700;margin-right:.25rem}
 .inelso-note{background:#fffbea;border:1px solid #f3e3a3;border-radius:12px;padding:.8rem 1rem;color:#594a16}
-.inelso-module-head{margin:.05rem 0 .55rem 0!important;padding:1.05rem 1.25rem!important;border-left:6px solid #2a8c99}
-.inelso-module-head h2{margin:0!important;font-size:1.55rem!important;line-height:1.2!important;color:#173b5e!important}
-.inelso-module-head p{margin:.45rem 0 0!important;font-size:1rem!important;line-height:1.45!important;color:#475467!important}
+.inelso-module-head{margin:.05rem 0 .55rem 0!important;padding:1.05rem 1.25rem!important;border-left:6px solid #AD8544}
+.inelso-module-head h2{margin:0!important;font-size:1.55rem!important;line-height:1.2!important;color:#11283E!important}
+.inelso-module-head p{margin:.45rem 0 0!important;font-size:1rem!important;line-height:1.45!important;color:#4B5A67!important}
 
 /* Product-grade polish */
 [data-testid="stSidebar"]{min-width:305px!important;max-width:305px!important}
@@ -164,35 +165,35 @@ div[data-testid="stMetric"]{background:#fff;border:1px solid #e3ebf1;border-radi
   transition:all .16s ease;
 }
 [data-testid="stSidebar"] [role="radiogroup"] label:hover{
-  background:#ffffff!important;border-color:#dce7ee!important;
+  background:#ffffff!important;border-color:#E9E3DB!important;
 }
 [data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked){
-  background:#ffffff!important;border-color:#cfe0e9!important;
+  background:#ffffff!important;border-color:#D9C39C!important;
   box-shadow:0 4px 12px rgba(16,42,67,.05)!important;
 }
 .inelso-status-row{display:flex;gap:.5rem;flex-wrap:wrap;margin:.45rem 0 .9rem}
 .inelso-pill{
   display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .65rem;border-radius:999px;
-  border:1px solid #dce7ee;background:#fff;color:#344054;font-size:.82rem;font-weight:650
+  border:1px solid #E9E3DB;background:#fff;color:#4B5A67;font-size:.82rem;font-weight:650
 }
 .inelso-pill.ok{background:#eefaf5;border-color:#ccebdd;color:#176b4d}
 .inelso-pill.warn{background:#fff8e8;border-color:#f1dfac;color:#7a5a0b}
-.inelso-pill.neutral{background:#f7f9fb;border-color:#e2e8f0;color:#475467}
+.inelso-pill.neutral{background:#FBFAF8;border-color:#E9E3DB;color:#4B5A67}
 .inelso-empty{
-  background:linear-gradient(180deg,#ffffff 0%,#f8fbfd 100%);
-  border:1px solid #dfe8ef;border-radius:18px;padding:1.2rem 1.3rem;margin:.65rem 0 1rem;
+  background:linear-gradient(180deg,#ffffff 0%,#FBFAF8 100%);
+  border:1px solid #E9E3DB;border-radius:18px;padding:1.2rem 1.3rem;margin:.65rem 0 1rem;
   box-shadow:0 5px 18px rgba(16,42,67,.04)
 }
-.inelso-empty h3{margin:.05rem 0 .35rem;color:#173b5e!important}
+.inelso-empty h3{margin:.05rem 0 .35rem;color:#11283E!important}
 .inelso-source-card{
-  border:1px solid #dfe8ef;background:#fff;border-radius:16px;padding:1rem 1.1rem;height:100%;
+  border:1px solid #E9E3DB;background:#fff;border-radius:16px;padding:1rem 1.1rem;height:100%;
   box-shadow:0 4px 14px rgba(16,42,67,.035)
 }
-.inelso-source-card b{font-size:1rem;color:#173b5e}
-.inelso-source-card p{margin:.35rem 0 0;color:#667085;font-size:.92rem}
-.inelso-kpi-title{color:#667085;font-size:.82rem;font-weight:650;margin-bottom:.18rem}
+.inelso-source-card b{font-size:1rem;color:#11283E}
+.inelso-source-card p{margin:.35rem 0 0;color:#4B5A67;font-size:.92rem}
+.inelso-kpi-title{color:#4B5A67;font-size:.82rem;font-weight:650;margin-bottom:.18rem}
 .inelso-section-label{
-  color:#667085;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  color:#4B5A67;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
   margin:.7rem 0 .15rem
 }
 [data-testid="stPopover"] button{white-space:nowrap!important}
@@ -201,19 +202,19 @@ div[data-baseweb="popover"]{max-width:560px!important}
   display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7rem;margin:.7rem 0 1rem
 }
 .inelso-process .step{
-  border:1px solid #dfe8ef;border-radius:14px;padding:.8rem;background:#fff;
+  border:1px solid #E9E3DB;border-radius:14px;padding:.8rem;background:#fff;
   min-height:86px;box-shadow:0 3px 12px rgba(16,42,67,.03)
 }
-.inelso-process .step strong{display:block;color:#173b5e;margin-bottom:.2rem}
-.inelso-process .step span{color:#667085;font-size:.86rem;line-height:1.35}
-.inelso-process .step.active{border-color:#9fd7db;background:#f3fbfb}
+.inelso-process .step strong{display:block;color:#11283E;margin-bottom:.2rem}
+.inelso-process .step span{color:#4B5A67;font-size:.86rem;line-height:1.35}
+.inelso-process .step.active{border-color:#D9C39C;background:#F4F0EB}
 .inelso-process .step.safe{border-color:#cae8dc;background:#f4fbf7}
 .inelso-exec-card{
-  border:1px solid #dfe8ef;border-radius:16px;padding:1rem 1.05rem;background:#fff;
+  border:1px solid #E9E3DB;border-radius:16px;padding:1rem 1.05rem;background:#fff;
   box-shadow:0 4px 15px rgba(16,42,67,.035);height:100%
 }
-.inelso-exec-card h4{margin:.05rem 0 .28rem;color:#173b5e}
-.inelso-exec-card p{margin:0;color:#667085;font-size:.9rem;line-height:1.45}
+.inelso-exec-card h4{margin:.05rem 0 .28rem;color:#11283E}
+.inelso-exec-card p{margin:0;color:#4B5A67;font-size:.9rem;line-height:1.45}
 .inelso-danger-lite{
   border:1px solid #f0d9ad;background:#fff9ec;border-radius:14px;padding:.8rem 1rem;
   color:#7b5b12;margin:.65rem 0
@@ -222,7 +223,7 @@ div[data-baseweb="popover"]{max-width:560px!important}
 
 /* Premium dashboard / iframe presentation layer */
 .inelso-home-hero{
-  background:linear-gradient(135deg,#163b5c 0%,#245f86 58%,#2b7894 100%);
+  background:linear-gradient(135deg,#11283E 0%,#11283E 58%,#0E2032 100%);
   color:white;border-radius:22px;padding:1.55rem 1.7rem;margin:.2rem 0 1rem;
   box-shadow:0 10px 28px rgba(16,42,67,.13);
 }
@@ -230,40 +231,80 @@ div[data-baseweb="popover"]{max-width:560px!important}
 .inelso-home-hero p{margin:.55rem 0 0!important;color:rgba(255,255,255,.9)!important;font-size:1rem!important}
 .inelso-home-eyebrow{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.78;margin-bottom:.45rem}
 .inelso-dashboard-tabs [data-baseweb="tab-list"]{
-  gap:.35rem;background:#f5f8fb;padding:.35rem;border:1px solid #e1e9ef;border-radius:14px
+  gap:.35rem;background:#FBFAF8;padding:.35rem;border:1px solid #E9E3DB;border-radius:14px
 }
 .inelso-dashboard-tabs [data-baseweb="tab"]{
-  height:2.75rem;border-radius:10px;padding:0 1rem;font-weight:700;color:#475467
+  height:2.75rem;border-radius:10px;padding:0 1rem;font-weight:700;color:#4B5A67
 }
 .inelso-dashboard-tabs [aria-selected="true"]{
-  background:#fff!important;color:#173b5e!important;box-shadow:0 3px 10px rgba(16,42,67,.07)
+  background:#fff!important;color:#11283E!important;box-shadow:0 3px 10px rgba(16,42,67,.07)
 }
 .inelso-feature-card{
-  background:#fff;border:1px solid #dfe8ef;border-radius:18px;padding:1.05rem 1.1rem;
+  background:#fff;border:1px solid #E9E3DB;border-radius:18px;padding:1.05rem 1.1rem;
   box-shadow:0 5px 18px rgba(16,42,67,.045);min-height:160px;height:100%
 }
-.inelso-feature-card .kicker{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#2a8c99;margin-bottom:.35rem}
-.inelso-feature-card h3{margin:.05rem 0 .35rem!important;color:#173b5e!important;font-size:1.08rem!important}
-.inelso-feature-card p{margin:0!important;color:#667085!important;font-size:.9rem!important;line-height:1.45!important}
-.inelso-feature-value{font-size:1.7rem;font-weight:760;color:#102a43;line-height:1.15;margin:.35rem 0}
-.inelso-mini-note{font-size:.78rem;color:#667085;margin-top:.3rem}
+.inelso-feature-card .kicker{font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#AD8544;margin-bottom:.35rem}
+.inelso-feature-card h3{margin:.05rem 0 .35rem!important;color:#11283E!important;font-size:1.08rem!important}
+.inelso-feature-card p{margin:0!important;color:#4B5A67!important;font-size:.9rem!important;line-height:1.45!important}
+.inelso-feature-value{font-size:1.7rem;font-weight:760;color:#11283E;line-height:1.15;margin:.35rem 0}
+.inelso-mini-note{font-size:.78rem;color:#4B5A67;margin-top:.3rem}
 .inelso-action-banner{
-  background:linear-gradient(180deg,#f8fbff 0%,#f2f7fb 100%);
-  border:1px solid #d9e6f0;border-radius:16px;padding:1rem 1.1rem;margin:.65rem 0
+  background:linear-gradient(180deg,#FBFAF8 0%,#F4F0EB 100%);
+  border:1px solid #E9E3DB;border-radius:16px;padding:1rem 1.1rem;margin:.65rem 0
 }
-.inelso-action-banner strong{color:#173b5e}
+.inelso-action-banner strong{color:#11283E}
 .inelso-data-strip{
   display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7rem;margin:.65rem 0 1rem
 }
 .inelso-data-chip{
-  border:1px solid #e0e8ef;background:#fff;border-radius:14px;padding:.8rem .9rem
+  border:1px solid #E9E3DB;background:#fff;border-radius:14px;padding:.8rem .9rem
 }
-.inelso-data-chip .label{font-size:.76rem;color:#667085;font-weight:650}
-.inelso-data-chip .value{font-size:1.35rem;color:#173b5e;font-weight:760;margin-top:.15rem}
+.inelso-data-chip .label{font-size:.76rem;color:#4B5A67;font-weight:650}
+.inelso-data-chip .value{font-size:1.35rem;color:#11283E;font-weight:760;margin-top:.15rem}
 @media(max-width:900px){
   .inelso-data-strip{grid-template-columns:1fr 1fr}
   .inelso-home-hero{padding:1.2rem}
 }
+
+/* Official INELSO Academia brand system — semantic warning/success colors remain distinct. */
+:root{
+ --navy:#11283E; --navy2:#0E2032; --gold:#AD8544; --softgold:#D9C39C;
+ --offwhite:#FBFAF8; --cream:#F4F0EB; --slate:#4B5A67; --border:#E9E3DB;
+}
+html,body,.stApp,[data-testid="stAppViewContainer"],[data-testid="stSidebar"]{
+ font-family:"Manrope",Arial,sans-serif;
+}
+.stApp :is(h1,h2,h3,h4,h5,h6,p,label,button,input,textarea,select),
+.stApp [data-testid="stMarkdownContainer"],
+.stApp [data-testid="stMetricValue"],
+.stApp [data-testid="stMetricLabel"],
+.stApp [role="tab"]{
+ font-family:"Manrope",Arial,sans-serif!important;
+}
+.stApp,[data-testid="stAppViewContainer"]{background:var(--offwhite)}
+[data-testid="stSidebar"]{background:var(--cream);border-right:1px solid var(--border)}
+.inelso-brand-logo{display:flex;align-items:center;justify-content:center;padding:.3rem .6rem .5rem}
+.inelso-brand-logo img{display:block;width:100%;max-width:210px;height:auto;object-fit:contain}
+.inelso-home-hero,.hero{background:linear-gradient(135deg,var(--navy),var(--navy2));border-bottom:3px solid var(--gold)}
+.inelso-feature-card .kicker{color:#785923}
+.inelso-module-head{border-left-color:var(--gold)}
+.inelso-section-label{color:var(--slate)}
+[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked){
+ background:var(--offwhite)!important;border-color:var(--softgold)!important;
+}
+button[data-testid="stBaseButton-primary"]{
+ background:var(--navy)!important;color:var(--offwhite)!important;border:1px solid var(--navy)!important;
+}
+button[data-testid="stBaseButton-primary"]:hover:not(:disabled){
+ background:var(--navy2)!important;border-color:var(--gold)!important;
+}
+button[data-testid="stBaseButton-primary"]:disabled{opacity:.55}
+button[data-testid="stBaseButton-secondary"],[data-testid="stDownloadButton"] button,[data-testid="stLinkButton"] a{
+ border-color:var(--border);border-radius:10px;
+}
+[data-testid="stExpander"]{border-color:var(--border)}
+[data-baseweb="tab"][aria-selected="true"]{color:var(--navy)!important}
+[data-baseweb="tab-highlight"]{background-color:var(--gold)!important}
 </style>
 """, unsafe_allow_html=True)
 
@@ -1595,7 +1636,16 @@ def _inelso_moodle_call(base_url, token, function_name, params=None, timeout=30)
 # ==========================================================
 # ΠΛΟΗΓΗΣΗ
 # ==========================================================
-st.sidebar.markdown("## 🎓 INELSO Academia")
+_brand_logo_path = Path(__file__).resolve().parent / "assets" / "inelso_academia_logo.png.b64"
+if _brand_logo_path.is_file():
+    _brand_logo_data = _brand_logo_path.read_text(encoding="utf-8").strip()
+    st.sidebar.markdown(
+        '<div class="inelso-brand-logo"><img alt="INELSO Academia" src="data:image/png;base64,'
+        + _brand_logo_data + '"></div>',
+        unsafe_allow_html=True,
+    )
+else:
+    st.sidebar.markdown("## INELSO Academia")
 st.sidebar.caption("Πλατφόρμα Έξυπνης Μάθησης")
 st.sidebar.markdown("<div class='inelso-section-label'>Κύριες λειτουργίες</div>", unsafe_allow_html=True)
 
